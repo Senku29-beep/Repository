@@ -907,12 +907,35 @@
             <div class="setting-row"><span>Кэш:</span><span id="cacheSize">0 байт</span></div>
             <div class="setting-row"><span>🔔 Уведомления:</span><button class="save-btn" id="requestNotificationBtn" style="width:auto; padding:5px 15px;">Включить</button></div>
         </div>
+        <!-- БЛОК СИНХРОНИЗАЦИИ ЧЕРЕЗ GITHUB -->
+        <div class="settings-card">
+            <div class="graph-title">☁️ Синхронизация через GitHub</div>
+            <div class="setting-row">
+                <span>🔑 Gist ID (секретный ключ)</span>
+                <input type="text" id="gistIdInput" class="setting-input" style="width: 200px;" placeholder="Ваш Gist ID">
+            </div>
+            <div class="setting-row">
+                <span>📤 Сохранить в GitHub</span>
+                <button class="save-btn" id="saveToGistBtn" style="width:auto; padding:8px 20px;">СОХРАНИТЬ</button>
+            </div>
+            <div class="setting-row">
+                <span>📥 Загрузить из GitHub</span>
+                <button class="save-btn" id="loadFromGistBtn" style="width:auto; padding:8px 20px;">ЗАГРУЗИТЬ</button>
+            </div>
+            <div class="setting-row">
+                <span>🔗 Создать новый Gist</span>
+                <button class="save-btn" id="createGistBtn" style="width:auto; padding:8px 20px;">СОЗДАТЬ</button>
+            </div>
+            <div class="setting-row">
+                <span id="gistStatus" style="font-size: 12px; opacity: 0.7;">⚪ Не синхронизировано</span>
+            </div>
+        </div>
     </div>
 
     <div id="about" class="section">
-        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система для выращивания растений с годовым календарём истории.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений</p></div>
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система для выращивания растений с годовым календарём истории.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Синхронизация через GitHub Gist</p></div>
     </div>
-    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | Push-уведомления</div>
+    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | GitHub синхронизация</div>
 </div>
 
 <!-- Модальные окна -->
@@ -959,7 +982,6 @@
     mobileMenuBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const section = btn.dataset.section;
-            // Активируем соответствующую секцию
             document.querySelectorAll('.nav-btn, .mobile-menu-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const correspondingNavBtn = document.querySelector(`.nav-btn[data-section="${section}"]`);
@@ -1065,16 +1087,14 @@
     
     document.getElementById('requestNotificationBtn')?.addEventListener('click', requestNotificationPermission);
     
-    // Автоматическое уведомление при загрузке (для привлечения внимания)
     if ('Notification' in window && Notification.permission === 'default') {
         setTimeout(() => {
             showToast('🔔 Нажмите "Включить" в настройках для получения уведомлений');
         }, 3000);
     }
     
-    // Проверка критических значений и отправка уведомлений
     let lastNotificationTime = 0;
-    const NOTIFICATION_COOLDOWN = 60000; // 1 минута между уведомлениями
+    const NOTIFICATION_COOLDOWN = 60000;
     
     function checkAndSendNotification() {
         const now = Date.now();
@@ -1119,7 +1139,6 @@
     let hum = 58, light = 65, soil = 42;
     let waterSaved = 0, co2Absorbed = 0;
     
-    // БИБЛИОТЕКА РАСТЕНИЙ (19 ШТУК)
     const plantsList = {
         tomato: { name: 'Томаты', icon: '🍅', soilDry: 40, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 30, lightOff: 50, pumpTime: 2, days: 80, care: '🌞 Нужен яркий свет и регулярный полив. Любят тепло!', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
         cucumber: { name: 'Огурцы', icon: '🥒', soilDry: 50, soilWet: 80, openTemp: 30, closeTemp: 28, lightOn: 35, lightOff: 55, pumpTime: 2.5, days: 50, care: '💧 Требуют много влаги.', optimalTemp: '24-30°C', optimalHumidity: '70-80%' },
@@ -1144,7 +1163,7 @@
     let devices = { pump: false, light: false, window: false, heater: false, fan: false };
     let autoSettings = { water: true, vent: true, light: true };
 
-    // ========== МОДАЛЬНОЕ ОКНО ДЛЯ ГРАФИКА ==========
+    // ========== МОДАЛЬНЫЕ ОКНА ==========
     const modal = document.getElementById('chartModal');
     const modalCloseBtn = document.getElementById('modalCloseBtn');
     let modalChart = null;
@@ -1172,7 +1191,6 @@
     document.getElementById('periodMonth').onclick = () => { currentPeriod = 'month'; updateModalChart(); };
     function updateModalChartTheme() { if (modalChart) modalChart.update(); }
 
-    // ========== МОДАЛЬНОЕ ОКНО ДЛЯ РАСТЕНИЙ ==========
     const plantModal = document.getElementById('plantInfoModal');
     const plantModalCloseBtn = document.getElementById('plantModalCloseBtn');
     function openPlantInfoModal(plantKey) {
@@ -1290,7 +1308,7 @@
     document.getElementById('emergencyWindow')?.addEventListener('click', () => showToast('🪟 Форточка открыта'));
     document.getElementById('saveSettings')?.addEventListener('click', () => showToast('⚙️ Сохранено'));
 
-    // НОВЫЕ ФУНКЦИИ
+    // ========== УПРАВЛЕНИЕ ==========
     const brightnessSlider = document.getElementById('brightnessSlider');
     const brightnessValue = document.getElementById('brightnessValue');
     brightnessSlider?.addEventListener('input', (e) => {
@@ -1438,6 +1456,174 @@
         window.addEventListener('online', () => { document.getElementById('offlineStatus').innerHTML = '🟢 Онлайн'; showToast('🌐 Интернет восстановлен'); });
         window.addEventListener('offline', () => { document.getElementById('offlineStatus').innerHTML = '🔴 Офлайн-режим'; showToast('📴 Офлайн-режим'); });
     } else { document.getElementById('offlineStatus').innerHTML = '⚠️ Не поддерживается'; }
+
+    // ========== СИНХРОНИЗАЦИЯ ЧЕРЕЗ GITHUB GIST ==========
+    async function createGist() {
+        const settings = {
+            version: "1.0",
+            timestamp: new Date().toISOString(),
+            currentPlant: currentPlant,
+            theme: document.body.classList.contains('dark') ? 'dark' : 'light',
+            autoSettings: autoSettings,
+            brightness: light,
+            thresholds: {
+                openTemp: document.getElementById('openTemp')?.value || '28',
+                closeTemp: document.getElementById('closeTemp')?.value || '26',
+                soilDry: document.getElementById('soilDry')?.value || '40',
+                soilWet: document.getElementById('soilWet')?.value || '70',
+                lightOn: document.getElementById('lightOn')?.value || '30',
+                lightOff: document.getElementById('lightOff')?.value || '50',
+                pumpTime: document.getElementById('pumpTime')?.value || '2'
+            }
+        };
+        
+        const content = JSON.stringify(settings, null, 2);
+        
+        try {
+            const response = await fetch('https://api.github.com/gists', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    description: 'Умная теплица - настройки',
+                    public: false,
+                    files: { 'teplitsa_settings.json': { content: content } }
+                })
+            });
+            if (!response.ok) throw new Error('Ошибка создания Gist');
+            const data = await response.json();
+            const gistId = data.id;
+            document.getElementById('gistIdInput').value = gistId;
+            localStorage.setItem('teplitsa_gist_id', gistId);
+            document.getElementById('gistStatus').innerHTML = '✅ Gist создан! ID сохранён';
+            showToast(`✅ Gist создан! ID: ${gistId}`);
+            return gistId;
+        } catch (error) {
+            console.error('Ошибка:', error);
+            document.getElementById('gistStatus').innerHTML = '❌ Ошибка создания Gist';
+            showToast('❌ Не удалось создать Gist');
+            return null;
+        }
+    }
+
+    async function saveToGist(gistId) {
+        if (!gistId) { showToast('❌ Сначала создайте Gist или введите ID'); return false; }
+        const settings = {
+            version: "1.0",
+            lastUpdate: new Date().toISOString(),
+            currentPlant: currentPlant,
+            theme: document.body.classList.contains('dark') ? 'dark' : 'light',
+            autoSettings: autoSettings,
+            brightness: light,
+            thresholds: {
+                openTemp: document.getElementById('openTemp')?.value || '28',
+                closeTemp: document.getElementById('closeTemp')?.value || '26',
+                soilDry: document.getElementById('soilDry')?.value || '40',
+                soilWet: document.getElementById('soilWet')?.value || '70',
+                lightOn: document.getElementById('lightOn')?.value || '30',
+                lightOff: document.getElementById('lightOff')?.value || '50',
+                pumpTime: document.getElementById('pumpTime')?.value || '2'
+            }
+        };
+        const content = JSON.stringify(settings, null, 2);
+        try {
+            const getResponse = await fetch(`https://api.github.com/gists/${gistId}`, { headers: { 'Accept': 'application/json' } });
+            if (!getResponse.ok) throw new Error('Gist не найден');
+            const gistData = await getResponse.json();
+            const fileSha = gistData.files['teplitsa_settings.json']?.sha || null;
+            const updateResponse = await fetch(`https://api.github.com/gists/${gistId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ files: { 'teplitsa_settings.json': { content: content, sha: fileSha } } })
+            });
+            if (!updateResponse.ok) throw new Error('Ошибка сохранения');
+            document.getElementById('gistStatus').innerHTML = '✅ Сохранено в GitHub!';
+            showToast('✅ Настройки сохранены в GitHub!');
+            return true;
+        } catch (error) {
+            console.error('Ошибка:', error);
+            document.getElementById('gistStatus').innerHTML = '❌ Ошибка сохранения';
+            showToast('❌ Не удалось сохранить в GitHub');
+            return false;
+        }
+    }
+
+    async function loadFromGist(gistId) {
+        if (!gistId) { showToast('❌ Введите Gist ID'); return false; }
+        try {
+            const response = await fetch(`https://api.github.com/gists/${gistId}`, { headers: { 'Accept': 'application/json' } });
+            if (!response.ok) throw new Error('Gist не найден');
+            const data = await response.json();
+            const fileContent = data.files['teplitsa_settings.json']?.content;
+            if (!fileContent) { showToast('❌ Файл с настройками не найден'); return false; }
+            const settings = JSON.parse(fileContent);
+            if (settings.currentPlant && plantsList[settings.currentPlant]) {
+                currentPlant = settings.currentPlant;
+                buildPlants();
+                buildDashboard();
+            }
+            if (settings.theme === 'dark' && !document.body.classList.contains('dark')) {
+                document.getElementById('themeToggle')?.click();
+            } else if (settings.theme === 'light' && document.body.classList.contains('dark')) {
+                document.getElementById('themeToggle')?.click();
+            }
+            if (settings.autoSettings) {
+                autoSettings = settings.autoSettings;
+                if (document.getElementById('autoWaterToggle')) document.getElementById('autoWaterToggle').checked = autoSettings.water;
+                if (document.getElementById('autoVentToggle')) document.getElementById('autoVentToggle').checked = autoSettings.vent;
+                if (document.getElementById('autoLightToggle')) document.getElementById('autoLightToggle').checked = autoSettings.light;
+            }
+            if (settings.brightness) {
+                light = settings.brightness;
+                if (document.getElementById('brightnessSlider')) {
+                    document.getElementById('brightnessSlider').value = light;
+                    document.getElementById('brightnessValue').innerHTML = light + '%';
+                    document.getElementById('currentLightLevel').innerHTML = light + '%';
+                    document.getElementById('lightValue').textContent = light;
+                }
+            }
+            if (settings.thresholds) {
+                const th = settings.thresholds;
+                if (document.getElementById('openTemp')) document.getElementById('openTemp').value = th.openTemp;
+                if (document.getElementById('closeTemp')) document.getElementById('closeTemp').value = th.closeTemp;
+                if (document.getElementById('soilDry')) document.getElementById('soilDry').value = th.soilDry;
+                if (document.getElementById('soilWet')) document.getElementById('soilWet').value = th.soilWet;
+                if (document.getElementById('lightOn')) document.getElementById('lightOn').value = th.lightOn;
+                if (document.getElementById('lightOff')) document.getElementById('lightOff').value = th.lightOff;
+                if (document.getElementById('pumpTime')) document.getElementById('pumpTime').value = th.pumpTime;
+            }
+            localStorage.setItem('teplitsa_gist_id', gistId);
+            document.getElementById('gistStatus').innerHTML = `✅ Загружено из GitHub (${new Date(settings.lastUpdate).toLocaleString()})`;
+            showToast('✅ Настройки загружены из GitHub!');
+            updateStatsLive();
+            buildDashboard();
+            return true;
+        } catch (error) {
+            console.error('Ошибка:', error);
+            document.getElementById('gistStatus').innerHTML = '❌ Ошибка загрузки';
+            showToast('❌ Не удалось загрузить настройки');
+            return false;
+        }
+    }
+
+    document.getElementById('createGistBtn')?.addEventListener('click', async () => { await createGist(); });
+    document.getElementById('saveToGistBtn')?.addEventListener('click', async () => {
+        let gistId = document.getElementById('gistIdInput').value;
+        if (!gistId) gistId = localStorage.getItem('teplitsa_gist_id');
+        if (gistId) document.getElementById('gistIdInput').value = gistId;
+        await saveToGist(gistId);
+    });
+    document.getElementById('loadFromGistBtn')?.addEventListener('click', async () => {
+        let gistId = document.getElementById('gistIdInput').value;
+        if (!gistId) gistId = localStorage.getItem('teplitsa_gist_id');
+        if (gistId) document.getElementById('gistIdInput').value = gistId;
+        await loadFromGist(gistId);
+    });
+
+    const savedGistId = localStorage.getItem('teplitsa_gist_id');
+    if (savedGistId) {
+        document.getElementById('gistIdInput').value = savedGistId;
+        document.getElementById('gistStatus').innerHTML = '⚪ Gist ID сохранён, нажмите "Загрузить"';
+    }
 
     // ========== НАВИГАЦИЯ ==========
     document.querySelectorAll('.nav-btn').forEach(btn => {
