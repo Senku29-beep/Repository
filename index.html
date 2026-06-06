@@ -540,6 +540,22 @@
     </style>
 </head>
 <body>
+
+<div style="position: fixed; top: 0; left: 0; background: red; color: white; padding: 5px; z-index: 99999; font-size: 10px;" id="testMsg">Проверка config.js...</div>
+
+<script>
+// Временная проверка
+setTimeout(() => {
+    if (typeof GITHUB_TOKEN !== 'undefined') {
+        document.getElementById('testMsg').innerHTML = '✅ config.js ЗАГРУЖЕН! Токен есть';
+        document.getElementById('testMsg').style.background = 'green';
+    } else {
+        document.getElementById('testMsg').innerHTML = '❌ config.js НЕ ЗАГРУЖЕН! Проверьте путь';
+        document.getElementById('testMsg').style.background = 'red';
+    }
+}, 100);
+</script>
+
 <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
 
 <div class="container">
