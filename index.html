@@ -1370,7 +1370,7 @@ setInterval(() => {
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }, 3000);
 
-// ========== GitHub СИНХРОНИЗАЦИЯ (РАБОТАЮЩАЯ) ==========
+// ========== GitHub СИНХРОНИЗАЦИЯ (АВТОМАТИЧЕСКАЯ) ==========
 const GITHUB_TOKEN = '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';
 const GIST_ID = '352bdb9b6b35d9604caff6399093b8b4';
 const RAW_URL = `https://gist.githubusercontent.com/Senku29-beep/${GIST_ID}/raw/data.json`;
@@ -1383,6 +1383,7 @@ if (!deviceId) {
 }
 
 let isGitHubSyncing = false;
+let lastLoadedTimestamp = 0;
 
 function updateLastSyncTime() {
     const now = new Date();
@@ -1391,67 +1392,11 @@ function updateLastSyncTime() {
     document.getElementById('syncStatus').style.color = '#4caf50';
 }
 
-// Чтение из GitHub (сначала через RAW, если не работает - через API)
-async function loadFromGitHub() {
-    if (isGitHubSyncing) return;
-    
-    try {
-        let data = null;
-        
-        // Пробуем прочитать через RAW URL
-        try {
-            const res = await fetch(RAW_URL + '?t=' + Date.now());
-            if (res.ok) {
-                data = await res.json();
-            }
-        } catch(e) {
-            console.log('RAW загрузка не удалась, пробуем API');
-        }
-        
-        // Если RAW не сработал, пробуем через API с токеном
-        if (!data) {
-            const res = await fetch(API_URL, {
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-            });
-            const gist = await res.json();
-            if (gist.files && gist.files['data.json']) {
-                data = JSON.parse(gist.files['data.json'].content);
-            }
-        }
-        
-        if (data && data.last && data.last.deviceId !== deviceId && data.last.timestamp) {
-            isGitHubSyncing = true;
-            
-            temp = data.last.temp;
-            hum = data.last.hum;
-            soil = data.last.soil;
-            light = data.last.light;
-            devices = data.last.devices;
-            if (data.last.currentPlant) currentPlant = data.last.currentPlant;
-            if (data.last.waterSaved) waterSaved = data.last.waterSaved;
-            if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
-            
-            updateAllUI();
-            buildPlants();
-            buildControlButtons();
-            updateLastSyncTime();
-            addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные из GitHub');
-            showToast('🔄 Данные синхронизированы');
-            
-            setTimeout(() => { isGitHubSyncing = false; }, 500);
-        }
-    } catch(e) {
-        console.log('Ошибка загрузки:', e);
-        addEventToLog('⚠️ GitHub: ошибка загрузки');
-    }
-}
-
-// Запись в GitHub (через API с токеном)
+// Отправка данных в GitHub
 async function syncToGitHub() {
     if (isGitHubSyncing) return;
     
     try {
-        // Сначала получаем текущий gist
         const getRes = await fetch(API_URL, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
@@ -1479,7 +1424,7 @@ async function syncToGitHub() {
         };
         
         allData.history.push(newRecord);
-        if (allData.history.length > 100) allData.history.shift();
+        if (allData.history.length > 50) allData.history.shift();
         allData.last = newRecord;
         
         await fetch(API_URL, {
@@ -1502,19 +1447,98 @@ async function syncToGitHub() {
         
     } catch(e) {
         console.log('Ошибка отправки:', e);
-        addEventToLog('⚠️ GitHub: ошибка отправки');
     }
 }
 
-// Запускаем синхронизацию
-setInterval(() => {
-    syncToGitHub();
-    loadFromGitHub();
-}, 5000);
+// Автоматическая загрузка данных из GitHub
+async function autoLoadFromGitHub() {
+    if (isGitHubSyncing) return;
+    
+    try {
+        // Пробуем через RAW (быстрее, нет CORS)
+        const res = await fetch(RAW_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error('RAW не доступен');
+        
+        const data = await res.json();
+        
+        if (data && data.last && data.last.timestamp && data.last.timestamp > lastLoadedTimestamp) {
+            lastLoadedTimestamp = data.last.timestamp;
+            
+            if (data.last.deviceId !== deviceId) {
+                isGitHubSyncing = true;
+                
+                temp = data.last.temp;
+                hum = data.last.hum;
+                soil = data.last.soil;
+                light = data.last.light;
+                devices = data.last.devices;
+                if (data.last.currentPlant) currentPlant = data.last.currentPlant;
+                if (data.last.waterSaved) waterSaved = data.last.waterSaved;
+                if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
+                
+                updateAllUI();
+                buildPlants();
+                buildControlButtons();
+                updateLastSyncTime();
+                addEventToLog('🔄 АВТО-СИНХРОНИЗАЦИЯ! Получены данные с другого устройства');
+                showToast('🔄 Данные синхронизированы');
+                
+                setTimeout(() => { isGitHubSyncing = false; }, 500);
+            }
+        }
+    } catch(e) {
+        // RAW не сработал, пробуем через API
+        try {
+            const res = await fetch(API_URL, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            const gist = await res.json();
+            
+            if (gist.files && gist.files['data.json']) {
+                const data = JSON.parse(gist.files['data.json'].content);
+                
+                if (data && data.last && data.last.timestamp && data.last.timestamp > lastLoadedTimestamp) {
+                    lastLoadedTimestamp = data.last.timestamp;
+                    
+                    if (data.last.deviceId !== deviceId) {
+                        isGitHubSyncing = true;
+                        
+                        temp = data.last.temp;
+                        hum = data.last.hum;
+                        soil = data.last.soil;
+                        light = data.last.light;
+                        devices = data.last.devices;
+                        if (data.last.currentPlant) currentPlant = data.last.currentPlant;
+                        if (data.last.waterSaved) waterSaved = data.last.waterSaved;
+                        if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
+                        
+                        updateAllUI();
+                        buildPlants();
+                        buildControlButtons();
+                        updateLastSyncTime();
+                        addEventToLog('🔄 АВТО-СИНХРОНИЗАЦИЯ! Получены данные с другого устройства');
+                        showToast('🔄 Данные синхронизированы');
+                        
+                        setTimeout(() => { isGitHubSyncing = false; }, 500);
+                    }
+                }
+            }
+        } catch(err) {
+            // тихо
+        }
+    }
+}
 
+// Отправляем данные при каждом изменении
+setInterval(syncToGitHub, 4000);
+
+// АВТОМАТИЧЕСКАЯ ЗАГРУЗКА - каждые 4 секунды
+setInterval(autoLoadFromGitHub, 4000);
+
+// Загружаем при старте
 setTimeout(() => {
-    loadFromGitHub();
-    addEventToLog('☁️ GitHub синхронизация запущена');
+    autoLoadFromGitHub();
+    addEventToLog('☁️ GitHub синхронизация активна (автообновление каждые 4 сек)');
 }, 2000);
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
@@ -1531,6 +1555,8 @@ function init() {
 }
 
 init();
+
+
 </script>
 </body>
 </html>
