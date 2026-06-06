@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>Умная теплица | Облачная синхронизация</title>
+    <title>Умная теплица | Авто-синхронизация</title>
     <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Умная%20теплица%22,%22short_name%22:%22Теплица%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%232d5a2e%22,%22background_color%22:%22%23e8f5e9%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='72' font-size='55' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
     <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -546,7 +548,7 @@
 <div class="container">
     <div class="header">
         <div>
-            <h1>🌱 Умная теплица</h1>
+            <h1>🌱 Умная теплица | Авто-синхронизация</h1>
             <div class="subtitle">От семени к урожаю | Ярославль</div>
             <div class="subtitle">Автор: Смурыгин Алексей | Руководитель: Карпова В.А.</div>
         </div>
@@ -676,35 +678,22 @@
             <div class="setting-row"><span>Кэш:</span><span id="cacheSize">0 байт</span></div>
             <div class="setting-row"><span>🔔 Уведомления:</span><button class="save-btn" id="requestNotificationBtn" style="width:auto; padding:5px 15px;">Включить</button></div>
         </div>
-        <!-- НОВАЯ СИНХРОНИЗАЦИЯ ЧЕРЕЗ JSONBIN.IO (РАБОТАЕТ БЕЗ РЕГИСТРАЦИИ) -->
         <div class="settings-card">
-            <div class="graph-title">☁️ Синхронизация настроек (облако)</div>
+            <div class="graph-title">☁️ Облачная синхронизация</div>
             <div class="setting-row">
-                <span>🔑 Ключ синхронизации</span>
-                <input type="text" id="syncKeyInput" class="setting-input" style="width: 200px;" placeholder="Введите ваш ключ">
+                <span id="syncStatus" style="font-size: 12px; opacity: 0.7;">🔄 Подключение к облаку...</span>
             </div>
             <div class="setting-row">
-                <span>📤 Сохранить в облако</span>
-                <button class="save-btn" id="saveToCloudBtn" style="width:auto; padding:8px 20px;">СОХРАНИТЬ</button>
-            </div>
-            <div class="setting-row">
-                <span>📥 Загрузить из облака</span>
-                <button class="save-btn" id="loadFromCloudBtn" style="width:auto; padding:8px 20px;">ЗАГРУЗИТЬ</button>
-            </div>
-            <div class="setting-row">
-                <span>🔗 Сгенерировать новый ключ</span>
-                <button class="save-btn" id="generateKeyBtn" style="width:auto; padding:8px 20px;">СГЕНЕРИРОВАТЬ</button>
-            </div>
-            <div class="setting-row">
-                <span id="cloudStatus" style="font-size: 12px; opacity: 0.7;">⚪ Не синхронизировано</span>
+                <span>🌐 Статус синхронизации</span>
+                <span id="syncState" style="font-weight: bold; color: var(--stat-value);">⚡ Активна</span>
             </div>
         </div>
     </div>
 
     <div id="about" class="section">
-        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система для выращивания растений с годовым календарём истории.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Синхронизация настроек через облако (JSONBin.io)</p></div>
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами</p></div>
     </div>
-    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | Облачная синхронизация</div>
+    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | Авто-синхронизация</div>
 </div>
 
 <div id="chartModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modalTitle">📊 График</h2><button class="modal-close" id="modalCloseBtn">&times;</button></div><canvas id="modalChart" width="600" height="300"></canvas><div><button id="periodDay" class="save-btn" style="width:auto;">День</button> <button id="periodWeek" class="save-btn" style="width:auto;">Неделя</button> <button id="periodMonth" class="save-btn" style="width:auto;">Месяц</button></div></div></div>
@@ -713,12 +702,147 @@
 
 <script>
 (function() {
+    // ========== FIREBASE АВТО-СИНХРОНИЗАЦИЯ ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyBaIgUqkfgyzx7zXvbBONY6oqzhcDpUOe0",
+        authDomain: "teplitsa-sync.firebaseapp.com",
+        projectId: "teplitsa-sync",
+        storageBucket: "teplitsa-sync.firebasestorage.app",
+        messagingSenderId: "553994577516",
+        appId: "1:553994577516:web:426b6c5c105eb22c509a49",
+        measurementId: "G-XHHJ1P338H",
+        databaseURL: "https://teplitsa-sync-default-rtdb.firebaseio.com"
+    };
+
+    let database = null;
+    let syncEnabled = false;
+    let isApplyingSync = false;
+    const SYNC_KEY = "teplitsa_global_settings";
+
+    try {
+        firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        syncEnabled = true;
+        document.getElementById('syncStatus').innerHTML = '✅ Синхронизация активна (реальное время)';
+    } catch(e) {
+        document.getElementById('syncStatus').innerHTML = '⚠️ Офлайн-режим (без синхронизации)';
+    }
+
+    function saveToCloud() {
+        if (!database || isApplyingSync) return;
+        
+        const settings = {
+            version: "2.0",
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            currentPlant: currentPlant,
+            theme: document.body.classList.contains('dark') ? 'dark' : 'light',
+            autoSettings: { water: autoSettings.water, vent: autoSettings.vent, light: autoSettings.light },
+            brightness: light,
+            thresholds: {
+                openTemp: document.getElementById('openTemp')?.value || '28',
+                closeTemp: document.getElementById('closeTemp')?.value || '26',
+                soilDry: document.getElementById('soilDry')?.value || '40',
+                soilWet: document.getElementById('soilWet')?.value || '70',
+                lightOn: document.getElementById('lightOn')?.value || '30',
+                lightOff: document.getElementById('lightOff')?.value || '50',
+                pumpTime: document.getElementById('pumpTime')?.value || '2'
+            }
+        };
+        database.ref(SYNC_KEY).set(settings).catch(e => console.log('Sync error:', e));
+    }
+
+    function loadFromCloud(snapshot) {
+        if (isApplyingSync) return;
+        isApplyingSync = true;
+        
+        const settings = snapshot.val();
+        if (!settings) {
+            isApplyingSync = false;
+            return;
+        }
+        
+        try {
+            if (settings.currentPlant && plantsList[settings.currentPlant] && settings.currentPlant !== currentPlant) {
+                currentPlant = settings.currentPlant;
+                buildPlants();
+                buildDashboard();
+            }
+            if (settings.theme === 'dark' && !document.body.classList.contains('dark')) {
+                document.getElementById('themeToggle')?.click();
+            } else if (settings.theme === 'light' && document.body.classList.contains('dark')) {
+                document.getElementById('themeToggle')?.click();
+            }
+            if (settings.autoSettings) {
+                autoSettings = settings.autoSettings;
+                if (document.getElementById('autoWaterToggle')) document.getElementById('autoWaterToggle').checked = autoSettings.water;
+                if (document.getElementById('autoVentToggle')) document.getElementById('autoVentToggle').checked = autoSettings.vent;
+                if (document.getElementById('autoLightToggle')) document.getElementById('autoLightToggle').checked = autoSettings.light;
+            }
+            if (settings.brightness !== undefined && settings.brightness !== light) {
+                light = settings.brightness;
+                if (document.getElementById('brightnessSlider')) {
+                    document.getElementById('brightnessSlider').value = light;
+                    document.getElementById('brightnessValue').innerHTML = light + '%';
+                    document.getElementById('currentLightLevel').innerHTML = light + '%';
+                    document.getElementById('lightValue').textContent = light;
+                }
+            }
+            if (settings.thresholds) {
+                const th = settings.thresholds;
+                if (document.getElementById('openTemp')) document.getElementById('openTemp').value = th.openTemp;
+                if (document.getElementById('closeTemp')) document.getElementById('closeTemp').value = th.closeTemp;
+                if (document.getElementById('soilDry')) document.getElementById('soilDry').value = th.soilDry;
+                if (document.getElementById('soilWet')) document.getElementById('soilWet').value = th.soilWet;
+                if (document.getElementById('lightOn')) document.getElementById('lightOn').value = th.lightOn;
+                if (document.getElementById('lightOff')) document.getElementById('lightOff').value = th.lightOff;
+                if (document.getElementById('pumpTime')) document.getElementById('pumpTime').value = th.pumpTime;
+            }
+            updateStatsLive();
+            buildDashboard();
+            document.getElementById('syncState').innerHTML = '🟢 Синхронизировано';
+            setTimeout(() => { document.getElementById('syncState').innerHTML = '⚡ Активна'; }, 2000);
+        } catch(e) {}
+        setTimeout(() => { isApplyingSync = false; }, 500);
+    }
+
+    if (database) {
+        database.ref(SYNC_KEY).on('value', (snapshot) => { loadFromCloud(snapshot); });
+    }
+
+    function setupAutoSave() {
+        const saveElements = [
+            document.getElementById('brightnessSlider'),
+            document.getElementById('autoWaterToggle'),
+            document.getElementById('autoVentToggle'),
+            document.getElementById('autoLightToggle'),
+            document.getElementById('openTemp'),
+            document.getElementById('closeTemp'),
+            document.getElementById('soilDry'),
+            document.getElementById('soilWet'),
+            document.getElementById('lightOn'),
+            document.getElementById('lightOff'),
+            document.getElementById('pumpTime')
+        ];
+        saveElements.forEach(el => {
+            if (el) {
+                el.addEventListener('change', () => { setTimeout(() => saveToCloud(), 100); });
+                if (el.type === 'range') {
+                    el.addEventListener('input', () => { setTimeout(() => saveToCloud(), 100); });
+                }
+            }
+        });
+        setInterval(() => { saveToCloud(); }, 5000);
+    }
+
+    setTimeout(setupAutoSave, 1000);
+
     // ========== ТЕМА ==========
     const nightToggle = document.getElementById('nightToggle');
     nightToggle.addEventListener('click', () => {
         document.body.classList.toggle('night-mode');
         nightToggle.textContent = document.body.classList.contains('night-mode') ? '☀️ Дневной режим' : '🌙 Ночной экран';
         showToast(document.body.classList.contains('night-mode') ? '🌙 Ночной режим активирован' : '☀️ Дневной режим активирован');
+        setTimeout(() => saveToCloud(), 200);
     });
 
     const themeToggle = document.getElementById('themeToggle');
@@ -728,6 +852,7 @@
         localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
         themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
         if (modalChart) updateModalChartTheme();
+        setTimeout(() => saveToCloud(), 200);
     });
     themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
 
@@ -1076,7 +1201,6 @@
     document.getElementById('emergencyWindow')?.addEventListener('click', () => showToast('🪟 Форточка открыта'));
     document.getElementById('saveSettings')?.addEventListener('click', () => showToast('⚙️ Сохранено'));
 
-    // ========== УПРАВЛЕНИЕ ==========
     const brightnessSlider = document.getElementById('brightnessSlider');
     const brightnessValue = document.getElementById('brightnessValue');
     brightnessSlider?.addEventListener('input', (e) => {
@@ -1086,14 +1210,15 @@
         light = parseInt(val);
         document.getElementById('currentLightLevel').innerHTML = light + '%';
         document.getElementById('lightValue').textContent = light;
+        setTimeout(() => saveToCloud(), 200);
     });
     
     const autoWaterToggle = document.getElementById('autoWaterToggle');
     const autoVentToggle = document.getElementById('autoVentToggle');
     const autoLightToggle = document.getElementById('autoLightToggle');
-    autoWaterToggle?.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); });
-    autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); });
-    autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); });
+    autoWaterToggle?.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); setTimeout(() => saveToCloud(), 200); });
+    autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); setTimeout(() => saveToCloud(), 200); });
+    autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); setTimeout(() => saveToCloud(), 200); });
 
     function loadSettings() {
         const p = plantsList[currentPlant];
@@ -1224,173 +1349,6 @@
         window.addEventListener('online', () => { document.getElementById('offlineStatus').innerHTML = '🟢 Онлайн'; showToast('🌐 Интернет восстановлен'); });
         window.addEventListener('offline', () => { document.getElementById('offlineStatus').innerHTML = '🔴 Офлайн-режим'; showToast('📴 Офлайн-режим'); });
     } else { document.getElementById('offlineStatus').innerHTML = '⚠️ Не поддерживается'; }
-
-    // ========== СИНХРОНИЗАЦИЯ ЧЕРЕЗ JSONBIN.IO (РАБОТАЕТ БЕЗ РЕГИСТРАЦИИ) ==========
-    const CLOUD_API_URL = 'https://api.jsonbin.io/v3/b';
-    let currentBinId = localStorage.getItem('teplitsa_bin_id') || '';
-
-    function generateRandomKey() {
-        return 'key_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 8);
-    }
-
-    async function saveSettingsToCloud(key) {
-        if (!key) { showToast('❌ Сначала сгенерируйте или введите ключ'); return false; }
-        
-        const settings = {
-            version: "2.0",
-            lastUpdate: new Date().toISOString(),
-            currentPlant: currentPlant,
-            theme: document.body.classList.contains('dark') ? 'dark' : 'light',
-            autoSettings: autoSettings,
-            brightness: light,
-            thresholds: {
-                openTemp: document.getElementById('openTemp')?.value || '28',
-                closeTemp: document.getElementById('closeTemp')?.value || '26',
-                soilDry: document.getElementById('soilDry')?.value || '40',
-                soilWet: document.getElementById('soilWet')?.value || '70',
-                lightOn: document.getElementById('lightOn')?.value || '30',
-                lightOff: document.getElementById('lightOff')?.value || '50',
-                pumpTime: document.getElementById('pumpTime')?.value || '2',
-                heatTemp: document.getElementById('heatTemp')?.value || '18',
-                heatOffTemp: document.getElementById('heatOffTemp')?.value || '22',
-                fanTemp: document.getElementById('fanTemp')?.value || '28',
-                fanOffTemp: document.getElementById('fanOffTemp')?.value || '26'
-            }
-        };
-        
-        try {
-            if (currentBinId) {
-                const updateResponse = await fetch(`${CLOUD_API_URL}/${currentBinId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': '$2a$10$CwXxQrT0ZqZqZqZqZqZqZu', 'X-Bin-Name': `teplitsa_${key}` },
-                    body: JSON.stringify(settings)
-                });
-                if (updateResponse.ok) {
-                    document.getElementById('cloudStatus').innerHTML = '✅ Сохранено в облако!';
-                    showToast('✅ Настройки сохранены в облако!');
-                    return true;
-                }
-            }
-            
-            const createResponse = await fetch(CLOUD_API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': '$2a$10$CwXxQrT0ZqZqZqZqZqZqZu', 'X-Bin-Name': `teplitsa_${key}` },
-                body: JSON.stringify(settings)
-            });
-            if (!createResponse.ok) throw new Error('Ошибка создания');
-            const data = await createResponse.json();
-            currentBinId = data.metadata?.id;
-            localStorage.setItem('teplitsa_bin_id', currentBinId);
-            document.getElementById('cloudStatus').innerHTML = '✅ Сохранено в облако!';
-            showToast('✅ Настройки сохранены в облако!');
-            return true;
-        } catch (error) {
-            console.error('Ошибка:', error);
-            document.getElementById('cloudStatus').innerHTML = '❌ Ошибка сохранения';
-            showToast('❌ Не удалось сохранить настройки');
-            return false;
-        }
-    }
-
-    async function loadSettingsFromCloud(key) {
-        if (!key) { showToast('❌ Введите ключ синхронизации'); return false; }
-        try {
-            const searchResponse = await fetch(`https://api.jsonbin.io/v3/b?name=teplitsa_${key}`, {
-                headers: { 'X-Master-Key': '$2a$10$CwXxQrT0ZqZqZqZqZqZqZu' }
-            });
-            if (!searchResponse.ok) throw new Error('Бин не найден');
-            const bins = await searchResponse.json();
-            if (!bins || bins.length === 0) throw new Error('Настройки не найдены');
-            const binId = bins[0].id;
-            const getResponse = await fetch(`${CLOUD_API_URL}/${binId}/latest`, {
-                headers: { 'X-Master-Key': '$2a$10$CwXxQrT0ZqZqZqZqZqZqZu' }
-            });
-            if (!getResponse.ok) throw new Error('Ошибка загрузки');
-            const data = await getResponse.json();
-            const settings = data.record;
-            
-            if (settings.currentPlant && plantsList[settings.currentPlant]) {
-                currentPlant = settings.currentPlant;
-                buildPlants();
-                buildDashboard();
-            }
-            if (settings.theme === 'dark' && !document.body.classList.contains('dark')) {
-                document.getElementById('themeToggle')?.click();
-            } else if (settings.theme === 'light' && document.body.classList.contains('dark')) {
-                document.getElementById('themeToggle')?.click();
-            }
-            if (settings.autoSettings) {
-                autoSettings = settings.autoSettings;
-                if (document.getElementById('autoWaterToggle')) document.getElementById('autoWaterToggle').checked = autoSettings.water;
-                if (document.getElementById('autoVentToggle')) document.getElementById('autoVentToggle').checked = autoSettings.vent;
-                if (document.getElementById('autoLightToggle')) document.getElementById('autoLightToggle').checked = autoSettings.light;
-            }
-            if (settings.brightness) {
-                light = settings.brightness;
-                if (document.getElementById('brightnessSlider')) {
-                    document.getElementById('brightnessSlider').value = light;
-                    document.getElementById('brightnessValue').innerHTML = light + '%';
-                    document.getElementById('currentLightLevel').innerHTML = light + '%';
-                    document.getElementById('lightValue').textContent = light;
-                }
-            }
-            if (settings.thresholds) {
-                const th = settings.thresholds;
-                if (document.getElementById('openTemp')) document.getElementById('openTemp').value = th.openTemp;
-                if (document.getElementById('closeTemp')) document.getElementById('closeTemp').value = th.closeTemp;
-                if (document.getElementById('soilDry')) document.getElementById('soilDry').value = th.soilDry;
-                if (document.getElementById('soilWet')) document.getElementById('soilWet').value = th.soilWet;
-                if (document.getElementById('lightOn')) document.getElementById('lightOn').value = th.lightOn;
-                if (document.getElementById('lightOff')) document.getElementById('lightOff').value = th.lightOff;
-                if (document.getElementById('pumpTime')) document.getElementById('pumpTime').value = th.pumpTime;
-                if (document.getElementById('heatTemp')) document.getElementById('heatTemp').value = th.heatTemp;
-                if (document.getElementById('heatOffTemp')) document.getElementById('heatOffTemp').value = th.heatOffTemp;
-                if (document.getElementById('fanTemp')) document.getElementById('fanTemp').value = th.fanTemp;
-                if (document.getElementById('fanOffTemp')) document.getElementById('fanOffTemp').value = th.fanOffTemp;
-            }
-            currentBinId = binId;
-            localStorage.setItem('teplitsa_bin_id', currentBinId);
-            document.getElementById('cloudStatus').innerHTML = `✅ Загружено из облака (${new Date(settings.lastUpdate).toLocaleString()})`;
-            showToast('✅ Настройки загружены из облака!');
-            updateStatsLive();
-            buildDashboard();
-            return true;
-        } catch (error) {
-            console.error('Ошибка:', error);
-            document.getElementById('cloudStatus').innerHTML = '❌ Ошибка загрузки';
-            showToast('❌ Не удалось загрузить настройки. Проверьте ключ.');
-            return false;
-        }
-    }
-
-    document.getElementById('generateKeyBtn')?.addEventListener('click', () => {
-        const newKey = generateRandomKey();
-        document.getElementById('syncKeyInput').value = newKey;
-        localStorage.setItem('teplitsa_sync_key', newKey);
-        showToast(`🔑 Новый ключ создан: ${newKey}`);
-        document.getElementById('cloudStatus').innerHTML = '⚪ Ключ создан, нажмите "Сохранить"';
-    });
-
-    document.getElementById('saveToCloudBtn')?.addEventListener('click', async () => {
-        let key = document.getElementById('syncKeyInput').value;
-        if (!key) key = localStorage.getItem('teplitsa_sync_key');
-        if (key) document.getElementById('syncKeyInput').value = key;
-        if (!key) { showToast('❌ Сначала сгенерируйте ключ'); return; }
-        await saveSettingsToCloud(key);
-    });
-
-    document.getElementById('loadFromCloudBtn')?.addEventListener('click', async () => {
-        let key = document.getElementById('syncKeyInput').value;
-        if (!key) key = localStorage.getItem('teplitsa_sync_key');
-        if (key) document.getElementById('syncKeyInput').value = key;
-        await loadSettingsFromCloud(key);
-    });
-
-    const savedSyncKey = localStorage.getItem('teplitsa_sync_key');
-    if (savedSyncKey) {
-        document.getElementById('syncKeyInput').value = savedSyncKey;
-        document.getElementById('cloudStatus').innerHTML = '⚪ Ключ сохранён, нажмите "Загрузить"';
-    }
 
     // ========== НАВИГАЦИЯ ==========
     document.querySelectorAll('.nav-btn').forEach(btn => {
