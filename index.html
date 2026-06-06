@@ -1370,10 +1370,11 @@ setInterval(() => {
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }, 3000);
 
-// ========== GitHub СИНХРОНИЗАЦИЯ (исправленная CORS) ==========
-const GIST_ID = 'd03a4da3332da9901e8a8019bf56e7fa';
+// ========== GitHub СИНХРОНИЗАЦИЯ (РАБОТАЮЩАЯ) ==========
 const GITHUB_TOKEN = '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';
-const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
+const GIST_ID = '352bdb9b6b35d9604caff6399093b8b4';
+const RAW_URL = `https://gist.githubusercontent.com/Senku29-beep/${GIST_ID}/raw/data.json`;
+const API_URL = `https://api.github.com/gists/${GIST_ID}`;
 
 let deviceId = localStorage.getItem('device_id_github');
 if (!deviceId) {
@@ -1390,20 +1391,56 @@ function updateLastSyncTime() {
     document.getElementById('syncStatus').style.color = '#4caf50';
 }
 
+// Чтение из GitHub (через RAW - нет CORS)
+async function loadFromGitHub() {
+    if (isGitHubSyncing) return;
+    
+    try {
+        const res = await fetch(RAW_URL + '?t=' + Date.now());
+        const data = await res.json();
+        
+        if (data.last && data.last.deviceId !== deviceId && data.last.timestamp) {
+            isGitHubSyncing = true;
+            
+            temp = data.last.temp;
+            hum = data.last.hum;
+            soil = data.last.soil;
+            light = data.last.light;
+            devices = data.last.devices;
+            if (data.last.currentPlant) currentPlant = data.last.currentPlant;
+            if (data.last.waterSaved) waterSaved = data.last.waterSaved;
+            if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
+            
+            updateAllUI();
+            buildPlants();
+            buildControlButtons();
+            updateLastSyncTime();
+            addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные из GitHub');
+            showToast('🔄 Данные синхронизированы');
+            
+            setTimeout(() => { isGitHubSyncing = false; }, 500);
+        }
+    } catch(e) {
+        console.log('Ошибка загрузки:', e);
+        addEventToLog('⚠️ GitHub: ошибка загрузки');
+    }
+}
+
+// Запись в GitHub (через API с токеном)
 async function syncToGitHub() {
     if (isGitHubSyncing) return;
     
     try {
-        // Используем CORS-прокси для обхода ограничений
-        const getRes = await fetch(`${CORS_PROXY}https://api.github.com/gists/${GIST_ID}`, {
+        // Сначала получаем текущий gist
+        const getRes = await fetch(API_URL, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
         const gist = await getRes.json();
         
         let allData = {};
-        if (gist.files && gist.files['teplitsa_data.json']) {
+        if (gist.files && gist.files['data.json']) {
             try {
-                allData = JSON.parse(gist.files['teplitsa_data.json'].content);
+                allData = JSON.parse(gist.files['data.json'].content);
             } catch(e) { allData = { history: [] }; }
         }
         if (!allData.history) allData.history = [];
@@ -1425,7 +1462,7 @@ async function syncToGitHub() {
         if (allData.history.length > 100) allData.history.shift();
         allData.last = newRecord;
         
-        await fetch(`${CORS_PROXY}https://api.github.com/gists/${GIST_ID}`, {
+        await fetch(API_URL, {
             method: 'PATCH',
             headers: {
                 'Authorization': `token ${GITHUB_TOKEN}`,
@@ -1433,7 +1470,7 @@ async function syncToGitHub() {
             },
             body: JSON.stringify({
                 files: {
-                    'teplitsa_data.json': {
+                    'data.json': {
                         content: JSON.stringify(allData, null, 2)
                     }
                 }
@@ -1446,46 +1483,6 @@ async function syncToGitHub() {
     } catch(e) {
         console.log('Ошибка отправки:', e);
         addEventToLog('⚠️ GitHub: ошибка отправки');
-    }
-}
-
-async function loadFromGitHub() {
-    if (isGitHubSyncing) return;
-    
-    try {
-        const res = await fetch(`${CORS_PROXY}https://api.github.com/gists/${GIST_ID}`, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-        });
-        const gist = await res.json();
-        
-        if (gist.files && gist.files['teplitsa_data.json']) {
-            const data = JSON.parse(gist.files['teplitsa_data.json'].content);
-            
-            if (data.last && data.last.deviceId !== deviceId && data.last.timestamp) {
-                isGitHubSyncing = true;
-                
-                temp = data.last.temp;
-                hum = data.last.hum;
-                soil = data.last.soil;
-                light = data.last.light;
-                devices = data.last.devices;
-                if (data.last.currentPlant) currentPlant = data.last.currentPlant;
-                if (data.last.waterSaved) waterSaved = data.last.waterSaved;
-                if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
-                
-                updateAllUI();
-                buildPlants();
-                buildControlButtons();
-                updateLastSyncTime();
-                addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные из GitHub');
-                showToast('🔄 Данные синхронизированы');
-                
-                setTimeout(() => { isGitHubSyncing = false; }, 500);
-            }
-        }
-    } catch(e) {
-        console.log('Ошибка загрузки:', e);
-        addEventToLog('⚠️ GitHub: ошибка загрузки');
     }
 }
 
