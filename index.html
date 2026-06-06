@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Умная теплица</title>
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Умная%20теплица%22,%22short_name%22:%22Теплица%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%232d5a2e%22,%22background_color%22:%22%23e8f5e9%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-gradient-start: #e8f5e9;
+            --bg-gradient-end: #c8e6c9;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --text-primary: #1a2e1a;
+            --text-secondary: #555;
+            --nav-bg: rgba(255, 255, 255, 0.85);
+            --nav-active: #2d5a2e;
+            --nav-active-text: white;
+            --border-color: #ddd;
+            --graph-bg: #f5f5f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --stat-value: #2d5a2e;
+            --modal-bg: rgba(0,0,0,0.5);
+            --neon-glow: 0 0 10px rgba(45,90,46,0.5);
+            --badge-ok-bg: #e8f5e9;
+            --badge-ok-text: #2e7d32;
+            --badge-warning-bg: #ffedea;
+            --badge-warning-text: #d84315;
+            --gradient-1: #2d5a2e;
+            --gradient-2: #8bc34a;
+        }
+        body.dark {
+            --bg-gradient-start: #0a1f0a;
+            --bg-gradient-end: #0d2e0d;
+            --card-bg: rgba(30, 30, 35, 0.92);
+            --text-primary: #e0e0e0;
+            --text-secondary: #aaa;
+            --nav-bg: rgba(30, 30, 35, 0.85);
+            --nav-active: #4caf50;
+            --nav-active-text: #0a1f0a;
+            --border-color: #444;
+            --graph-bg: #252530;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --stat-value: #4caf50;
+            --modal-bg: rgba(0,0,0,0.7);
+            --neon-glow: 0 0 15px rgba(76,175,80,0.6);
+            --badge-ok-bg: #1e3a1e;
+            --badge-ok-text: #8bc34a;
+            --badge-warning-bg: #3e2a1e;
+            --badge-warning-text: #ffa270;
+            --gradient-1: #4caf50;
+            --gradient-2: #8bc34a;
+        }
+        
+        body.night-mode::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            pointer-events: none;
+            z-index: 9998;
+            animation: nightFade 0.5s ease;
+        }
+        @keyframes nightFade { from { opacity: 0; } to { opacity: 1; } }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            transition: background 0.3s ease;
+            position: relative;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .leaf {
+            position: fixed;
+            top: -20px;
+            font-size: 20px;
+            user-select: none;
+            pointer-events: none;
+            z-index: 999;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .sun-spin { display: inline-block; animation: spinSun 10s linear infinite; }
+        @keyframes spinSun { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .cloud-drift { display: inline-block; animation: driftCloud 14s ease-in-out infinite; }
+        @keyframes driftCloud { 0% { transform: translateX(0px); } 50% { transform: translateX(12px); } 100% { transform: translateX(0px); } }
+        .weather-icon-animated { font-size: 52px; display: inline-block; }
+
+        @keyframes dropletFall {
+            0% { top: -10px; opacity: 1; transform: scale(1); }
+            100% { top: 100%; opacity: 0; transform: scale(0.5); }
+        }
+        .droplet {
+            position: absolute;
+            width: 8px;
+            height: 14px;
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            pointer-events: none;
+            z-index: 5;
+            animation: dropletFall 1s ease-out forwards;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(5px);
+            border-radius: 24px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px var(--shadow);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            position: relative;
+            background-clip: padding-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 0;
+        }
+        .stat-card:hover {
+            transform: translateY(-8px);
+            border: 1px solid transparent;
+            background-image: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: var(--neon-glow), 0 15px 30px var(--shadow);
+        }
+        .stat-card:hover .stat-value,
+        .stat-card:hover .stat-label,
+        .stat-card:hover .minmax-info {
+            color: white !important;
+        }
+        .stat-card:hover .badge-ok,
+        .stat-card:hover .badge-warning {
+            background: rgba(255,255,255,0.25);
+            color: white !important;
+        }
+
+        .stat-value {
+            font-size: 42px;
+            font-weight: bold;
+            color: var(--stat-value);
+            word-break: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            line-height: 1.2;
+        }
+        
+        .stat-card:last-child .stat-value {
+            font-size: 24px;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            word-break: break-word;
+        }
+        
+        .stat-icon {
+            font-size: 32px;
+            transition: transform 0.3s;
+            display: inline-block;
+        }
+
+        .optimum-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 30px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .badge-ok { background: var(--badge-ok-bg); color: var(--badge-ok-text); }
+        .badge-warning { background: var(--badge-warning-bg); color: var(--badge-warning-text); }
+        .minmax-info {
+            font-size: 11px;
+            margin-top: 8px;
+            opacity: 0.8;
+            color: var(--text-secondary);
+            background: rgba(0,0,0,0.05);
+            border-radius: 20px;
+            padding: 4px 8px;
+            display: inline-block;
+        }
+
+        .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: transparent; z-index: 1000; }
+        .progress-bar { height: 4px; background: var(--stat-value); width: 0%; transition: width 0.2s; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--graph-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--stat-value); border-radius: 10px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; position: relative; z-index: 10; }
+
+        .header {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header h1 { color: var(--stat-value); font-size: 26px; }
+        .subtitle { color: var(--text-secondary); font-size: 13px; }
+        .theme-toggle, .night-toggle {
+            background: var(--nav-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+        .nav { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; position: sticky; top: 10px; z-index: 100; backdrop-filter: blur(10px); padding: 5px 0; }
+        .nav-btn {
+            background: var(--nav-bg);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+        .nav-btn.active { background: var(--nav-active); color: var(--nav-active-text); transform: scale(1.02); box-shadow: 0 5px 15px var(--shadow); }
+        .nav-btn:hover { transform: translateY(-3px); }
+        
+        .section { display: none; animation: fadeSlideIn 0.4s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 20px; margin-bottom: 25px; }
+
+        .graph-card, .settings-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(5px);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px var(--shadow);
+        }
+        canvas { max-height: 250px; width: 100%; }
+
+        /* Стили для кнопок управления с градиентом и свечением */
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .control-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 18px 12px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .control-btn.on {
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            color: white;
+            border-color: transparent;
+            box-shadow: var(--neon-glow), 0 0 15px var(--stat-value);
+            animation: btnPulse 1.5s infinite;
+        }
+        @keyframes btnPulse {
+            0%, 100% { box-shadow: var(--neon-glow), 0 0 0px var(--stat-value); }
+            50% { box-shadow: var(--neon-glow), 0 0 15px var(--stat-value); }
+        }
+        .control-btn.on:hover {
+            transform: translateY(-5px);
+            filter: brightness(1.05);
+        }
+        .control-btn:not(.on):hover {
+            transform: translateY(-3px);
+            border-color: var(--stat-value);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px; }
+        .setting-input { width: 80px; padding: 8px; border-radius: 12px; background: var(--graph-bg); border: 1px solid var(--border-color); text-align: center; color: var(--text-primary); }
+        .save-btn { background: var(--nav-active); color: var(--nav-active-text); border: none; padding: 12px 25px; border-radius: 40px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; transition: all 0.3s; }
+        .save-btn:hover { transform: scale(1.02); filter: brightness(1.05); }
+
+        /* Стили для ползунка яркости */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: var(--border-color);
+            border-radius: 5px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--stat-value);
+            cursor: pointer;
+            box-shadow: 0 0 5px var(--stat-value);
+        }
+        .brightness-value {
+            min-width: 45px;
+            font-weight: bold;
+            color: var(--stat-value);
+        }
+
+        /* Переключатели (toggle switches) */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider-switch {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+        .slider-switch:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider-switch {
+            background-color: var(--stat-value);
+        }
+        input:checked + .slider-switch:before {
+            transform: translateX(26px);
+        }
+
+        .plants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+        .plant-card {
+            background: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: 20px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 0;
+            user-select: none;
+        }
+        .plant-card.selected { 
+            border-color: var(--stat-value); 
+            background: var(--graph-bg); 
+            transform: scale(1.02);
+            box-shadow: var(--neon-glow);
+        }
+        .plant-icon { 
+            font-size: 36px; 
+            transition: transform 0.2s; 
+            display: inline-block;
+            margin-bottom: 6px;
+            pointer-events: none;
+        }
+        .plant-card:hover .plant-icon { transform: scale(1.1); }
+        .plant-name { 
+            margin-top: 6px; 
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 1.3;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            pointer-events: none;
+        }
+
+        /* ========== ГОДОВОЙ КАЛЕНДАРЬ ========== */
+        .year-calendar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        .month-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(5px);
+            border-radius: 24px;
+            padding: 15px;
+            box-shadow: 0 5px 15px var(--shadow);
+            transition: all 0.3s ease;
+        }
+        .month-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--neon-glow);
+        }
+        .month-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            color: var(--stat-value);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .month-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--graph-bg);
+            color: var(--text-primary);
+        }
+        .day-cell:hover {
+            transform: scale(1.1);
+            background: var(--stat-value);
+            color: white;
+        }
+        .day-cell.past {
+            background: var(--stat-value);
+            color: white;
+            box-shadow: 0 0 5px var(--stat-value);
+        }
+        .day-cell.empty {
+            background: transparent;
+            cursor: default;
+            box-shadow: none;
+        }
+        .day-cell.empty:hover {
+            transform: none;
+            background: transparent;
+        }
+        .weekday-header {
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+            color: var(--stat-value);
+        }
+
+        /* Модальное окно дня */
+        .day-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .day-modal-content {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 20px;
+            width: 90%;
+            max-width: 900px;
+            animation: scaleIn 0.3s ease;
+            overflow: visible;
+            max-height: none;
+        }
+        .day-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .day-modal-header h2 { font-size: 20px; color: var(--stat-value); }
+        .day-modal-close { background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text-secondary); transition: 0.2s; }
+        .day-modal-close:hover { transform: scale(1.1); color: var(--stat-value); }
+        
+        .day-modal-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: stretch;
+        }
+        .day-modal-chart {
+            flex: 2;
+            min-width: 280px;
+        }
+        .day-modal-chart canvas {
+            max-height: 220px;
+            width: 100%;
+        }
+        .day-modal-stats {
+            flex: 1;
+            min-width: 240px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            align-content: center;
+        }
+        .day-stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .day-stat-card:hover {
+            transform: translateY(-5px);
+            border: 1px solid transparent;
+            background-image: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: var(--neon-glow);
+        }
+        .day-stat-card:hover .day-stat-value,
+        .day-stat-card:hover .day-stat-label {
+            color: white !important;
+        }
+        .day-stat-icon { font-size: 24px; }
+        .day-stat-value { font-size: 22px; font-weight: bold; color: var(--stat-value); }
+        .day-stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+        /* Модальное окно растений */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-bg);
+            backdrop-filter: blur(8px);
+            z-index: 2100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 30px 50px var(--shadow);
+            animation: scaleIn 0.3s ease;
+            overflow: visible;
+            max-height: none;
+        }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border-color); }
+        .modal-header h2 { font-size: 24px; color: var(--stat-value); }
+        .modal-close { background: none; border: none; font-size: 32px; cursor: pointer; color: var(--text-secondary); transition: 0.2s; }
+        .modal-close:hover { transform: scale(1.1); color: var(--stat-value); }
+        
+        .plant-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 15px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .plant-detail-label {
+            font-weight: bold;
+            color: var(--stat-value);
+            background: rgba(0,0,0,0.03);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .plant-detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .plant-care-text {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(45,90,46,0.1), rgba(139,195,74,0.1));
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            border-left: 4px solid var(--stat-value);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: var(--nav-active);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideInToast 0.3s ease-out;
+        }
+        @keyframes slideInToast { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .footer { text-align: center; padding: 20px; font-size: 12px; }
+        .weather-source { font-size: 10px; margin-top: 5px; opacity: 0.6; }
+        .websocket-badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 10px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        @media (max-width: 768px) {
+            .year-calendar { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .day-modal-body { flex-direction: column; }
+            .day-modal-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .year-calendar { grid-template-columns: 1fr; }
+            .header h1 { font-size: 20px; }
+            .nav-btn { padding: 8px 16px; font-size: 13px; }
+            .stat-value { font-size: 32px; }
+            .day-modal-stats { grid-template-columns: 1fr; }
+            .plant-detail-row { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+<div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>🌱 Умная теплица</h1>
+            <div class="subtitle">От семени к урожаю без участия человека | Ярославль</div>
+            <div class="subtitle">Автор: Смурыгин Алексей | Руководитель: Карпова В.А.</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="night-toggle" id="nightToggle">🌙 Ночной экран</button>
+            <button class="theme-toggle" id="themeToggle">🌓 Тёмная тема</button>
+        </div>
+    </div>
+
+    <div class="nav" id="navContainer">
+        <button class="nav-btn active" data-section="dashboard">📊 Дашборд</button>
+        <button class="nav-btn" data-section="history">📅 Годовой календарь</button>
+        <button class="nav-btn" data-section="control">🎮 Управление</button>
+        <button class="nav-btn" data-section="plants">🌱 Библиотека растений</button>
+        <button class="nav-btn" data-section="settings">⚙️ Настройки</button>
+        <button class="nav-btn" data-section="about">📄 О проекте</button>
+    </div>
+
+    <div id="dashboard" class="section active">
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="stats-grid" style="margin-bottom: 25px;">
+            <div class="stat-card" style="grid-column: span 2;" id="weatherCard">
+                <div class="weather-icon-animated" id="weatherIcon">🌤️</div>
+                <div class="stat-value" id="weatherText" style="font-size: 18px;">Загрузка...</div>
+                <div class="stat-label" id="weatherRecommendation">Анализ погодных условий</div>
+                <div class="stat-label" id="forecast3days">📅 Ярославль, Россия</div>
+                <div class="weather-source" id="weatherSource">🌡️ Данные симуляции реальной погоды <span class="websocket-badge" id="wsBadge">🔴 WebSocket</span></div>
+            </div>
+            <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" id="nextWatering">--</div><div class="stat-label">До следующего полива</div></div>
+            <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="daysToHarvest">80</div><div class="stat-label">Дней до сбора урожая</div></div>
+        </div>
+        <div class="settings-card">
+            <div class="graph-title">📋 ПОСЛЕДНИЕ СОБЫТИЯ <span class="websocket-badge" id="wsEventsBadge">🟢 WebSocket онлайн</span></div>
+            <div id="eventsList" style="max-height: 200px; overflow-y: auto;"></div>
+        </div>
+        <div class="stats-grid" id="statsBottomGrid"></div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-value" id="vsYesterday">+0°C</div><div class="stat-label">Сравнение с вчера</div></div>
+            <div class="stat-card"><div class="stat-icon">💚</div><div class="stat-value" id="plantHealth">95%</div><div class="stat-label">Здоровье растений</div><div style="width:100%; background:var(--border-color); border-radius:10px; margin-top:5px;"><div id="healthBar" style="width:95%; height:6px; background:#4caf50; border-radius:10px;"></div></div></div>
+            <div class="stat-card"><div class="stat-icon">💧</div><div class="stat-value" id="waterSaved">0 л</div><div class="stat-label">Сэкономлено воды</div></div>
+            <div class="stat-card"><div class="stat-icon">🌍</div><div class="stat-value" id="co2Absorbed">0 кг</div><div class="stat-label">Поглощено CO₂</div></div>
+        </div>
+    </div>
+
+    <!-- ========== ГОДОВОЙ КАЛЕНДАРЬ ========== -->
+    <div id="history" class="section">
+        <div class="settings-card">
+            <div class="graph-title">📅 Годовой календарь истории</div>
+            <div id="yearCalendar" class="year-calendar"></div>
+        </div>
+    </div>
+
+    <!-- ========== РАЗДЕЛ УПРАВЛЕНИЯ (С ГРАДИЕНТОМ И СВЕЧЕНИЕМ) ========== -->
+    <div id="control" class="section">
+        <!-- Ручное управление -->
+        <div class="control-grid" id="controlGrid"></div>
+        
+        <!-- Ползунок яркости света -->
+        <div class="settings-card">
+            <div class="graph-title">💡 Регулировка яркости света</div>
+            <div class="setting-row">
+                <div class="slider-container" style="width: 100%;">
+                    <span>🔆 Яркость:</span>
+                    <input type="range" id="brightnessSlider" min="0" max="100" value="65">
+                    <span class="brightness-value" id="brightnessValue">65%</span>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span>📊 Текущая освещённость в теплице:</span>
+                <span id="currentLightLevel" style="font-weight: bold; color: var(--stat-value);">65%</span>
+            </div>
+        </div>
+        
+        <!-- Настройки автоматики -->
+        <div class="settings-card">
+            <div class="graph-title">⚙️ Настройки автоматики</div>
+            <div class="setting-row">
+                <span>💧 Автоматический полив</span>
+                <label class="switch">
+                    <input type="checkbox" id="autoWaterToggle" checked>
+                    <span class="slider-switch"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>🪟 Автоматическая вентиляция</span>
+                <label class="switch">
+                    <input type="checkbox" id="autoVentToggle" checked>
+                    <span class="slider-switch"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>💡 Автоматическое освещение</span>
+                <label class="switch">
+                    <input type="checkbox" id="autoLightToggle" checked>
+                    <span class="slider-switch"></span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Быстрые команды -->
+        <div class="settings-card">
+            <div class="graph-title">⚡ Быстрые команды</div>
+            <div class="setting-row"><span>🚨 Аварийный полив (30 сек)</span><button class="save-btn" id="emergencyPump" style="width:auto; padding:8px 20px;">ЗАПУСТИТЬ</button></div>
+            <div class="setting-row"><span>🪟 Аварийное открытие форточки</span><button class="save-btn" id="emergencyWindow" style="width:auto; padding:8px 20px;">ОТКРЫТЬ</button></div>
+        </div>
+    </div>
+
+    <div id="plants" class="section">
+        <div class="plants-grid" id="plantsGrid"></div>
+    </div>
+
+    <!-- ========== РАЗДЕЛ НАСТРОЕК (С ПОНЯТНЫМИ ПОРОГАМИ) ========== -->
+    <div id="settings" class="section">
+        <div class="settings-card">
+            <div class="graph-title">🌡️ Пороги температуры</div>
+            <div class="setting-row"><span>🌡️ Открыть форточку при температуре выше (°C)</span><input type="number" class="setting-input" id="openTemp" value="28"></div>
+            <div class="setting-row"><span>🌡️ Закрыть форточку при температуре ниже (°C)</span><input type="number" class="setting-input" id="closeTemp" value="26"></div>
+            <div class="setting-row"><span>🔥 Включить обогрев при температуре ниже (°C)</span><input type="number" class="setting-input" id="heatTemp" value="18"></div>
+            <div class="setting-row"><span>❄️ Выключить обогрев при температуре выше (°C)</span><input type="number" class="setting-input" id="heatOffTemp" value="22"></div>
+        </div>
+        <div class="settings-card">
+            <div class="graph-title">💧 Пороги влажности почвы</div>
+            <div class="setting-row"><span>💧 Включить полив при влажности ниже (%)</span><input type="number" class="setting-input" id="soilDry" value="40"></div>
+            <div class="setting-row"><span>💧 Выключить полив при влажности выше (%)</span><input type="number" class="setting-input" id="soilWet" value="70"></div>
+        </div>
+        <div class="settings-card">
+            <div class="graph-title">💡 Пороги освещения</div>
+            <div class="setting-row"><span>💡 Включить фитолампу при освещённости ниже (%)</span><input type="number" class="setting-input" id="lightOn" value="30"></div>
+            <div class="setting-row"><span>💡 Выключить фитолампу при освещённости выше (%)</span><input type="number" class="setting-input" id="lightOff" value="50"></div>
+        </div>
+        <div class="settings-card">
+            <div class="graph-title">💨 Пороги вентиляции</div>
+            <div class="setting-row"><span>💨 Включить вентилятор при температуре выше (°C)</span><input type="number" class="setting-input" id="fanTemp" value="28"></div>
+            <div class="setting-row"><span>💨 Выключить вентилятор при температуре ниже (°C)</span><input type="number" class="setting-input" id="fanOffTemp" value="26"></div>
+        </div>
+        <div class="settings-card">
+            <div class="graph-title">⏱️ Время работы устройств</div>
+            <div class="setting-row"><span>💧 Длительность работы насоса (секунд)</span><input type="number" class="setting-input" id="pumpTime" value="2"></div>
+        </div>
+        <div class="settings-card">
+            <div class="graph-title">📈 Экспорт данных</div>
+            <button class="save-btn" id="exportCsvBtn">📥 Скачать CSV (все данные за сутки)</button>
+        </div>
+        <div class="settings-card">
+            <div class="graph-title">💾 Офлайн-режим</div>
+            <div class="setting-row"><span>Статус:</span><span id="offlineStatus">🟢 Онлайн</span></div>
+            <div class="setting-row"><span>Кэш:</span><span id="cacheSize">0 байт</span></div>
+        </div>
+    </div>
+
+    <div id="about" class="section">
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система для выращивания растений с годовым календарём истории.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь (все 12 месяцев на одной странице)<br>• 💡 Регулировка яркости света (0-100%)<br>• ⚙️ Настройки автоматики (полив, вентиляция, освещение)<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🔄 WebSocket<br>• 🌙 Ночной экран<br>• 🌱 Библиотека из 19 растений</p></div>
+    </div>
+    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | Годовой календарь</div>
+</div>
+
+<!-- Модальные окна -->
+<div id="chartModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modalTitle">📊 График</h2><button class="modal-close" id="modalCloseBtn">&times;</button></div><canvas id="modalChart" width="600" height="300"></canvas><div><button id="periodDay" class="save-btn" style="width:auto;">День</button> <button id="periodWeek" class="save-btn" style="width:auto;">Неделя</button> <button id="periodMonth" class="save-btn" style="width:auto;">Месяц</button></div></div></div>
+<div id="plantInfoModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="plantModalTitle">🌱 Информация о растении</h2><button class="modal-close" id="plantModalCloseBtn">&times;</button></div><div id="plantModalContent"></div></div></div>
+<div id="dayModal" class="day-modal"><div class="day-modal-content"><div class="day-modal-header"><h2 id="dayModalTitle">📅 Данные за день</h2><button class="day-modal-close" id="dayModalCloseBtn">&times;</button></div><div class="day-modal-body"><div class="day-modal-chart"><canvas id="dayChart" width="400" height="220" style="width:100%; height:auto; max-height:220px;"></canvas></div><div class="day-modal-stats" id="dayModalStats"></div></div></div></div>
+
+<script>
+(function() {
+    // ========== ТЕМА ==========
+    const nightToggle = document.getElementById('nightToggle');
+    nightToggle.addEventListener('click', () => {
+        document.body.classList.toggle('night-mode');
+        nightToggle.textContent = document.body.classList.contains('night-mode') ? '☀️ Дневной режим' : '🌙 Ночной экран';
+        showToast(document.body.classList.contains('night-mode') ? '🌙 Ночной режим активирован' : '☀️ Дневной режим активирован');
+    });
+
+    const themeToggle = document.getElementById('themeToggle');
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
+        if (modalChart) updateModalChartTheme();
+    });
+    themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
+
+    // ========== АНИМАЦИЯ ==========
+    function createLeaf() {
+        const leaf = document.createElement('div');
+        leaf.className = 'leaf';
+        const leaves = ['🍃', '🌿', '🍂', '🌱', '🍀'];
+        leaf.textContent = leaves[Math.floor(Math.random() * leaves.length)];
+        leaf.style.left = Math.random() * 100 + '%';
+        leaf.style.fontSize = (15 + Math.random() * 20) + 'px';
+        leaf.style.animationDuration = (5 + Math.random() * 5) + 's';
+        leaf.style.animationDelay = Math.random() * 5 + 's';
+        document.body.appendChild(leaf);
+        setTimeout(() => leaf.remove(), 10000);
+    }
+    setInterval(createLeaf, 2000);
+
+    function createDropletsOnCards() {
+        document.querySelectorAll('.stat-card').forEach(card => {
+            for (let i = 0; i < 6; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'droplet';
+                drop.style.left = Math.random() * 100 + '%';
+                drop.style.top = '-10px';
+                drop.style.animationDelay = Math.random() * 0.5 + 's';
+                card.appendChild(drop);
+                setTimeout(() => drop.remove(), 1000);
+            }
+        });
+    }
+
+    let wsInterval;
+    function startWebSocketSimulation() {
+        const wsBadge = document.getElementById('wsBadge');
+        const wsEventsBadge = document.getElementById('wsEventsBadge');
+        if (wsBadge) wsBadge.innerHTML = '🟢 WebSocket';
+        if (wsEventsBadge) wsEventsBadge.innerHTML = '🟢 WebSocket онлайн';
+        if (wsInterval) clearInterval(wsInterval);
+        wsInterval = setInterval(() => {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'setting-row';
+            eventDiv.innerHTML = `🔵 ${new Date().toLocaleTimeString()} | 📡 WebSocket: данные обновлены (теплица: ${temp.toFixed(1)}°C, влажность: ${hum}%, почва: ${soil}%)`;
+            const eventsList = document.getElementById('eventsList');
+            if (eventsList) {
+                eventsList.insertBefore(eventDiv, eventsList.firstChild);
+                if (eventsList.children.length > 8) eventsList.removeChild(eventsList.lastChild);
+            }
+        }, 8000);
+    }
+
+    // ========== ПОГОДА ==========
+    let weatherCycle = 0;
+    function getRealisticWeather() {
+        const hour = new Date().getHours();
+        let baseTemp = hour >= 6 && hour <= 18 ? 21 + (hour - 12) * 0.4 : 13;
+        let temperature = Math.round((baseTemp + Math.sin(weatherCycle * 0.1) * 2 + (Math.random() * 2 - 1)) * 10) / 10;
+        temperature = Math.min(28, Math.max(10, temperature));
+        let condition = temperature > 22 ? 'солнечно' : (temperature < 15 ? 'прохладно' : 'облачно');
+        let iconHtml = temperature > 22 ? '<span class="sun-spin">☀️</span>' : '<span class="cloud-drift">⛅</span>';
+        return { temperature, condition, iconHtml };
+    }
+    
+    let externalTemp = 20, externalCondition = 'солнечно', externalIcon = '<span class="sun-spin">☀️</span>';
+    setInterval(() => {
+        const w = getRealisticWeather();
+        externalTemp = w.temperature;
+        externalCondition = w.condition;
+        externalIcon = w.iconHtml;
+        weatherCycle++;
+        document.getElementById('weatherSource').innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)} <span class="websocket-badge">🟢 WebSocket</span>`;
+    }, 300000);
+
+    // ========== ДАННЫЕ ==========
+    const hours24 = Array.from({length:24}, (_,i)=> i+':00');
+    let tempData24 = [18,19,18,17,16,15,16,18,20,22,24,25,26,27,28,28,27,26,25,24,23,22,21,20];
+    let humData24 = [65,66,67,68,69,70,70,69,67,65,62,60,58,56,55,55,56,58,60,62,64,65,65,64];
+    let lightData24 = [0,0,0,0,0,5,15,30,45,60,70,75,78,80,75,70,60,45,30,15,5,0,0,0];
+    let soilData24 = [45,44,44,43,43,42,42,41,41,40,39,38,42,45,44,43,42,42,41,41,40,40,39,39];
+    
+    let currentPeriod = 'day';
+    let currentMetric = 'temp';
+    let currentPlant = 'tomato';
+    let temp = 22.5, direction = 0.05;
+    let hum = 58, light = 65, soil = 42;
+    let waterSaved = 0, co2Absorbed = 0;
+    
+    // БИБЛИОТЕКА РАСТЕНИЙ (19 ШТУК)
+    const plantsList = {
+        tomato: { name: 'Томаты', icon: '🍅', soilDry: 40, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 30, lightOff: 50, pumpTime: 2, days: 80, care: '🌞 Нужен яркий свет и регулярный полив. Любят тепло!', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
+        cucumber: { name: 'Огурцы', icon: '🥒', soilDry: 50, soilWet: 80, openTemp: 30, closeTemp: 28, lightOn: 35, lightOff: 55, pumpTime: 2.5, days: 50, care: '💧 Требуют много влаги и высокую влажность воздуха.', optimalTemp: '24-30°C', optimalHumidity: '70-80%' },
+        pepper: { name: 'Перец', icon: '🌶️', soilDry: 40, soilWet: 65, openTemp: 28, closeTemp: 26, lightOn: 30, lightOff: 50, pumpTime: 2, days: 90, care: '🌡️ Любят тепло, не переносят сквозняков.', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
+        salad: { name: 'Салат', icon: '🥬', soilDry: 50, soilWet: 75, openTemp: 22, closeTemp: 20, lightOn: 40, lightOff: 60, pumpTime: 1.5, days: 30, care: '🌱 Растёт быстро, нужен частый полив.', optimalTemp: '15-22°C', optimalHumidity: '65-75%' },
+        basil: { name: 'Базилик', icon: '🌿', soilDry: 40, soilWet: 60, openTemp: 25, closeTemp: 23, lightOn: 40, lightOff: 60, pumpTime: 1.5, days: 30, care: '☀️ Любит солнце и тепло, не заливайте!', optimalTemp: '22-26°C', optimalHumidity: '55-65%' },
+        strawberry: { name: 'Клубника', icon: '🍓', soilDry: 45, soilWet: 70, openTemp: 26, closeTemp: 24, lightOn: 35, lightOff: 55, pumpTime: 2, days: 60, care: '🍓 Нуждается в опылении и ярком свете.', optimalTemp: '18-26°C', optimalHumidity: '60-75%' },
+        rose: { name: 'Розы', icon: '🌹', soilDry: 45, soilWet: 65, openTemp: 25, closeTemp: 23, lightOn: 40, lightOff: 60, pumpTime: 2.5, days: 120, care: '🌹 Любят свежий воздух и регулярную обрезку.', optimalTemp: '18-25°C', optimalHumidity: '55-65%' },
+        orchid: { name: 'Орхидеи', icon: '🌸', soilDry: 50, soilWet: 75, openTemp: 28, closeTemp: 26, lightOn: 35, lightOff: 55, pumpTime: 2, days: 180, care: '🌸 Требуют высокую влажность и рассеянный свет.', optimalTemp: '20-28°C', optimalHumidity: '60-80%' },
+        carrot: { name: 'Морковь', icon: '🥕', soilDry: 45, soilWet: 70, openTemp: 24, closeTemp: 22, lightOn: 35, lightOff: 55, pumpTime: 2, days: 70, care: '🥕 Нуждается в рыхлой почве и умеренном поливе.', optimalTemp: '16-24°C', optimalHumidity: '60-70%' },
+        potato: { name: 'Картофель', icon: '🥔', soilDry: 50, soilWet: 75, openTemp: 24, closeTemp: 22, lightOn: 30, lightOff: 50, pumpTime: 2.5, days: 90, care: '🥔 Любит окучивание и регулярный полив.', optimalTemp: '15-24°C', optimalHumidity: '60-70%' },
+        onion: { name: 'Лук', icon: '🧅', soilDry: 45, soilWet: 70, openTemp: 24, closeTemp: 22, lightOn: 35, lightOff: 55, pumpTime: 1.5, days: 100, care: '🧅 Не любит переувлажнения, нужен хороший дренаж.', optimalTemp: '13-24°C', optimalHumidity: '50-65%' },
+        garlic: { name: 'Чеснок', icon: '🧄', soilDry: 45, soilWet: 70, openTemp: 22, closeTemp: 20, lightOn: 35, lightOff: 55, pumpTime: 1.5, days: 120, care: '🧄 Морозостоек, любит солнечные места.', optimalTemp: '13-22°C', optimalHumidity: '50-65%' },
+        eggplant: { name: 'Баклажан', icon: '🍆', soilDry: 45, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 35, lightOff: 55, pumpTime: 2, days: 85, care: '🍆 Требует много тепла и света.', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
+        watermelon: { name: 'Арбуз', icon: '🍉', soilDry: 40, soilWet: 65, openTemp: 30, closeTemp: 28, lightOn: 40, lightOff: 60, pumpTime: 2.5, days: 80, care: '🍉 Любит жару и простор для роста.', optimalTemp: '25-30°C', optimalHumidity: '55-65%' },
+        melon: { name: 'Дыня', icon: '🍈', soilDry: 40, soilWet: 65, openTemp: 30, closeTemp: 28, lightOn: 40, lightOff: 60, pumpTime: 2.5, days: 75, care: '🍈 Требует много солнца и тепла.', optimalTemp: '24-30°C', optimalHumidity: '55-65%' },
+        corn: { name: 'Кукуруза', icon: '🌽', soilDry: 45, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 40, lightOff: 60, pumpTime: 2, days: 90, care: '🌽 Любит ветроопыление и высокие температуры.', optimalTemp: '20-28°C', optimalHumidity: '60-70%' },
+        sunflower: { name: 'Подсолнух', icon: '🌻', soilDry: 40, soilWet: 65, openTemp: 28, closeTemp: 26, lightOn: 45, lightOff: 65, pumpTime: 2, days: 100, care: '🌻 Тянется к солнцу, нуждается в опоре.', optimalTemp: '20-28°C', optimalHumidity: '55-65%' },
+        lavender: { name: 'Лаванда', icon: '💜', soilDry: 35, soilWet: 55, openTemp: 28, closeTemp: 26, lightOn: 45, lightOff: 65, pumpTime: 1.5, days: 120, care: '💜 Любит сухую почву и много солнца.', optimalTemp: '18-28°C', optimalHumidity: '40-50%' },
+        mint: { name: 'Мята', icon: '🌱', soilDry: 50, soilWet: 80, openTemp: 25, closeTemp: 23, lightOn: 35, lightOff: 55, pumpTime: 2, days: 30, care: '🌱 Агрессивно растёт, нужен контроль корней.', optimalTemp: '18-25°C', optimalHumidity: '60-75%' }
+    };
+    let devices = { pump: false, light: false, window: false, heater: false, fan: false };
+    let autoSettings = { water: true, vent: true, light: true };
+
+    // ========== МОДАЛЬНОЕ ОКНО ДЛЯ ГРАФИКА ==========
+    const modal = document.getElementById('chartModal');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    let modalChart = null;
+    function openModal(metric) { currentMetric = metric; updateModalChart(); modal.style.display = 'flex'; }
+    function updateModalChart() {
+        let data, labels;
+        if (currentMetric === 'temp') data = tempData24;
+        else if (currentMetric === 'hum') data = humData24;
+        else if (currentMetric === 'light') data = lightData24;
+        else data = soilData24;
+        if (currentPeriod === 'week') { labels = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']; let week=[]; for(let i=0;i<7;i++) week.push(data[Math.floor(i*24/7)]); data=week; }
+        else if (currentPeriod === 'month') { labels = Array.from({length:30},(_,i)=>i+1); let month=[]; for(let i=0;i<30;i++) month.push(data[Math.floor(i*24/30)]); data=month; }
+        else { labels = hours24; }
+        const ctx = document.getElementById('modalChart').getContext('2d');
+        if (modalChart) modalChart.destroy();
+        modalChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ label: currentMetric === 'temp' ? 'Температура' : (currentMetric === 'hum' ? 'Влажность' : (currentMetric === 'light' ? 'Свет' : 'Почва')), data, borderColor: '#2d5a2e', backgroundColor: '#2d5a2e20', fill: true, tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+    }
+    modalCloseBtn.onclick = () => modal.style.display = 'none';
+    document.getElementById('periodDay').onclick = () => { currentPeriod = 'day'; updateModalChart(); };
+    document.getElementById('periodWeek').onclick = () => { currentPeriod = 'week'; updateModalChart(); };
+    document.getElementById('periodMonth').onclick = () => { currentPeriod = 'month'; updateModalChart(); };
+    function updateModalChartTheme() { if (modalChart) modalChart.update(); }
+
+    // ========== МОДАЛЬНОЕ ОКНО ДЛЯ РАСТЕНИЙ ==========
+    const plantModal = document.getElementById('plantInfoModal');
+    const plantModalCloseBtn = document.getElementById('plantModalCloseBtn');
+    function openPlantInfoModal(plantKey) {
+        const p = plantsList[plantKey];
+        document.getElementById('plantModalTitle').innerHTML = `${p.icon} ${p.name} — условия выращивания`;
+        document.getElementById('plantModalContent').innerHTML = `
+            <div class="plant-detail-row"><span class="plant-detail-label">🌡️ Оптимальная температура:</span><span class="plant-detail-value">${p.optimalTemp || '22-28°C'}</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">💧 Оптимальная влажность:</span><span class="plant-detail-value">${p.optimalHumidity || '60-70%'}</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">💧 Полив:</span><span class="plant-detail-value">при влажности &lt; ${p.soilDry}% → полив до ${p.soilWet}%</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">🪟 Проветривание:</span><span class="plant-detail-value">открывать при &gt; ${p.openTemp}°C, закрывать при &lt; ${p.closeTemp}°C</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">💡 Освещение:</span><span class="plant-detail-value">включать при &lt; ${p.lightOn}%, выключать при &gt; ${p.lightOff}%</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">⏱️ Время полива:</span><span class="plant-detail-value">${p.pumpTime} сек</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">📅 Срок созревания:</span><span class="plant-detail-value">${p.days} дней</span></div>
+            <div class="plant-care-text">💚 <strong>Совет по уходу:</strong> ${p.care}</div>
+        `;
+        plantModal.style.display = 'flex';
+    }
+    plantModalCloseBtn.onclick = () => plantModal.style.display = 'none';
+    plantModal.onclick = (e) => { if (e.target === plantModal) plantModal.style.display = 'none'; };
+
+    function getOptimumBadge(v, min, max) { return v >= min && v <= max ? '<span class="optimum-badge badge-ok">✅ оптимум</span>' : '<span class="optimum-badge badge-warning">⚠️ отклонение</span>'; }
+    function getDailyMinMax() { return { temp: { min: Math.min(...tempData24).toFixed(1), max: Math.max(...tempData24).toFixed(1) }, hum: { min: Math.min(...humData24), max: Math.max(...humData24) }, soil: { min: Math.min(...soilData24), max: Math.max(...soilData24) } }; }
+
+    let codeAnimationDone = false;
+    function buildDashboard() {
+        const daily = getDailyMinMax();
+        const p = plantsList[currentPlant];
+        document.getElementById('statsGrid').innerHTML = `
+            <div class="stat-card" data-metric="temp"><div class="stat-icon">🌡️</div><div class="stat-value" id="tempValue">${temp.toFixed(1)}</div><div class="stat-label">Температура (°C) ${getOptimumBadge(temp, 18, 28)}</div><div class="minmax-info">📉 мин ${daily.temp.min}°C | 📈 макс ${daily.temp.max}°C</div></div>
+            <div class="stat-card" data-metric="hum"><div class="stat-icon">💧</div><div class="stat-value" id="humValue">${hum}</div><div class="stat-label">Влажность (%) ${getOptimumBadge(hum, 45, 75)}</div><div class="minmax-info">📉 мин ${daily.hum.min}% | 📈 макс ${daily.hum.max}%</div></div>
+            <div class="stat-card" data-metric="light"><div class="stat-icon">☀️</div><div class="stat-value" id="lightValue">${light}</div><div class="stat-label">Освещённость (%) ${getOptimumBadge(light, 30, 85)}</div><div class="minmax-info">🌞 0-100%</div></div>
+            <div class="stat-card" data-metric="soil"><div class="stat-icon">🌱</div><div class="stat-value" id="soilValue">${soil}</div><div class="stat-label">Почва (%) ${getOptimumBadge(soil, 40, 70)}</div><div class="minmax-info">📉 мин ${daily.soil.min}% | 📈 макс ${daily.soil.max}%</div></div>
+            <div class="stat-card"><div class="stat-icon">💧</div><div class="stat-value">FULL</div><div class="stat-label">Вода</div></div>
+            <div class="stat-card"><div class="stat-icon">${p.icon}</div><div class="stat-value">${p.name}</div><div class="stat-label">Растение</div></div>
+        `;
+        document.querySelectorAll('.stat-card[data-metric]').forEach(card => card.addEventListener('click', () => openModal(card.dataset.metric)));
+        document.getElementById('statsBottomGrid').innerHTML = `<div class="stat-card"><div class="stat-icon">🔧</div><div class="stat-value">950+</div><div class="stat-label">Строк кода</div></div><div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">19</div><div class="stat-label">Растений</div></div><div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">4640 ₽</div><div class="stat-label">Себестоимость</div></div>`;
+        if (!codeAnimationDone) { animateNumberFixed(document.getElementById('codeCount'), 0, 950, ''); codeAnimationDone = true; }
+    }
+    function animateNumberFixed(el, start, end, suffix) { let cur = start, step = (end-start)/40, int = setInterval(() => { cur += step; if(cur >= end){ el.textContent = end + suffix; clearInterval(int); } else el.textContent = Math.floor(cur) + suffix; }, 15); }
+
+    function updateWeatherAndEvents() {
+        document.getElementById('weatherIcon').innerHTML = externalIcon;
+        document.getElementById('weatherText').innerHTML = `🌍 Ярославль: ${externalTemp}°C, ${externalCondition}`;
+        document.getElementById('weatherRecommendation').innerHTML = externalTemp > 25 ? '⚠️ Жарко!' : (externalTemp < 10 ? '❄️ Холодно!' : '✅ Норма');
+        document.getElementById('forecast3days').innerHTML = `📅 завтра ${Math.round(externalTemp + (Math.random() * 3 - 1))}°C`;
+        document.getElementById('nextWatering').innerHTML = `~${Math.floor(Math.random() * 5) + 2} ч`;
+        document.getElementById('daysToHarvest').innerHTML = plantsList[currentPlant].days;
+        document.getElementById('vsYesterday').innerHTML = (externalTemp - (externalTemp - 0.7)).toFixed(1) + '°C';
+        let health = 100; if (temp > 30) health -= 12; if (temp < 15) health -= 10; if (soil < 35) health -= 18;
+        health = Math.max(0, Math.min(100, health));
+        document.getElementById('plantHealth').innerHTML = health + '%';
+        document.getElementById('healthBar').style.width = health + '%';
+        waterSaved += 0.12; co2Absorbed += 0.06;
+        document.getElementById('waterSaved').innerHTML = waterSaved.toFixed(1) + ' л';
+        document.getElementById('co2Absorbed').innerHTML = co2Absorbed.toFixed(1) + ' кг';
+        const timeStr = new Date().toLocaleTimeString().slice(0,5);
+        let events = [`🟢 Система | ${timeStr}`, `🌡️ ${temp.toFixed(1)}°C`, `💧 ${hum}%`, `🌱 ${soil}%`, `☀️ ${light}%`];
+        if (temp > 28) events.unshift(`🔥 ЖАР!`); if (soil < 40) events.unshift(`💧 ПОЛИВ!`);
+        document.getElementById('eventsList').innerHTML = events.slice(0,5).map(e => `<div class="setting-row">${e}</div>`).join('');
+        document.getElementById('weeklySummary').innerHTML = `📊 Средняя t ${(temp-0.5).toFixed(1)}°C | 💧 ${waterSaved.toFixed(1)} л | 🌱 ${health}%`;
+        if (!document.getElementById('advisorCard')) { const d = document.createElement('div'); d.className = 'settings-card'; d.id = 'advisorCard'; d.innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${plantsList[currentPlant].care}</div>`; document.getElementById('dashboard').appendChild(d); }
+        else document.getElementById('advisorCard').innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${plantsList[currentPlant].care}</div>`;
+        
+        document.getElementById('currentLightLevel').innerHTML = light + '%';
+        document.getElementById('brightnessSlider').value = light;
+        document.getElementById('brightnessValue').innerHTML = light + '%';
+    }
+
+    function updateStatsLive() {
+        document.getElementById('tempValue').textContent = temp.toFixed(1);
+        document.getElementById('humValue').textContent = hum;
+        document.getElementById('lightValue').textContent = light;
+        document.getElementById('soilValue').textContent = soil;
+        tempData24.push(Number(temp.toFixed(1))); tempData24.shift();
+        humData24.push(hum); humData24.shift();
+        lightData24.push(light); lightData24.shift();
+        soilData24.push(soil); soilData24.shift();
+        updateWeatherAndEvents(); buildDashboard();
+    }
+
+    function buildControlButtons() {
+        const container = document.getElementById('controlGrid');
+        const btns = ['pump','light','window','heater','fan'];
+        const icons = { pump:'💧', light:'💡', window:'🪟', heater:'🔥', fan:'💨' };
+        const labels = { pump:'ПОЛИВ', light:'СВЕТ', window:'ФОРТОЧКА', heater:'НАГРЕВ', fan:'ВЕНТИЛЯТОР' };
+        container.innerHTML = '';
+        btns.forEach(id => {
+            const btn = document.createElement('button');
+            btn.className = `control-btn ${devices[id] ? 'on' : 'off'}`;
+            btn.innerHTML = `${icons[id]} ${labels[id]}<br><small>${devices[id] ? (id==='window'?'ОТКР':'ВКЛ') : (id==='window'?'ЗАКР':'ВЫКЛ')}</small>`;
+            btn.onclick = () => { devices[id] = !devices[id]; btn.className = `control-btn ${devices[id] ? 'on' : 'off'}`; btn.innerHTML = `${icons[id]} ${labels[id]}<br><small>${devices[id] ? (id==='window'?'ОТКР':'ВКЛ') : (id==='window'?'ЗАКР':'ВЫКЛ')}</small>`; showToast(`${labels[id]} ${devices[id] ? 'включён' : 'выключен'}`); if (id === 'pump') createDropletsOnCards(); };
+            container.appendChild(btn);
+        });
+    }
+
+    function buildPlants() {
+        const grid = document.getElementById('plantsGrid');
+        grid.innerHTML = '';
+        Object.keys(plantsList).forEach(key => {
+            const p = plantsList[key];
+            const card = document.createElement('div');
+            card.className = `plant-card ${currentPlant === key ? 'selected' : ''}`;
+            card.innerHTML = `<div class="plant-icon">${p.icon}</div><div class="plant-name">${p.name}</div>`;
+            card.onclick = (e) => { e.stopPropagation(); if (currentPlant === key) openPlantInfoModal(key); else { document.querySelectorAll('.plant-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); currentPlant = key; buildDashboard(); updateWeatherAndEvents(); showToast(`🌱 ${p.name}`); } };
+            grid.appendChild(card);
+        });
+    }
+    
+    function showToast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
+
+    document.getElementById('emergencyPump')?.addEventListener('click', () => { showToast('🚨 Аварийный полив'); createDropletsOnCards(); });
+    document.getElementById('emergencyWindow')?.addEventListener('click', () => showToast('🪟 Форточка открыта'));
+    document.getElementById('saveSettings')?.addEventListener('click', () => showToast('⚙️ Сохранено'));
+
+    // ========== НОВЫЕ ФУНКЦИИ УПРАВЛЕНИЯ ==========
+    const brightnessSlider = document.getElementById('brightnessSlider');
+    const brightnessValue = document.getElementById('brightnessValue');
+    brightnessSlider?.addEventListener('input', (e) => {
+        const val = e.target.value;
+        brightnessValue.innerHTML = val + '%';
+        showToast(`💡 Яркость света установлена на ${val}%`);
+        light = parseInt(val);
+        document.getElementById('currentLightLevel').innerHTML = light + '%';
+        document.getElementById('lightValue').textContent = light;
+    });
+    
+    const autoWaterToggle = document.getElementById('autoWaterToggle');
+    const autoVentToggle = document.getElementById('autoVentToggle');
+    const autoLightToggle = document.getElementById('autoLightToggle');
+    autoWaterToggle?.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); });
+    autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); });
+    autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); });
+
+    // Загрузка значений в настройки
+    function loadSettings() {
+        const p = plantsList[currentPlant];
+        document.getElementById('openTemp').value = p.openTemp;
+        document.getElementById('closeTemp').value = p.closeTemp;
+        document.getElementById('soilDry').value = p.soilDry;
+        document.getElementById('soilWet').value = p.soilWet;
+        document.getElementById('lightOn').value = p.lightOn;
+        document.getElementById('lightOff').value = p.lightOff;
+        document.getElementById('pumpTime').value = p.pumpTime;
+        document.getElementById('heatTemp').value = 18;
+        document.getElementById('heatOffTemp').value = 22;
+        document.getElementById('fanTemp').value = 28;
+        document.getElementById('fanOffTemp').value = 26;
+    }
+    loadSettings();
+
+    // ========== ГОДОВОЙ КАЛЕНДАРЬ ==========
+    const currentYear = new Date().getFullYear();
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    function generateRandomDataForDay(year, month, day) {
+        const date = new Date(year, month, day);
+        if (date > today) return null;
+        return { temp: 18 + Math.random() * 10, hum: 50 + Math.random() * 25, soil: 35 + Math.random() * 35, light: 30 + Math.random() * 50 };
+    }
+    
+    function getDataForDay(year, month, day) {
+        const key = `${year}-${month}-${day}`;
+        if (!window.historyDataCache) window.historyDataCache = {};
+        if (!window.historyDataCache[key]) window.historyDataCache[key] = generateRandomDataForDay(year, month, day);
+        return window.historyDataCache[key];
+    }
+    
+    function renderYearCalendar() {
+        const container = document.getElementById('yearCalendar');
+        container.innerHTML = '';
+        const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        
+        for (let month = 0; month < 12; month++) {
+            const firstDayOfMonth = new Date(currentYear, month, 1);
+            const startWeekday = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1;
+            const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
+            
+            const monthCard = document.createElement('div');
+            monthCard.className = 'month-card';
+            monthCard.innerHTML = `<div class="month-title">${monthNames[month]}</div><div class="month-days"></div>`;
+            const daysContainer = monthCard.querySelector('.month-days');
+            
+            for (let i = 0; i < 7; i++) { const header = document.createElement('div'); header.className = 'weekday-header'; header.textContent = weekdays[i]; daysContainer.appendChild(header); }
+            for (let i = 0; i < startWeekday; i++) { const empty = document.createElement('div'); empty.className = 'day-cell empty'; daysContainer.appendChild(empty); }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                dayCell.textContent = day;
+                const date = new Date(currentYear, month, day);
+                if (date <= today) dayCell.classList.add('past');
+                dayCell.onclick = (function(y, m, d) { return function() { openDayModal(y, m, d); }; })(currentYear, month, day);
+                daysContainer.appendChild(dayCell);
+            }
+            container.appendChild(monthCard);
+        }
+    }
+    
+    let dayChart = null;
+    let currentDayData = null;
+    let currentDayMetric = 'temp';
+    
+    function openDayModal(year, month, day) {
+        const data = getDataForDay(year, month, day);
+        if (!data) { showToast('📅 Данных за этот день ещё нет'); return; }
+        currentDayData = data;
+        currentDayMetric = 'temp';
+        const date = new Date(year, month, day);
+        document.getElementById('dayModalTitle').innerHTML = `📅 ${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+        const tempRounded = data.temp.toFixed(1);
+        const humRounded = Math.round(data.hum);
+        const soilRounded = Math.round(data.soil);
+        const lightRounded = Math.round(data.light);
+        document.getElementById('dayModalStats').innerHTML = `
+            <div class="day-stat-card" data-metric="temp"><div class="day-stat-icon">🌡️</div><div class="day-stat-value">${tempRounded}°C</div><div class="day-stat-label">Средняя температура</div></div>
+            <div class="day-stat-card" data-metric="hum"><div class="day-stat-icon">💧</div><div class="day-stat-value">${humRounded}%</div><div class="day-stat-label">Влажность воздуха</div></div>
+            <div class="day-stat-card" data-metric="soil"><div class="day-stat-icon">🌱</div><div class="day-stat-value">${soilRounded}%</div><div class="day-stat-label">Влажность почвы</div></div>
+            <div class="day-stat-card" data-metric="light"><div class="day-stat-icon">☀️</div><div class="day-stat-value">${lightRounded}%</div><div class="day-stat-label">Освещённость</div></div>
+        `;
+        document.querySelectorAll('.day-stat-card').forEach(card => { card.addEventListener('click', () => { currentDayMetric = card.dataset.metric; updateDayChart(); }); });
+        updateDayChart();
+        document.getElementById('dayModal').style.display = 'flex';
+    }
+    
+    function updateDayChart() {
+        const ctx = document.getElementById('dayChart').getContext('2d');
+        if (dayChart) dayChart.destroy();
+        let data, label, color;
+        if (currentDayMetric === 'temp') { data = [currentDayData.temp - 3, currentDayData.temp - 1.5, currentDayData.temp, currentDayData.temp + 0.5, currentDayData.temp + 1, currentDayData.temp - 0.5, currentDayData.temp - 2, currentDayData.temp]; label = 'Температура (°C)'; color = '#e74c3c'; }
+        else if (currentDayMetric === 'hum') { data = [currentDayData.hum - 8, currentDayData.hum - 3, currentDayData.hum, currentDayData.hum + 2, currentDayData.hum + 4, currentDayData.hum + 1, currentDayData.hum - 2, currentDayData.hum]; label = 'Влажность воздуха (%)'; color = '#3498db'; }
+        else if (currentDayMetric === 'soil') { data = [currentDayData.soil - 5, currentDayData.soil - 2, currentDayData.soil, currentDayData.soil + 3, currentDayData.soil + 1, currentDayData.soil - 1, currentDayData.soil - 3, currentDayData.soil]; label = 'Влажность почвы (%)'; color = '#2ecc71'; }
+        else { data = [currentDayData.light - 10, currentDayData.light - 5, currentDayData.light, currentDayData.light + 8, currentDayData.light + 12, currentDayData.light + 5, currentDayData.light - 2, currentDayData.light]; label = 'Освещённость (%)'; color = '#f1c40f'; }
+        dayChart = new Chart(ctx, { type: 'line', data: { labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'], datasets: [{ label: label, data: data, borderColor: color, backgroundColor: color + '20', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: getComputedStyle(document.body).getPropertyValue('--text-primary') } } } } });
+    }
+    
+    const dayModal = document.getElementById('dayModal');
+    const dayModalCloseBtn = document.getElementById('dayModalCloseBtn');
+    dayModalCloseBtn.onclick = () => dayModal.style.display = 'none';
+    dayModal.onclick = (e) => { if (e.target === dayModal) dayModal.style.display = 'none'; };
+    renderYearCalendar();
+    
+    // ========== ЭКСПОРТ CSV ==========
+    document.getElementById('exportCsvBtn').onclick = () => {
+        let csv = "Дата,Время,Температура,Влажность,Почва,Освещённость\n";
+        const now = new Date();
+        for (let i = 0; i < tempData24.length; i++) csv += `${now.toLocaleDateString()},${hours24[i]},${tempData24[i]},${humData24[i]},${soilData24[i]},${lightData24[i]}\n`;
+        const blob = new Blob([csv], {type: 'text/csv'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `teplitsa_${now.toISOString().slice(0,19)}.csv`;
+        link.click();
+        showToast('📊 Данные экспортированы в CSV');
+    };
+
+    // ========== ОФЛАЙН-РЕЖИМ ==========
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+        document.getElementById('offlineStatus').innerHTML = '🟢 Онлайн';
+        caches.open('teplitsa-cache-v1').then(cache => { cache.keys().then(keys => { let total = 0; keys.forEach(k => total += k.size || 0); document.getElementById('cacheSize').innerHTML = (total / 1024).toFixed(2) + ' КБ'; }); });
+        window.addEventListener('online', () => { document.getElementById('offlineStatus').innerHTML = '🟢 Онлайн'; showToast('🌐 Интернет восстановлен'); });
+        window.addEventListener('offline', () => { document.getElementById('offlineStatus').innerHTML = '🔴 Офлайн-режим'; showToast('📴 Офлайн-режим'); });
+    } else { document.getElementById('offlineStatus').innerHTML = '⚠️ Не поддерживается'; }
+
+    // ========== НАВИГАЦИЯ ==========
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(btn.dataset.section).classList.add('active');
+            if (btn.dataset.section === 'dashboard') buildDashboard();
+            if (btn.dataset.section === 'plants') buildPlants();
+            if (btn.dataset.section === 'history') renderYearCalendar();
+            if (btn.dataset.section === 'settings') loadSettings();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+
+    window.addEventListener('scroll', () => { const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; document.getElementById('progressBar').style.width = (window.scrollY / h) * 100 + '%'; });
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); showToast('📱 Установите приложение через меню браузера'); });
+
+    buildDashboard();
+    buildControlButtons();
+    buildPlants();
+    updateWeatherAndEvents();
+    startWebSocketSimulation();
+    
+    setInterval(() => {
+        temp += direction;
+        if (temp > 28) direction = -0.05;
+        if (temp < 22) direction = 0.05;
+        hum = 55 + Math.floor(Math.sin(Date.now()/10000) * 10);
+        light = 40 + Math.floor(Math.sin(Date.now()/5000) * 30);
+        soil = 35 + Math.floor(Math.sin(Date.now()/30000) * 10);
+        updateStatsLive();
+        if (modalChart && modal.style.display === 'flex') updateModalChart();
+    }, 3000);
+})();
+</script>
+</body>
+</html>
