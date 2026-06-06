@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Умная теплица</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>Умная теплица | Мобильное приложение</title>
     <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Умная%20теплица%22,%22short_name%22:%22Теплица%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%232d5a2e%22,%22background_color%22:%22%23e8f5e9%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
     <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -77,7 +77,6 @@
             transition: background 0.3s ease;
             position: relative;
             overflow-x: hidden;
-            user-select: none;
         }
 
         .leaf {
@@ -235,7 +234,19 @@
             transition: all 0.3s;
             color: var(--text-primary);
         }
-        .nav { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; position: sticky; top: 10px; z-index: 100; backdrop-filter: blur(10px); padding: 5px 0; }
+        
+        /* Обычная навигация (скрывается на мобилках, показывается в гамбургере) */
+        .nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            padding: 5px 0;
+        }
         .nav-btn {
             background: var(--nav-bg);
             border: none;
@@ -249,6 +260,67 @@
         }
         .nav-btn.active { background: var(--nav-active); color: var(--nav-active-text); transform: scale(1.02); box-shadow: 0 5px 15px var(--shadow); }
         .nav-btn:hover { transform: translateY(-3px); }
+        
+        /* Кнопка гамбургер */
+        .burger-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: var(--stat-value);
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .burger-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Мобильное меню (гамбургер) */
+        .mobile-menu {
+            position: fixed;
+            bottom: 85px;
+            right: 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: 0 10px 30px var(--shadow);
+            border: 1px solid rgba(255,255,255,0.2);
+            min-width: 180px;
+        }
+        .mobile-menu.active {
+            display: flex;
+        }
+        .mobile-menu-btn {
+            background: var(--nav-bg);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-primary);
+            text-align: center;
+        }
+        .mobile-menu-btn.active {
+            background: var(--nav-active);
+            color: var(--nav-active-text);
+        }
         
         .section { display: none; animation: fadeSlideIn 0.4s ease-out; }
         .section.active { display: block; }
@@ -266,7 +338,6 @@
         }
         canvas { max-height: 250px; width: 100%; }
 
-        /* Стили для кнопок управления с градиентом и свечением */
         .control-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -315,7 +386,6 @@
         .save-btn { background: var(--nav-active); color: var(--nav-active-text); border: none; padding: 12px 25px; border-radius: 40px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; transition: all 0.3s; }
         .save-btn:hover { transform: scale(1.02); filter: brightness(1.05); }
 
-        /* Стили для ползунка яркости */
         .slider-container {
             display: flex;
             align-items: center;
@@ -346,7 +416,6 @@
             color: var(--stat-value);
         }
 
-        /* Переключатели (toggle switches) */
         .switch {
             position: relative;
             display: inline-block;
@@ -429,7 +498,6 @@
             pointer-events: none;
         }
 
-        /* ========== ГОДОВОЙ КАЛЕНДАРЬ ========== */
         .year-calendar {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -502,7 +570,6 @@
             color: var(--stat-value);
         }
 
-        /* Модальное окно дня */
         .day-modal {
             display: none;
             position: fixed;
@@ -586,7 +653,6 @@
         .day-stat-value { font-size: 22px; font-weight: bold; color: var(--stat-value); }
         .day-stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
 
-        /* Модальное окно растений */
         .modal {
             display: none;
             position: fixed;
@@ -681,106 +747,21 @@
             .day-modal-body { flex-direction: column; }
             .day-modal-stats { grid-template-columns: repeat(2, 1fr); }
         }
-        @media (max-width: 480px) {
+        @media (max-width: 640px) {
             .year-calendar { grid-template-columns: 1fr; }
             .header h1 { font-size: 20px; }
-            .nav-btn { padding: 8px 16px; font-size: 13px; }
             .stat-value { font-size: 32px; }
             .day-modal-stats { grid-template-columns: 1fr; }
             .plant-detail-row { flex-direction: column; align-items: flex-start; }
+            .stats-grid { gap: 12px; }
+            .stat-card { padding: 12px; }
+            .burger-btn { display: flex; }
+            .nav { display: none; }
         }
-        /* ========== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ========== */
-        @media (max-width: 640px) {
-            .stat-card {
-                padding: 15px 12px;
-            }
-            .stat-value {
-                font-size: 28px;
-            }
-            .control-btn, .mode-btn {
-                padding: 18px 8px !important;
-                font-size: 13px !important;
-            }
-            .container {
-                padding: 12px;
-            }
-            .settings-card {
-                margin-bottom: 15px;
-            }
-            * {
-                -webkit-tap-highlight-color: transparent;
-            }
-            .mobile-menu-btn {
-                display: flex !important;
-            }
-            .nav {
-                display: none;
-            }
-            .nav.active {
-                display: flex;
-            }
-            .year-calendar {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            .month-card {
-                padding: 10px;
-            }
-            .month-days {
-                gap: 3px;
-            }
-            .day-cell {
-                font-size: 10px;
-            }
-            .plants-grid {
-                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-                gap: 10px;
-            }
-            .plant-icon {
-                font-size: 28px;
-            }
-            .plant-name {
-                font-size: 10px;
-            }
-            .modal-content {
-                padding: 20px;
-                width: 95%;
-            }
-            .day-modal-stats {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-            .day-stat-value {
-                font-size: 18px;
-            }
-            .header h1 {
-                font-size: 20px;
-            }
-            .nav-btn {
-                padding: 8px 16px;
-                font-size: 13px;
-            }
-            .setting-row {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            .slider-container {
-                flex-wrap: wrap;
-            }
-            .brightness-value {
-                min-width: auto;
-            }
-        }
-
         @media (min-width: 641px) {
-            .mobile-menu-btn {
-                display: none !important;
-            }
-            .nav {
-                display: flex !important;
-            }
-    }
+            .burger-btn, .mobile-menu { display: none !important; }
+            .nav { display: flex !important; }
+        }
     </style>
 </head>
 <body>
@@ -790,7 +771,7 @@
     <div class="header">
         <div>
             <h1>🌱 Умная теплица</h1>
-            <div class="subtitle">От семени к урожаю без участия человека | Ярославль</div>
+            <div class="subtitle">От семени к урожаю | Ярославль</div>
             <div class="subtitle">Автор: Смурыгин Алексей | Руководитель: Карпова В.А.</div>
         </div>
         <div style="display: flex; gap: 10px;">
@@ -799,6 +780,7 @@
         </div>
     </div>
 
+    <!-- Обычная навигация (скрывается на мобилках) -->
     <div class="nav" id="navContainer">
         <button class="nav-btn active" data-section="dashboard">📊 Дашборд</button>
         <button class="nav-btn" data-section="history">📅 Годовой календарь</button>
@@ -806,6 +788,19 @@
         <button class="nav-btn" data-section="plants">🌱 Библиотека растений</button>
         <button class="nav-btn" data-section="settings">⚙️ Настройки</button>
         <button class="nav-btn" data-section="about">📄 О проекте</button>
+    </div>
+
+    <!-- Кнопка гамбургер (только на мобилках) -->
+    <button class="burger-btn" id="burgerBtn">☰</button>
+    
+    <!-- Мобильное меню (выпадающее) -->
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-menu-btn active" data-section="dashboard">📊 Дашборд</button>
+        <button class="mobile-menu-btn" data-section="history">📅 Календарь</button>
+        <button class="mobile-menu-btn" data-section="control">🎮 Управление</button>
+        <button class="mobile-menu-btn" data-section="plants">🌱 Растения</button>
+        <button class="mobile-menu-btn" data-section="settings">⚙️ Настройки</button>
+        <button class="mobile-menu-btn" data-section="about">📄 О проекте</button>
     </div>
 
     <div id="dashboard" class="section active">
@@ -834,7 +829,7 @@
         </div>
     </div>
 
-    <!-- ========== ГОДОВОЙ КАЛЕНДАРЬ ========== -->
+    <!-- ГОДОВОЙ КАЛЕНДАРЬ -->
     <div id="history" class="section">
         <div class="settings-card">
             <div class="graph-title">📅 Годовой календарь истории</div>
@@ -842,12 +837,9 @@
         </div>
     </div>
 
-    <!-- ========== РАЗДЕЛ УПРАВЛЕНИЯ (С ГРАДИЕНТОМ И СВЕЧЕНИЕМ) ========== -->
+    <!-- УПРАВЛЕНИЕ -->
     <div id="control" class="section">
-        <!-- Ручное управление -->
         <div class="control-grid" id="controlGrid"></div>
-        
-        <!-- Ползунок яркости света -->
         <div class="settings-card">
             <div class="graph-title">💡 Регулировка яркости света</div>
             <div class="setting-row">
@@ -858,38 +850,16 @@
                 </div>
             </div>
             <div class="setting-row">
-                <span>📊 Текущая освещённость в теплице:</span>
+                <span>📊 Текущая освещённость:</span>
                 <span id="currentLightLevel" style="font-weight: bold; color: var(--stat-value);">65%</span>
             </div>
         </div>
-        
-        <!-- Настройки автоматики -->
         <div class="settings-card">
             <div class="graph-title">⚙️ Настройки автоматики</div>
-            <div class="setting-row">
-                <span>💧 Автоматический полив</span>
-                <label class="switch">
-                    <input type="checkbox" id="autoWaterToggle" checked>
-                    <span class="slider-switch"></span>
-                </label>
-            </div>
-            <div class="setting-row">
-                <span>🪟 Автоматическая вентиляция</span>
-                <label class="switch">
-                    <input type="checkbox" id="autoVentToggle" checked>
-                    <span class="slider-switch"></span>
-                </label>
-            </div>
-            <div class="setting-row">
-                <span>💡 Автоматическое освещение</span>
-                <label class="switch">
-                    <input type="checkbox" id="autoLightToggle" checked>
-                    <span class="slider-switch"></span>
-                </label>
-            </div>
+            <div class="setting-row"><span>💧 Автоматический полив</span><label class="switch"><input type="checkbox" id="autoWaterToggle" checked><span class="slider-switch"></span></label></div>
+            <div class="setting-row"><span>🪟 Автоматическая вентиляция</span><label class="switch"><input type="checkbox" id="autoVentToggle" checked><span class="slider-switch"></span></label></div>
+            <div class="setting-row"><span>💡 Автоматическое освещение</span><label class="switch"><input type="checkbox" id="autoLightToggle" checked><span class="slider-switch"></span></label></div>
         </div>
-        
-        <!-- Быстрые команды -->
         <div class="settings-card">
             <div class="graph-title">⚡ Быстрые команды</div>
             <div class="setting-row"><span>🚨 Аварийный полив (30 сек)</span><button class="save-btn" id="emergencyPump" style="width:auto; padding:8px 20px;">ЗАПУСТИТЬ</button></div>
@@ -897,53 +867,52 @@
         </div>
     </div>
 
-    <div id="plants" class="section">
-        <div class="plants-grid" id="plantsGrid"></div>
-    </div>
+    <div id="plants" class="section"><div class="plants-grid" id="plantsGrid"></div></div>
 
-    <!-- ========== РАЗДЕЛ НАСТРОЕК (С ПОНЯТНЫМИ ПОРОГАМИ) ========== -->
+    <!-- НАСТРОЙКИ -->
     <div id="settings" class="section">
         <div class="settings-card">
             <div class="graph-title">🌡️ Пороги температуры</div>
-            <div class="setting-row"><span>🌡️ Открыть форточку при температуре выше (°C)</span><input type="number" class="setting-input" id="openTemp" value="28"></div>
-            <div class="setting-row"><span>🌡️ Закрыть форточку при температуре ниже (°C)</span><input type="number" class="setting-input" id="closeTemp" value="26"></div>
-            <div class="setting-row"><span>🔥 Включить обогрев при температуре ниже (°C)</span><input type="number" class="setting-input" id="heatTemp" value="18"></div>
-            <div class="setting-row"><span>❄️ Выключить обогрев при температуре выше (°C)</span><input type="number" class="setting-input" id="heatOffTemp" value="22"></div>
+            <div class="setting-row"><span>🌡️ Открыть форточку при выше (°C)</span><input type="number" class="setting-input" id="openTemp" value="28"></div>
+            <div class="setting-row"><span>🌡️ Закрыть форточку при ниже (°C)</span><input type="number" class="setting-input" id="closeTemp" value="26"></div>
+            <div class="setting-row"><span>🔥 Включить обогрев при ниже (°C)</span><input type="number" class="setting-input" id="heatTemp" value="18"></div>
+            <div class="setting-row"><span>❄️ Выключить обогрев при выше (°C)</span><input type="number" class="setting-input" id="heatOffTemp" value="22"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">💧 Пороги влажности почвы</div>
-            <div class="setting-row"><span>💧 Включить полив при влажности ниже (%)</span><input type="number" class="setting-input" id="soilDry" value="40"></div>
-            <div class="setting-row"><span>💧 Выключить полив при влажности выше (%)</span><input type="number" class="setting-input" id="soilWet" value="70"></div>
+            <div class="setting-row"><span>💧 Включить полив при ниже (%)</span><input type="number" class="setting-input" id="soilDry" value="40"></div>
+            <div class="setting-row"><span>💧 Выключить полив при выше (%)</span><input type="number" class="setting-input" id="soilWet" value="70"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">💡 Пороги освещения</div>
-            <div class="setting-row"><span>💡 Включить фитолампу при освещённости ниже (%)</span><input type="number" class="setting-input" id="lightOn" value="30"></div>
-            <div class="setting-row"><span>💡 Выключить фитолампу при освещённости выше (%)</span><input type="number" class="setting-input" id="lightOff" value="50"></div>
+            <div class="setting-row"><span>💡 Включить фитолампу при ниже (%)</span><input type="number" class="setting-input" id="lightOn" value="30"></div>
+            <div class="setting-row"><span>💡 Выключить фитолампу при выше (%)</span><input type="number" class="setting-input" id="lightOff" value="50"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">💨 Пороги вентиляции</div>
-            <div class="setting-row"><span>💨 Включить вентилятор при температуре выше (°C)</span><input type="number" class="setting-input" id="fanTemp" value="28"></div>
-            <div class="setting-row"><span>💨 Выключить вентилятор при температуре ниже (°C)</span><input type="number" class="setting-input" id="fanOffTemp" value="26"></div>
+            <div class="setting-row"><span>💨 Включить вентилятор при выше (°C)</span><input type="number" class="setting-input" id="fanTemp" value="28"></div>
+            <div class="setting-row"><span>💨 Выключить вентилятор при ниже (°C)</span><input type="number" class="setting-input" id="fanOffTemp" value="26"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">⏱️ Время работы устройств</div>
-            <div class="setting-row"><span>💧 Длительность работы насоса (секунд)</span><input type="number" class="setting-input" id="pumpTime" value="2"></div>
+            <div class="setting-row"><span>💧 Длительность насоса (сек)</span><input type="number" class="setting-input" id="pumpTime" value="2"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">📈 Экспорт данных</div>
-            <button class="save-btn" id="exportCsvBtn">📥 Скачать CSV (все данные за сутки)</button>
+            <button class="save-btn" id="exportCsvBtn">📥 Скачать CSV</button>
         </div>
         <div class="settings-card">
             <div class="graph-title">💾 Офлайн-режим</div>
             <div class="setting-row"><span>Статус:</span><span id="offlineStatus">🟢 Онлайн</span></div>
             <div class="setting-row"><span>Кэш:</span><span id="cacheSize">0 байт</span></div>
+            <div class="setting-row"><span>🔔 Уведомления:</span><button class="save-btn" id="requestNotificationBtn" style="width:auto; padding:5px 15px;">Включить</button></div>
         </div>
     </div>
 
     <div id="about" class="section">
-        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система для выращивания растений с годовым календарём истории.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь (все 12 месяцев на одной странице)<br>• 💡 Регулировка яркости света (0-100%)<br>• ⚙️ Настройки автоматики (полив, вентиляция, освещение)<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🔄 WebSocket<br>• 🌙 Ночной экран<br>• 🌱 Библиотека из 19 растений</p></div>
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система для выращивания растений с годовым календарём истории.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений</p></div>
     </div>
-    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | Годовой календарь</div>
+    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | Push-уведомления</div>
 </div>
 
 <!-- Модальные окна -->
@@ -970,6 +939,37 @@
         if (modalChart) updateModalChartTheme();
     });
     themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
+
+    // ========== ГАМБУРГЕР-МЕНЮ ==========
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mobileMenuBtns = document.querySelectorAll('.mobile-menu-btn');
+    
+    burgerBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mobileMenu.classList.toggle('active');
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (mobileMenu.classList.contains('active') && !mobileMenu.contains(e.target) && e.target !== burgerBtn) {
+            mobileMenu.classList.remove('active');
+        }
+    });
+    
+    mobileMenuBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const section = btn.dataset.section;
+            // Активируем соответствующую секцию
+            document.querySelectorAll('.nav-btn, .mobile-menu-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const correspondingNavBtn = document.querySelector(`.nav-btn[data-section="${section}"]`);
+            if (correspondingNavBtn) correspondingNavBtn.classList.add('active');
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            mobileMenu.classList.remove('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
 
     // ========== АНИМАЦИЯ ==========
     function createLeaf() {
@@ -1041,6 +1041,70 @@
         document.getElementById('weatherSource').innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)} <span class="websocket-badge">🟢 WebSocket</span>`;
     }, 300000);
 
+    // ========== PUSH-УВЕДОМЛЕНИЯ ==========
+    let notificationPermission = false;
+    
+    function requestNotificationPermission() {
+        if ('Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    notificationPermission = true;
+                    showToast('🔔 Уведомления включены!');
+                    new Notification('🌱 Умная теплица', {
+                        body: 'Уведомления активированы. Вы будете получать оповещения о критических значениях.',
+                        icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="45" fill="%232d5a2e"/%3E%3Ctext x="50" y="70" font-size="50" text-anchor="middle" fill="white"%3E🌱%3C/text%3E%3C/svg%3E'
+                    });
+                } else {
+                    showToast('❌ Уведомления не разрешены');
+                }
+            });
+        } else {
+            showToast('❌ Ваш браузер не поддерживает уведомления');
+        }
+    }
+    
+    document.getElementById('requestNotificationBtn')?.addEventListener('click', requestNotificationPermission);
+    
+    // Автоматическое уведомление при загрузке (для привлечения внимания)
+    if ('Notification' in window && Notification.permission === 'default') {
+        setTimeout(() => {
+            showToast('🔔 Нажмите "Включить" в настройках для получения уведомлений');
+        }, 3000);
+    }
+    
+    // Проверка критических значений и отправка уведомлений
+    let lastNotificationTime = 0;
+    const NOTIFICATION_COOLDOWN = 60000; // 1 минута между уведомлениями
+    
+    function checkAndSendNotification() {
+        const now = Date.now();
+        if (!notificationPermission && Notification.permission === 'granted') {
+            notificationPermission = true;
+        }
+        if (!notificationPermission) return;
+        if (now - lastNotificationTime < NOTIFICATION_COOLDOWN) return;
+        
+        if (temp > 28) {
+            lastNotificationTime = now;
+            new Notification('🔥 КРИТИЧЕСКИЙ ЖАР!', {
+                body: `Температура в теплице ${temp.toFixed(1)}°C! Откройте форточку или включите вентиляцию.`,
+                icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="45" fill="%23ef4444"/%3E%3Ctext x="50" y="70" font-size="50" text-anchor="middle" fill="white"%3E🔥%3C/text%3E%3C/svg%3E'
+            });
+        } else if (soil < 35) {
+            lastNotificationTime = now;
+            new Notification('💧 СУХАЯ ПОЧВА!', {
+                body: `Влажность почвы ${soil}%. Пора поливать растения!`,
+                icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="45" fill="%234285f4"/%3E%3Ctext x="50" y="70" font-size="50" text-anchor="middle" fill="white"%3E💧%3C/text%3E%3C/svg%3E'
+            });
+        } else if (temp < 15) {
+            lastNotificationTime = now;
+            new Notification('❄️ ПРОХЛАДНО!', {
+                body: `Температура ${temp.toFixed(1)}°C. Рекомендуется включить обогрев.`,
+                icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="45" fill="%233b82f6"/%3E%3Ctext x="50" y="70" font-size="50" text-anchor="middle" fill="white"%3E❄️%3C/text%3E%3C/svg%3E'
+            });
+        }
+    }
+
     // ========== ДАННЫЕ ==========
     const hours24 = Array.from({length:24}, (_,i)=> i+':00');
     let tempData24 = [18,19,18,17,16,15,16,18,20,22,24,25,26,27,28,28,27,26,25,24,23,22,21,20];
@@ -1058,24 +1122,24 @@
     // БИБЛИОТЕКА РАСТЕНИЙ (19 ШТУК)
     const plantsList = {
         tomato: { name: 'Томаты', icon: '🍅', soilDry: 40, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 30, lightOff: 50, pumpTime: 2, days: 80, care: '🌞 Нужен яркий свет и регулярный полив. Любят тепло!', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
-        cucumber: { name: 'Огурцы', icon: '🥒', soilDry: 50, soilWet: 80, openTemp: 30, closeTemp: 28, lightOn: 35, lightOff: 55, pumpTime: 2.5, days: 50, care: '💧 Требуют много влаги и высокую влажность воздуха.', optimalTemp: '24-30°C', optimalHumidity: '70-80%' },
-        pepper: { name: 'Перец', icon: '🌶️', soilDry: 40, soilWet: 65, openTemp: 28, closeTemp: 26, lightOn: 30, lightOff: 50, pumpTime: 2, days: 90, care: '🌡️ Любят тепло, не переносят сквозняков.', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
-        salad: { name: 'Салат', icon: '🥬', soilDry: 50, soilWet: 75, openTemp: 22, closeTemp: 20, lightOn: 40, lightOff: 60, pumpTime: 1.5, days: 30, care: '🌱 Растёт быстро, нужен частый полив.', optimalTemp: '15-22°C', optimalHumidity: '65-75%' },
-        basil: { name: 'Базилик', icon: '🌿', soilDry: 40, soilWet: 60, openTemp: 25, closeTemp: 23, lightOn: 40, lightOff: 60, pumpTime: 1.5, days: 30, care: '☀️ Любит солнце и тепло, не заливайте!', optimalTemp: '22-26°C', optimalHumidity: '55-65%' },
-        strawberry: { name: 'Клубника', icon: '🍓', soilDry: 45, soilWet: 70, openTemp: 26, closeTemp: 24, lightOn: 35, lightOff: 55, pumpTime: 2, days: 60, care: '🍓 Нуждается в опылении и ярком свете.', optimalTemp: '18-26°C', optimalHumidity: '60-75%' },
-        rose: { name: 'Розы', icon: '🌹', soilDry: 45, soilWet: 65, openTemp: 25, closeTemp: 23, lightOn: 40, lightOff: 60, pumpTime: 2.5, days: 120, care: '🌹 Любят свежий воздух и регулярную обрезку.', optimalTemp: '18-25°C', optimalHumidity: '55-65%' },
-        orchid: { name: 'Орхидеи', icon: '🌸', soilDry: 50, soilWet: 75, openTemp: 28, closeTemp: 26, lightOn: 35, lightOff: 55, pumpTime: 2, days: 180, care: '🌸 Требуют высокую влажность и рассеянный свет.', optimalTemp: '20-28°C', optimalHumidity: '60-80%' },
-        carrot: { name: 'Морковь', icon: '🥕', soilDry: 45, soilWet: 70, openTemp: 24, closeTemp: 22, lightOn: 35, lightOff: 55, pumpTime: 2, days: 70, care: '🥕 Нуждается в рыхлой почве и умеренном поливе.', optimalTemp: '16-24°C', optimalHumidity: '60-70%' },
-        potato: { name: 'Картофель', icon: '🥔', soilDry: 50, soilWet: 75, openTemp: 24, closeTemp: 22, lightOn: 30, lightOff: 50, pumpTime: 2.5, days: 90, care: '🥔 Любит окучивание и регулярный полив.', optimalTemp: '15-24°C', optimalHumidity: '60-70%' },
-        onion: { name: 'Лук', icon: '🧅', soilDry: 45, soilWet: 70, openTemp: 24, closeTemp: 22, lightOn: 35, lightOff: 55, pumpTime: 1.5, days: 100, care: '🧅 Не любит переувлажнения, нужен хороший дренаж.', optimalTemp: '13-24°C', optimalHumidity: '50-65%' },
-        garlic: { name: 'Чеснок', icon: '🧄', soilDry: 45, soilWet: 70, openTemp: 22, closeTemp: 20, lightOn: 35, lightOff: 55, pumpTime: 1.5, days: 120, care: '🧄 Морозостоек, любит солнечные места.', optimalTemp: '13-22°C', optimalHumidity: '50-65%' },
-        eggplant: { name: 'Баклажан', icon: '🍆', soilDry: 45, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 35, lightOff: 55, pumpTime: 2, days: 85, care: '🍆 Требует много тепла и света.', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
-        watermelon: { name: 'Арбуз', icon: '🍉', soilDry: 40, soilWet: 65, openTemp: 30, closeTemp: 28, lightOn: 40, lightOff: 60, pumpTime: 2.5, days: 80, care: '🍉 Любит жару и простор для роста.', optimalTemp: '25-30°C', optimalHumidity: '55-65%' },
-        melon: { name: 'Дыня', icon: '🍈', soilDry: 40, soilWet: 65, openTemp: 30, closeTemp: 28, lightOn: 40, lightOff: 60, pumpTime: 2.5, days: 75, care: '🍈 Требует много солнца и тепла.', optimalTemp: '24-30°C', optimalHumidity: '55-65%' },
-        corn: { name: 'Кукуруза', icon: '🌽', soilDry: 45, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 40, lightOff: 60, pumpTime: 2, days: 90, care: '🌽 Любит ветроопыление и высокие температуры.', optimalTemp: '20-28°C', optimalHumidity: '60-70%' },
-        sunflower: { name: 'Подсолнух', icon: '🌻', soilDry: 40, soilWet: 65, openTemp: 28, closeTemp: 26, lightOn: 45, lightOff: 65, pumpTime: 2, days: 100, care: '🌻 Тянется к солнцу, нуждается в опоре.', optimalTemp: '20-28°C', optimalHumidity: '55-65%' },
-        lavender: { name: 'Лаванда', icon: '💜', soilDry: 35, soilWet: 55, openTemp: 28, closeTemp: 26, lightOn: 45, lightOff: 65, pumpTime: 1.5, days: 120, care: '💜 Любит сухую почву и много солнца.', optimalTemp: '18-28°C', optimalHumidity: '40-50%' },
-        mint: { name: 'Мята', icon: '🌱', soilDry: 50, soilWet: 80, openTemp: 25, closeTemp: 23, lightOn: 35, lightOff: 55, pumpTime: 2, days: 30, care: '🌱 Агрессивно растёт, нужен контроль корней.', optimalTemp: '18-25°C', optimalHumidity: '60-75%' }
+        cucumber: { name: 'Огурцы', icon: '🥒', soilDry: 50, soilWet: 80, openTemp: 30, closeTemp: 28, lightOn: 35, lightOff: 55, pumpTime: 2.5, days: 50, care: '💧 Требуют много влаги.', optimalTemp: '24-30°C', optimalHumidity: '70-80%' },
+        pepper: { name: 'Перец', icon: '🌶️', soilDry: 40, soilWet: 65, openTemp: 28, closeTemp: 26, lightOn: 30, lightOff: 50, pumpTime: 2, days: 90, care: '🌡️ Любят тепло.', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
+        salad: { name: 'Салат', icon: '🥬', soilDry: 50, soilWet: 75, openTemp: 22, closeTemp: 20, lightOn: 40, lightOff: 60, pumpTime: 1.5, days: 30, care: '🌱 Частый полив.', optimalTemp: '15-22°C', optimalHumidity: '65-75%' },
+        basil: { name: 'Базилик', icon: '🌿', soilDry: 40, soilWet: 60, openTemp: 25, closeTemp: 23, lightOn: 40, lightOff: 60, pumpTime: 1.5, days: 30, care: '☀️ Любит солнце.', optimalTemp: '22-26°C', optimalHumidity: '55-65%' },
+        strawberry: { name: 'Клубника', icon: '🍓', soilDry: 45, soilWet: 70, openTemp: 26, closeTemp: 24, lightOn: 35, lightOff: 55, pumpTime: 2, days: 60, care: '🍓 Яркий свет.', optimalTemp: '18-26°C', optimalHumidity: '60-75%' },
+        rose: { name: 'Розы', icon: '🌹', soilDry: 45, soilWet: 65, openTemp: 25, closeTemp: 23, lightOn: 40, lightOff: 60, pumpTime: 2.5, days: 120, care: '🌹 Свежий воздух.', optimalTemp: '18-25°C', optimalHumidity: '55-65%' },
+        orchid: { name: 'Орхидеи', icon: '🌸', soilDry: 50, soilWet: 75, openTemp: 28, closeTemp: 26, lightOn: 35, lightOff: 55, pumpTime: 2, days: 180, care: '🌸 Высокая влажность.', optimalTemp: '20-28°C', optimalHumidity: '60-80%' },
+        carrot: { name: 'Морковь', icon: '🥕', soilDry: 45, soilWet: 70, openTemp: 24, closeTemp: 22, lightOn: 35, lightOff: 55, pumpTime: 2, days: 70, care: '🥕 Рыхлая почва.', optimalTemp: '16-24°C', optimalHumidity: '60-70%' },
+        potato: { name: 'Картофель', icon: '🥔', soilDry: 50, soilWet: 75, openTemp: 24, closeTemp: 22, lightOn: 30, lightOff: 50, pumpTime: 2.5, days: 90, care: '🥔 Окучивание.', optimalTemp: '15-24°C', optimalHumidity: '60-70%' },
+        onion: { name: 'Лук', icon: '🧅', soilDry: 45, soilWet: 70, openTemp: 24, closeTemp: 22, lightOn: 35, lightOff: 55, pumpTime: 1.5, days: 100, care: '🧅 Дренаж.', optimalTemp: '13-24°C', optimalHumidity: '50-65%' },
+        garlic: { name: 'Чеснок', icon: '🧄', soilDry: 45, soilWet: 70, openTemp: 22, closeTemp: 20, lightOn: 35, lightOff: 55, pumpTime: 1.5, days: 120, care: '🧄 Солнце.', optimalTemp: '13-22°C', optimalHumidity: '50-65%' },
+        eggplant: { name: 'Баклажан', icon: '🍆', soilDry: 45, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 35, lightOff: 55, pumpTime: 2, days: 85, care: '🍆 Тепло.', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
+        watermelon: { name: 'Арбуз', icon: '🍉', soilDry: 40, soilWet: 65, openTemp: 30, closeTemp: 28, lightOn: 40, lightOff: 60, pumpTime: 2.5, days: 80, care: '🍉 Жара.', optimalTemp: '25-30°C', optimalHumidity: '55-65%' },
+        melon: { name: 'Дыня', icon: '🍈', soilDry: 40, soilWet: 65, openTemp: 30, closeTemp: 28, lightOn: 40, lightOff: 60, pumpTime: 2.5, days: 75, care: '🍈 Солнце.', optimalTemp: '24-30°C', optimalHumidity: '55-65%' },
+        corn: { name: 'Кукуруза', icon: '🌽', soilDry: 45, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 40, lightOff: 60, pumpTime: 2, days: 90, care: '🌽 Ветроопыление.', optimalTemp: '20-28°C', optimalHumidity: '60-70%' },
+        sunflower: { name: 'Подсолнух', icon: '🌻', soilDry: 40, soilWet: 65, openTemp: 28, closeTemp: 26, lightOn: 45, lightOff: 65, pumpTime: 2, days: 100, care: '🌻 Опора.', optimalTemp: '20-28°C', optimalHumidity: '55-65%' },
+        lavender: { name: 'Лаванда', icon: '💜', soilDry: 35, soilWet: 55, openTemp: 28, closeTemp: 26, lightOn: 45, lightOff: 65, pumpTime: 1.5, days: 120, care: '💜 Сухая почва.', optimalTemp: '18-28°C', optimalHumidity: '40-50%' },
+        mint: { name: 'Мята', icon: '🌱', soilDry: 50, soilWet: 80, openTemp: 25, closeTemp: 23, lightOn: 35, lightOff: 55, pumpTime: 2, days: 30, care: '🌱 Контроль корней.', optimalTemp: '18-25°C', optimalHumidity: '60-75%' }
     };
     let devices = { pump: false, light: false, window: false, heater: false, fan: false };
     let autoSettings = { water: true, vent: true, light: true };
@@ -1176,6 +1240,8 @@
         document.getElementById('currentLightLevel').innerHTML = light + '%';
         document.getElementById('brightnessSlider').value = light;
         document.getElementById('brightnessValue').innerHTML = light + '%';
+        
+        checkAndSendNotification();
     }
 
     function updateStatsLive() {
@@ -1224,7 +1290,7 @@
     document.getElementById('emergencyWindow')?.addEventListener('click', () => showToast('🪟 Форточка открыта'));
     document.getElementById('saveSettings')?.addEventListener('click', () => showToast('⚙️ Сохранено'));
 
-    // ========== НОВЫЕ ФУНКЦИИ УПРАВЛЕНИЯ ==========
+    // НОВЫЕ ФУНКЦИИ
     const brightnessSlider = document.getElementById('brightnessSlider');
     const brightnessValue = document.getElementById('brightnessValue');
     brightnessSlider?.addEventListener('input', (e) => {
@@ -1243,7 +1309,6 @@
     autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); });
     autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); });
 
-    // Загрузка значений в настройки
     function loadSettings() {
         const p = plantsList[currentPlant];
         document.getElementById('openTemp').value = p.openTemp;
@@ -1379,6 +1444,10 @@
         btn.addEventListener('click', () => {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            document.querySelectorAll('.mobile-menu-btn').forEach(b => {
+                if (b.dataset.section === btn.dataset.section) b.classList.add('active');
+                else b.classList.remove('active');
+            });
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(btn.dataset.section).classList.add('active');
             if (btn.dataset.section === 'dashboard') buildDashboard();
@@ -1411,235 +1480,4 @@
 })();
 </script>
 </body>
-<script>
-// ========== МОБИЛЬНЫЕ ФИШКИ ==========
-
-// 1. Свайпы для навигации (влево/вправо)
-let touchStartX = 0;
-let touchEndX = 0;
-const sections = ['dashboard', 'history', 'control', 'plants', 'settings', 'about'];
-let currentSectionIndex = 0;
-
-function getCurrentSectionIndex() {
-    for (let i = 0; i < sections.length; i++) {
-        if (document.getElementById(sections[i]).classList.contains('active')) {
-            return i;
-        }
-    }
-    return 0;
-}
-
-document.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
-});
-
-document.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    const diff = touchEndX - touchStartX;
-    
-    if (Math.abs(diff) > 50) {
-        currentSectionIndex = getCurrentSectionIndex();
-        if (diff > 0 && currentSectionIndex > 0) {
-            // Свайп вправо — предыдущий раздел
-            const prevBtn = document.querySelectorAll('.nav-btn')[currentSectionIndex - 1];
-            if (prevBtn) prevBtn.click();
-            showToast('👈 Свайп назад');
-        } else if (diff < 0 && currentSectionIndex < sections.length - 1) {
-            // Свайп влево — следующий раздел
-            const nextBtn = document.querySelectorAll('.nav-btn')[currentSectionIndex + 1];
-            if (nextBtn) nextBtn.click();
-            showToast('👉 Свайп вперёд');
-        }
-    }
-});
-
-// 2. Haptic feedback (вибрация)
-function vibrate(duration = 20) {
-    if (window.navigator && window.navigator.vibrate) {
-        window.navigator.vibrate(duration);
-    }
-}
-
-// Перехватываем клики по кнопкам управления и добавляем вибрацию
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.control-btn, .mode-btn, .save-btn, .nav-btn, .plant-card');
-    if (btn) {
-        vibrate(15);
-    }
-});
-
-// 3. Pull-to-refresh (обновление потягиванием)
-let pullStartY = 0;
-let pullEndY = 0;
-let isRefreshing = false;
-
-document.addEventListener('touchstart', (e) => {
-    if (window.scrollY === 0) {
-        pullStartY = e.touches[0].clientY;
-    }
-});
-
-document.addEventListener('touchmove', (e) => {
-    if (window.scrollY === 0 && !isRefreshing) {
-        pullEndY = e.touches[0].clientY;
-        const pullDistance = pullEndY - pullStartY;
-        if (pullDistance > 80) {
-            isRefreshing = true;
-            showToast('🔄 Обновление...');
-            location.reload();
-        }
-    }
-});
-
-// 4. Адаптивное меню (гамбургер на мобилках)
-function initMobileMenu() {
-    const nav = document.querySelector('.nav');
-    const isMobile = window.innerWidth <= 640;
-    
-    if (isMobile && !document.querySelector('.mobile-menu-btn')) {
-        // Создаём кнопку гамбургер
-        const menuBtn = document.createElement('button');
-        menuBtn.className = 'mobile-menu-btn';
-        menuBtn.innerHTML = '☰';
-        menuBtn.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--stat-value);
-            color: white;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            display: none;
-            align-items: center;
-            justify-content: center;
-        `;
-        
-        menuBtn.onclick = () => {
-            nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
-            if (nav.style.display === 'flex') {
-                nav.style.position = 'fixed';
-                nav.style.top = '50%';
-                nav.style.left = '50%';
-                nav.style.transform = 'translate(-50%, -50%)';
-                nav.style.backgroundColor = 'var(--card-bg)';
-                nav.style.padding = '20px';
-                nav.style.borderRadius = '20px';
-                nav.style.flexDirection = 'column';
-                nav.style.zIndex = '1001';
-                nav.style.backdropFilter = 'blur(10px)';
-            } else {
-                nav.style.position = 'sticky';
-                nav.style.flexDirection = 'row';
-                nav.style.padding = '5px 0';
-            }
-        };
-        
-        document.body.appendChild(menuBtn);
-        menuBtn.style.display = 'flex';
-        
-        // Закрытие при клике вне меню
-        document.addEventListener('click', (e) => {
-            if (nav.style.display === 'flex' && !nav.contains(e.target) && e.target !== menuBtn) {
-                nav.style.display = 'none';
-            }
-        });
-    }
-}
-
-// 5. Скрытие адресной строки при скролле
-window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-        window.scrollTo(0, window.scrollY);
-    }
-});
-
-// 6. Автоматическая тёмная тема по системным настройкам
-if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    if (!document.body.classList.contains('dark')) {
-        document.getElementById('themeToggle').click();
-    }
-}
-
-// 7. Плавные анимации для всех переходов
-document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const sections = document.querySelectorAll('.section');
-        sections.forEach(s => {
-            s.style.animation = 'none';
-            s.offsetHeight;
-            s.style.animation = 'fadeSlideIn 0.4s ease-out';
-        });
-    });
-});
-
-// 8. Увеличенные кнопки на мобилках
-function adjustButtonsForMobile() {
-    if (window.innerWidth <= 640) {
-        document.querySelectorAll('.control-btn, .mode-btn').forEach(btn => {
-            btn.style.padding = '20px 12px';
-            btn.style.fontSize = '16px';
-        });
-        document.querySelectorAll('.plant-card').forEach(card => {
-            card.style.padding = '15px 8px';
-        });
-    }
-}
-
-// 9. Индикатор загрузки при обновлении данных
-let loadingIndicator = null;
-function showLoading() {
-    if (!loadingIndicator) {
-        loadingIndicator = document.createElement('div');
-        loadingIndicator.innerHTML = '⏳ Загрузка...';
-        loadingIndicator.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--card-bg);
-            padding: 15px 25px;
-            border-radius: 30px;
-            font-weight: bold;
-            z-index: 2000;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        `;
-        document.body.appendChild(loadingIndicator);
-    }
-    loadingIndicator.style.display = 'block';
-    setTimeout(() => {
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-    }, 1000);
-}
-
-// Перехватываем обновление данных
-const originalUpdateStatsLive = updateStatsLive;
-updateStatsLive = function() {
-    showLoading();
-    originalUpdateStatsLive();
-};
-
-// 10. Отключение автоповорота (фиксация портретного режима)
-window.addEventListener('orientationchange', () => {
-    if (window.innerHeight < window.innerWidth) {
-        showToast('📱 Для лучшего опыта поверните телефон вертикально');
-    }
-});
-
-// Запускаем мобильные настройки
-window.addEventListener('load', () => {
-    initMobileMenu();
-    adjustButtonsForMobile();
-});
-
-window.addEventListener('resize', () => {
-    adjustButtonsForMobile();
-});
-</script>
 </html>
