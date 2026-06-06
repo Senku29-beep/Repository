@@ -1370,7 +1370,7 @@ setInterval(() => {
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }, 3000);
 
-// ========== GitHub СИНХРОНИЗАЦИЯ (АВТОМАТИЧЕСКАЯ) ==========
+// ========== GitHub СИНХРОНИЗАЦИЯ (УПРОЩЁННАЯ) ==========
 const GITHUB_TOKEN = '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';
 const GIST_ID = '352bdb9b6b35d9604caff6399093b8b4';
 const RAW_URL = `https://gist.githubusercontent.com/Senku29-beep/${GIST_ID}/raw/data.json`;
@@ -1382,19 +1382,17 @@ if (!deviceId) {
     localStorage.setItem('device_id_github', deviceId);
 }
 
-let isGitHubSyncing = false;
-let lastLoadedTimestamp = 0;
+let isSyncing = false;
 
 function updateLastSyncTime() {
-    const now = new Date();
-    document.getElementById('lastSyncTime').innerHTML = now.toLocaleTimeString();
+    document.getElementById('lastSyncTime').innerHTML = new Date().toLocaleTimeString();
     document.getElementById('syncStatus').innerHTML = '✅ GitHub';
     document.getElementById('syncStatus').style.color = '#4caf50';
 }
 
-// Отправка данных в GitHub
+// Отправка
 async function syncToGitHub() {
-    if (isGitHubSyncing) return;
+    if (isSyncing) return;
     
     try {
         const getRes = await fetch(API_URL, {
@@ -1443,103 +1441,66 @@ async function syncToGitHub() {
         });
         
         updateLastSyncTime();
-        addEventToLog('📤 Данные отправлены в GitHub');
-        
     } catch(e) {
         console.log('Ошибка отправки:', e);
     }
 }
 
-// Автоматическая загрузка данных из GitHub
-async function autoLoadFromGitHub() {
-    if (isGitHubSyncing) return;
+// Загрузка - ПРОСТАЯ, без всяких проверок
+async function loadFromGitHub() {
+    if (isSyncing) return;
     
     try {
-        // Пробуем через RAW (быстрее, нет CORS)
+        // Пробуем RAW
         const res = await fetch(RAW_URL + '?t=' + Date.now());
-        if (!res.ok) throw new Error('RAW не доступен');
-        
-        const data = await res.json();
-        
-        if (data && data.last && data.last.timestamp && data.last.timestamp > lastLoadedTimestamp) {
-            lastLoadedTimestamp = data.last.timestamp;
+        if (res.ok) {
+            const data = await res.json();
             
-            if (data.last.deviceId !== deviceId) {
-                isGitHubSyncing = true;
+            // Если есть данные и они НЕ от нашего устройства
+            if (data && data.last && data.last.deviceId && data.last.deviceId !== deviceId) {
+                isSyncing = true;
                 
+                console.log('Загружаем данные с другого устройства:', data.last);
+                
+                // Обновляем все показатели
                 temp = data.last.temp;
                 hum = data.last.hum;
                 soil = data.last.soil;
                 light = data.last.light;
-                devices = data.last.devices;
+                devices = data.last.devices || devices;
                 if (data.last.currentPlant) currentPlant = data.last.currentPlant;
                 if (data.last.waterSaved) waterSaved = data.last.waterSaved;
                 if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
                 
+                // Обновляем интерфейс
                 updateAllUI();
                 buildPlants();
                 buildControlButtons();
                 updateLastSyncTime();
-                addEventToLog('🔄 АВТО-СИНХРОНИЗАЦИЯ! Получены данные с другого устройства');
+                addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные с другого устройства');
                 showToast('🔄 Данные синхронизированы');
                 
-                setTimeout(() => { isGitHubSyncing = false; }, 500);
+                setTimeout(() => { isSyncing = false; }, 500);
             }
         }
     } catch(e) {
-        // RAW не сработал, пробуем через API
-        try {
-            const res = await fetch(API_URL, {
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-            });
-            const gist = await res.json();
-            
-            if (gist.files && gist.files['data.json']) {
-                const data = JSON.parse(gist.files['data.json'].content);
-                
-                if (data && data.last && data.last.timestamp && data.last.timestamp > lastLoadedTimestamp) {
-                    lastLoadedTimestamp = data.last.timestamp;
-                    
-                    if (data.last.deviceId !== deviceId) {
-                        isGitHubSyncing = true;
-                        
-                        temp = data.last.temp;
-                        hum = data.last.hum;
-                        soil = data.last.soil;
-                        light = data.last.light;
-                        devices = data.last.devices;
-                        if (data.last.currentPlant) currentPlant = data.last.currentPlant;
-                        if (data.last.waterSaved) waterSaved = data.last.waterSaved;
-                        if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
-                        
-                        updateAllUI();
-                        buildPlants();
-                        buildControlButtons();
-                        updateLastSyncTime();
-                        addEventToLog('🔄 АВТО-СИНХРОНИЗАЦИЯ! Получены данные с другого устройства');
-                        showToast('🔄 Данные синхронизированы');
-                        
-                        setTimeout(() => { isGitHubSyncing = false; }, 500);
-                    }
-                }
-            }
-        } catch(err) {
-            // тихо
-        }
+        console.log('Ошибка загрузки:', e);
     }
 }
 
-// Отправляем данные при каждом изменении
+// Отправка каждые 4 секунды
 setInterval(syncToGitHub, 4000);
 
-// АВТОМАТИЧЕСКАЯ ЗАГРУЗКА - каждые 4 секунды
-setInterval(autoLoadFromGitHub, 4000);
+// ЗАГРУЗКА каждые 4 секунды (гарантированно)
+setInterval(() => {
+    loadFromGitHub();
+}, 4000);
 
-// Загружаем при старте
+// При старте загружаем
 setTimeout(() => {
-    autoLoadFromGitHub();
-    addEventToLog('☁️ GitHub синхронизация активна (автообновление каждые 4 сек)');
-}, 2000);
+    loadFromGitHub();
+    addEventToLog('☁️ GitHub синхронизация активна');
+}, 1000);
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 function init() {
