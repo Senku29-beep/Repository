@@ -1371,11 +1371,8 @@ setInterval(() => {
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }, 3000);
 
-// ========== GitHub СИНХРОНИЗАЦИЯ (ТОКЕН ИЗ CONFIG.JS) ==========
-if (typeof GITHUB_TOKEN === 'undefined' || typeof GIST_ID === 'undefined') {
-    console.error('Ошибка: файл config.js не загружен! Создайте config.js с GITHUB_TOKEN и GIST_ID');
-    addEventToLog('❌ ОШИБКА: config.js не найден! Токен не загружен');
-} else {
+// ========== ПОЛНАЯ СИНХРОНИЗАЦИЯ ЧЕРЕЗ GITHUB ==========
+if (typeof GITHUB_TOKEN !== 'undefined' && typeof GIST_ID !== 'undefined') {
     const API_URL = `https://api.github.com/gists/${GIST_ID}`;
     
     let deviceId = localStorage.getItem('device_id_github');
@@ -1383,22 +1380,22 @@ if (typeof GITHUB_TOKEN === 'undefined' || typeof GIST_ID === 'undefined') {
         deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
         localStorage.setItem('device_id_github', deviceId);
     }
-    addEventToLog('🆔 Мой ID устройства: ' + deviceId);
+    addEventToLog('🆔 Мой ID: ' + deviceId);
     
-    let isGitHubSyncing = false;
-    let lastData = null;
+    let isSyncing = false;
     
     function updateLastSyncTime() {
-        const now = new Date();
-        document.getElementById('lastSyncTime').innerHTML = now.toLocaleTimeString();
+        document.getElementById('lastSyncTime').innerHTML = new Date().toLocaleTimeString();
         document.getElementById('syncStatus').innerHTML = '✅ GitHub';
         document.getElementById('syncStatus').style.color = '#4caf50';
     }
     
+    // ОТПРАВКА ВСЕХ ДАННЫХ
     async function syncToGitHub() {
-        if (isGitHubSyncing) return;
+        if (isSyncing) return;
         
         try {
+            // Получаем текущий gist
             const getRes = await fetch(API_URL, {
                 headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
             });
@@ -1412,6 +1409,7 @@ if (typeof GITHUB_TOKEN === 'undefined' || typeof GIST_ID === 'undefined') {
             }
             if (!allData.history) allData.history = [];
             
+            // Сохраняем ВСЕ данные
             const newRecord = {
                 deviceId: deviceId,
                 temp: temp,
@@ -1422,13 +1420,15 @@ if (typeof GITHUB_TOKEN === 'undefined' || typeof GIST_ID === 'undefined') {
                 currentPlant: currentPlant,
                 waterSaved: waterSaved,
                 co2Absorbed: co2Absorbed,
+                autoSettings: autoSettings,
                 timestamp: Date.now()
             };
             
             allData.history.push(newRecord);
-            if (allData.history.length > 50) allData.history.shift();
+            if (allData.history.length > 30) allData.history.shift();
             allData.last = newRecord;
             
+            // Записываем обратно
             await fetch(API_URL, {
                 method: 'PATCH',
                 headers: {
@@ -1436,23 +1436,18 @@ if (typeof GITHUB_TOKEN === 'undefined' || typeof GIST_ID === 'undefined') {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    files: {
-                        'data.json': {
-                            content: JSON.stringify(allData, null, 2)
-                        }
-                    }
+                    files: { 'data.json': { content: JSON.stringify(allData, null, 2) } }
                 })
             });
             
             updateLastSyncTime();
-            addEventToLog('📤 Данные отправлены в GitHub');
-        } catch(e) {
-            console.log('Ошибка отправки:', e);
-        }
+            addEventToLog('📤 Отправлено');
+        } catch(e) { console.log('Ошибка отправки:', e); }
     }
     
+    // ЗАГРУЗКА И ПРИМЕНЕНИЕ ВСЕХ ДАННЫХ
     async function loadFromGitHub() {
-        if (isGitHubSyncing) return;
+        if (isSyncing) return;
         
         try {
             const res = await fetch(API_URL, {
@@ -1463,48 +1458,79 @@ if (typeof GITHUB_TOKEN === 'undefined' || typeof GIST_ID === 'undefined') {
             if (gist.files && gist.files['data.json']) {
                 const data = JSON.parse(gist.files['data.json'].content);
                 
-                if (data && data.last) {
-                    if (data.last.deviceId && data.last.deviceId !== deviceId) {
-                        const newDataStr = JSON.stringify(data.last);
-                        if (lastData !== newDataStr) {
-                            lastData = newDataStr;
-                            isGitHubSyncing = true;
-                            
-                            addEventToLog('🔄 Найдены данные с другого устройства!');
-                            
-                            temp = data.last.temp;
-                            hum = data.last.hum;
-                            soil = data.last.soil;
-                            light = data.last.light;
-                            devices = data.last.devices || devices;
-                            if (data.last.currentPlant) currentPlant = data.last.currentPlant;
-                            if (data.last.waterSaved) waterSaved = data.last.waterSaved;
-                            if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
-                            
-                            updateAllUI();
-                            buildPlants();
-                            buildControlButtons();
-                            updateLastSyncTime();
-                            addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные обновлены');
-                            showToast('🔄 Данные синхронизированы');
-                            
-                            setTimeout(() => { isGitHubSyncing = false; }, 500);
-                        }
+                if (data && data.last && data.last.deviceId && data.last.deviceId !== deviceId) {
+                    isSyncing = true;
+                    
+                    addEventToLog('🔄 Синхронизация с другого устройства...');
+                    
+                    // Применяем ВСЕ данные
+                    temp = data.last.temp;
+                    hum = data.last.hum;
+                    soil = data.last.soil;
+                    light = data.last.light;
+                    devices = data.last.devices;
+                    currentPlant = data.last.currentPlant;
+                    waterSaved = data.last.waterSaved;
+                    co2Absorbed = data.last.co2Absorbed;
+                    if (data.last.autoSettings) autoSettings = data.last.autoSettings;
+                    
+                    // Обновляем интерфейс полностью
+                    updateAllUI();
+                    buildPlants();
+                    buildControlButtons();
+                    updateLastSyncTime();
+                    
+                    // Обновляем чекбоксы автоматики
+                    if (document.getElementById('autoWaterToggle')) {
+                        document.getElementById('autoWaterToggle').checked = autoSettings.water;
+                        document.getElementById('autoVentToggle').checked = autoSettings.vent;
+                        document.getElementById('autoLightToggle').checked = autoSettings.light;
                     }
+                    
+                    // Обновляем ползунок яркости
+                    if (document.getElementById('brightnessSlider')) {
+                        document.getElementById('brightnessSlider').value = light;
+                        document.getElementById('brightnessValue').innerHTML = light + '%';
+                        document.getElementById('currentLightLevel').innerHTML = light + '%';
+                    }
+                    
+                    addEventToLog('✅ Полная синхронизация завершена');
+                    showToast('🔄 Данные синхронизированы');
+                    
+                    setTimeout(() => { isSyncing = false; }, 500);
                 }
             }
-        } catch(e) {
-            console.log('Ошибка загрузки:', e);
-        }
+        } catch(e) { console.log('Ошибка загрузки:', e); }
     }
     
-    setInterval(syncToGitHub, 5000);
-    setInterval(loadFromGitHub, 5000);
+    // ОТПРАВКА КАЖДЫЕ 2 СЕКУНДЫ
+    setInterval(syncToGitHub, 2000);
     
+    // ЗАГРУЗКА КАЖДЫЕ 2 СЕКУНДЫ
+    setInterval(loadFromGitHub, 2000);
+    
+    // Загружаем при старте
     setTimeout(() => {
         loadFromGitHub();
-        addEventToLog('☁️ GitHub синхронизация активна');
-    }, 2000);
+        addEventToLog('☁️ GitHub синхронизация активна (каждые 2 сек)');
+    }, 500);
+    
+    // Кнопка ПРИНУДИТЕЛЬНОЙ синхронизации
+    const forceBtn = document.createElement('button');
+    forceBtn.textContent = '🔄 ПРИНУДИТЕЛЬНО';
+    forceBtn.style.cssText = 'position:fixed; bottom:10px; left:10px; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:20px; font-size:12px; cursor:pointer; z-index:9999; font-weight:bold;';
+    document.body.appendChild(forceBtn);
+    forceBtn.onclick = async () => {
+        addEventToLog('🔧 Принудительная синхронизация...');
+        isSyncing = false;
+        await syncToGitHub();
+        await loadFromGitHub();
+        addEventToLog('✅ Принудительная синхронизация завершена');
+        showToast('✅ Принудительная синхронизация');
+    };
+    
+} else {
+    addEventToLog('❌ ОШИБКА: config.js не найден! Создайте файл config.js с GITHUB_TOKEN и GIST_ID');
 }
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
