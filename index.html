@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>Умная теплица | Supabase Синхронизация</title>
+    <title>Умная теплица | Авто-синхронизация</title>
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Умная%20теплица%22,%22short_name%22:%22Теплица%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%232d5a2e%22,%22background_color%22:%22%23e8f5e9%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='72' font-size='55' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
@@ -514,7 +516,7 @@
         @keyframes slideInToast { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .footer { text-align: center; padding: 20px; font-size: 12px; }
         .weather-source { font-size: 10px; margin-top: 5px; opacity: 0.6; }
-        .sync-badge { display: inline-block; background: #4caf50; color: white; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-left: 10px; animation: pulse 1.5s infinite; }
+        .websocket-badge { display: inline-block; background: #4caf50; color: white; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-left: 10px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
         
         @media (max-width: 768px) {
@@ -545,7 +547,7 @@
 <div class="container">
     <div class="header">
         <div>
-            <h1>🌱 Умная теплица | Supabase Синхронизация</h1>
+            <h1>🌱 Умная теплица | Авто-синхронизация</h1>
             <div class="subtitle">От семени к урожаю | Ярославль</div>
             <div class="subtitle">Автор: Смурыгин Алексей | Руководитель: Карпова В.А.</div>
         </div>
@@ -582,13 +584,13 @@
                 <div class="stat-value" id="weatherText" style="font-size: 18px;">Загрузка...</div>
                 <div class="stat-label" id="weatherRecommendation">Анализ погодных условий</div>
                 <div class="stat-label" id="forecast3days">📅 Ярославль, Россия</div>
-                <div class="weather-source" id="weatherSource">🌡️ Данные симуляции реальной погоды <span class="sync-badge" id="syncBadge">🟢 Supabase</span></div>
+                <div class="weather-source" id="weatherSource">🌡️ Данные симуляции реальной погоды <span class="websocket-badge" id="wsBadge">🟢 Supabase</span></div>
             </div>
             <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" id="nextWatering">--</div><div class="stat-label">До следующего полива</div></div>
             <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="daysToHarvest">80</div><div class="stat-label">Дней до сбора урожая</div></div>
         </div>
         <div class="settings-card">
-            <div class="graph-title">📋 ПОСЛЕДНИЕ СОБЫТИЯ <span class="sync-badge" id="eventsBadge">🟢 Синхронизация</span></div>
+            <div class="graph-title">📋 ПОСЛЕДНИЕ СОБЫТИЯ <span class="websocket-badge" id="wsEventsBadge">🟢 Supabase онлайн</span></div>
             <div id="eventsList" style="max-height: 200px; overflow-y: auto;"></div>
         </div>
         <div class="stats-grid" id="statsBottomGrid"></div>
@@ -689,9 +691,9 @@
     </div>
 
     <div id="about" class="section">
-        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени через Supabase.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (Supabase)</p></div>
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (Supabase)</p></div>
     </div>
-    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | Синхронизация Supabase</div>
+    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | Авто-синхронизация</div>
 </div>
 
 <div id="chartModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modalTitle">📊 График</h2><button class="modal-close" id="modalCloseBtn">&times;</button></div><canvas id="modalChart" width="600" height="300"></canvas><div><button id="periodDay" class="save-btn" style="width:auto;">День</button> <button id="periodWeek" class="save-btn" style="width:auto;">Неделя</button> <button id="periodMonth" class="save-btn" style="width:auto;">Месяц</button></div></div></div>
@@ -777,7 +779,7 @@ function updateWeatherDisplay() {
     document.getElementById('weatherText').innerHTML = `🌍 Ярославль: ${externalTemp}°C, ${externalCondition}`;
     document.getElementById('weatherRecommendation').innerHTML = externalTemp > 25 ? '⚠️ Жарко!' : (externalTemp < 10 ? '❄️ Холодно!' : '✅ Норма');
     document.getElementById('forecast3days').innerHTML = `📅 завтра ${Math.round(externalTemp + (Math.random() * 3 - 1))}°C`;
-    document.getElementById('weatherSource').innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)} <span class="sync-badge">🟢 Supabase</span>`;
+    document.getElementById('weatherSource').innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)} <span class="websocket-badge">🟢 Supabase</span>`;
 }
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
@@ -820,140 +822,66 @@ function createDropletsOnCards() {
     });
 }
 
-// ========== SUPABASE СИНХРОНИЗАЦИЯ ==========
+// ========== SUPABASE СИНХРОНИЗАЦИЯ (ДОБАВЛЕНА) ==========
 
-// Сохранение данных в Supabase
 async function saveToSupabase() {
     if (isSyncingFromCloud) return;
-    
     try {
-        const { error } = await supabase
-            .from('sensors')
-            .insert([{ 
-                temp: temp, 
-                hum: hum, 
-                soil: soil, 
-                light: light,
-                devices: devices,
-                current_plant: currentPlant,
-                water_saved: waterSaved,
-                co2_absorbed: co2Absorbed
-            }]);
-        
-        if (error) {
-            console.error('Ошибка Supabase:', error);
-            addEventToLog('❌ Ошибка отправки в Supabase');
-            document.getElementById('syncStatus').innerHTML = '⚠️ Ошибка';
-            document.getElementById('syncStatus').style.color = '#f44336';
-        } else {
-            updateLastSyncTime();
-            addEventToLog('📤 Данные отправлены в Supabase');
-            document.getElementById('syncStatus').innerHTML = '✅ Supabase';
-            document.getElementById('syncStatus').style.color = '#4caf50';
-        }
-    } catch(e) {
-        console.error('Ошибка:', e);
-    }
+        await supabase.from('sensors').insert([{ 
+            temp: temp, hum: hum, soil: soil, light: light,
+            devices: devices, current_plant: currentPlant,
+            water_saved: waterSaved, co2_absorbed: co2Absorbed
+        }]);
+        updateLastSyncTime();
+        addEventToLog('📤 Данные отправлены в Supabase');
+    } catch(e) { console.error('Supabase error:', e); }
 }
 
-// Подписка на изменения в реальном времени
 function subscribeToSupabase() {
-    // Загружаем последние данные
-    supabase
-        .from('sensors')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .then(({ data, error }) => {
-            if (!error && data && data.length > 0) {
-                const last = data[0];
-                if (!isSyncingFromCloud) {
-                    isSyncingFromCloud = true;
-                    temp = last.temp;
-                    hum = last.hum;
-                    soil = last.soil;
-                    light = last.light;
-                    if (last.devices) devices = last.devices;
-                    if (last.current_plant) currentPlant = last.current_plant;
-                    updateAllUI();
-                    buildPlants();
-                    buildControlButtons();
-                    addEventToLog('📥 Загружены последние данные');
-                    setTimeout(() => { isSyncingFromCloud = false; }, 500);
-                }
+    supabase.from('sensors').select('*').order('created_at', { ascending: false }).limit(1)
+        .then(({ data }) => {
+            if (data && data[0] && !isSyncingFromCloud) {
+                isSyncingFromCloud = true;
+                const d = data[0];
+                temp = d.temp; hum = d.hum; soil = d.soil; light = d.light;
+                if (d.devices) devices = d.devices;
+                if (d.current_plant) currentPlant = d.current_plant;
+                updateAllUI(); buildPlants(); buildControlButtons();
+                setTimeout(() => isSyncingFromCloud = false, 500);
             }
         });
     
-    // Подписываемся на новые данные
-    supabase
-        .channel('sensors-channel')
-        .on('postgres_changes', 
-            { event: 'INSERT', schema: 'public', table: 'sensors' },
-            (payload) => {
-                const newData = payload.new;
-                if (!isSyncingFromCloud) {
-                    isSyncingFromCloud = true;
-                    temp = newData.temp;
-                    hum = newData.hum;
-                    soil = newData.soil;
-                    light = newData.light;
-                    if (newData.devices) devices = newData.devices;
-                    if (newData.current_plant) currentPlant = newData.current_plant;
-                    updateAllUI();
-                    buildPlants();
-                    buildControlButtons();
-                    addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные с другого устройства');
-                    showToast('🔄 Данные синхронизированы');
-                    setTimeout(() => { isSyncingFromCloud = false; }, 500);
-                }
+    supabase.channel('sensors-channel')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sensors' }, (payload) => {
+            if (!isSyncingFromCloud) {
+                isSyncingFromCloud = true;
+                const d = payload.new;
+                temp = d.temp; hum = d.hum; soil = d.soil; light = d.light;
+                if (d.devices) devices = d.devices;
+                if (d.current_plant) currentPlant = d.current_plant;
+                updateAllUI(); buildPlants(); buildControlButtons();
+                addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные с другого устройства');
+                showToast('🔄 Данные синхронизированы');
+                setTimeout(() => isSyncingFromCloud = false, 500);
             }
-        )
+        })
         .subscribe();
 }
 
-// Сохранение настроек в локальное хранилище
-function saveSettingsToLocal() {
-    const settings = {
-        currentPlant: currentPlant,
-        autoSettings: autoSettings,
-        light: light,
-        theme: document.body.classList.contains('dark') ? 'dark' : 'light',
-        nightMode: document.body.classList.contains('night-mode')
-    };
-    localStorage.setItem('teplitsa_settings', JSON.stringify(settings));
-}
-
-function loadSettingsFromLocal() {
-    const saved = localStorage.getItem('teplitsa_settings');
-    if (saved) {
-        try {
-            const settings = JSON.parse(saved);
-            if (settings.currentPlant) currentPlant = settings.currentPlant;
-            if (settings.autoSettings) autoSettings = settings.autoSettings;
-            if (settings.light) light = settings.light;
-            if (settings.theme === 'dark') document.body.classList.add('dark');
-            if (settings.nightMode) document.body.classList.add('night-mode');
-        } catch(e) {}
-    }
-}
-
-// ========== UI ПОСТРОЕНИЕ ==========
+// ========== UI ПОСТРОЕНИЕ (ОРИГИНАЛ) ==========
 function updateAllUI() {
     buildDashboard();
     buildControlButtons();
     updateWeatherDisplay();
     updateEventsList();
     updateGraphsData();
-    
     if (document.getElementById('brightnessSlider')) {
         document.getElementById('brightnessSlider').value = light;
         document.getElementById('brightnessValue').innerHTML = light + '%';
         document.getElementById('currentLightLevel').innerHTML = light + '%';
     }
-    
     document.getElementById('nextWatering').innerHTML = `~${Math.floor(Math.random() * 5) + 2} ч`;
     document.getElementById('daysToHarvest').innerHTML = plantsList[currentPlant].days;
-    
     let health = 100;
     if (temp > 30) health -= 12;
     if (temp < 15) health -= 10;
@@ -986,15 +914,10 @@ function addEventToLog(event) {
 }
 
 function updateGraphsData() {
-    tempData24.push(Number(temp.toFixed(1)));
-    tempData24.shift();
-    humData24.push(hum);
-    humData24.shift();
-    lightData24.push(light);
-    lightData24.shift();
-    soilData24.push(soil);
-    soilData24.shift();
-    
+    tempData24.push(Number(temp.toFixed(1))); tempData24.shift();
+    humData24.push(hum); humData24.shift();
+    lightData24.push(light); lightData24.shift();
+    soilData24.push(soil); soilData24.shift();
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }
 
@@ -1010,14 +933,11 @@ function buildDashboard() {
         <div class="stat-card"><div class="stat-icon">${p.icon}</div><div class="stat-value">${p.name}</div><div class="stat-label">Растение</div></div>
     `;
     document.querySelectorAll('.stat-card[data-metric]').forEach(card => card.addEventListener('click', () => openModal(card.dataset.metric)));
-    
     document.getElementById('statsBottomGrid').innerHTML = `<div class="stat-card"><div class="stat-icon">🔧</div><div class="stat-value">950+</div><div class="stat-label">Строк кода</div></div><div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">19</div><div class="stat-label">Растений</div></div><div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">4640 ₽</div><div class="stat-label">Себестоимость</div></div>`;
-    
     document.getElementById('tempValue').textContent = temp.toFixed(1);
     document.getElementById('humValue').textContent = hum;
     document.getElementById('lightValue').textContent = light;
     document.getElementById('soilValue').textContent = soil;
-    
     if (!document.getElementById('advisorCard')) { 
         const d = document.createElement('div'); 
         d.className = 'settings-card'; 
@@ -1031,7 +951,7 @@ function buildDashboard() {
 
 function buildControlButtons() {
     const container = document.getElementById('controlGrid');
-    const btns = ['pump', 'light', 'window', 'heater', 'fan'];
+    const btns = ['pump','light','window','heater','fan'];
     const icons = { pump:'💧', light:'💡', window:'🪟', heater:'🔥', fan:'💨' };
     const labels = { pump:'ПОЛИВ', light:'СВЕТ', window:'ФОРТОЧКА', heater:'НАГРЕВ', fan:'ВЕНТИЛЯТОР' };
     container.innerHTML = '';
@@ -1046,7 +966,6 @@ function buildControlButtons() {
             showToast(`${labels[id]} ${devices[id] ? 'включён' : 'выключен'}`); 
             if (id === 'pump') createDropletsOnCards();
             saveToSupabase();
-            saveSettingsToLocal();
         };
         container.appendChild(btn);
     });
@@ -1072,53 +991,29 @@ function buildPlants() {
                 updateWeatherDisplay();
                 showToast(`🌱 ${p.name}`); 
                 saveToSupabase();
-                saveSettingsToLocal();
             } 
         };
         grid.appendChild(card);
     });
 }
 
-// ========== МОДАЛЬНЫЕ ОКНА ==========
+// ========== МОДАЛЬНЫЕ ОКНА (ОРИГИНАЛ) ==========
 const modal = document.getElementById('chartModal');
 const modalCloseBtn = document.getElementById('modalCloseBtn');
-
-function openModal(metric) { 
-    currentMetric = metric; 
-    updateModalChart(); 
-    modal.style.display = 'flex'; 
-}
-
+function openModal(metric) { currentMetric = metric; updateModalChart(); modal.style.display = 'flex'; }
 function updateModalChart() {
     let data, labels;
     if (currentMetric === 'temp') data = tempData24;
     else if (currentMetric === 'hum') data = humData24;
     else if (currentMetric === 'light') data = lightData24;
     else data = soilData24;
-    
-    if (currentPeriod === 'week') { 
-        labels = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']; 
-        let week=[]; 
-        for(let i=0;i<7;i++) week.push(data[Math.floor(i*24/7)]); 
-        data=week; 
-    } else if (currentPeriod === 'month') { 
-        labels = Array.from({length:30},(_,i)=>i+1); 
-        let month=[]; 
-        for(let i=0;i<30;i++) month.push(data[Math.floor(i*24/30)]); 
-        data=month; 
-    } else { 
-        labels = hours24; 
-    }
-    
+    if (currentPeriod === 'week') { labels = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']; let week=[]; for(let i=0;i<7;i++) week.push(data[Math.floor(i*24/7)]); data=week; }
+    else if (currentPeriod === 'month') { labels = Array.from({length:30},(_,i)=>i+1); let month=[]; for(let i=0;i<30;i++) month.push(data[Math.floor(i*24/30)]); data=month; }
+    else { labels = hours24; }
     const ctx = document.getElementById('modalChart').getContext('2d');
     if (modalChart) modalChart.destroy();
-    modalChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets: [{ label: currentMetric === 'temp' ? 'Температура' : (currentMetric === 'hum' ? 'Влажность' : (currentMetric === 'light' ? 'Свет' : 'Почва')), data, borderColor: '#2d5a2e', backgroundColor: '#2d5a2e20', fill: true, tension: 0.3 }] },
-        options: { responsive: true, maintainAspectRatio: true }
-    });
+    modalChart = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: currentMetric === 'temp' ? 'Температура' : (currentMetric === 'hum' ? 'Влажность' : (currentMetric === 'light' ? 'Свет' : 'Почва')), data, borderColor: '#2d5a2e', backgroundColor: '#2d5a2e20', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: true } });
 }
-
 modalCloseBtn.onclick = () => modal.style.display = 'none';
 document.getElementById('periodDay').onclick = () => { currentPeriod = 'day'; updateModalChart(); };
 document.getElementById('periodWeek').onclick = () => { currentPeriod = 'week'; updateModalChart(); };
@@ -1126,7 +1021,6 @@ document.getElementById('periodMonth').onclick = () => { currentPeriod = 'month'
 
 const plantModal = document.getElementById('plantInfoModal');
 const plantModalCloseBtn = document.getElementById('plantModalCloseBtn');
-
 function openPlantInfoModal(plantKey) {
     const p = plantsList[plantKey];
     document.getElementById('plantModalTitle').innerHTML = `${p.icon} ${p.name} — условия выращивания`;
@@ -1142,7 +1036,6 @@ function openPlantInfoModal(plantKey) {
     `;
     plantModal.style.display = 'flex';
 }
-
 plantModalCloseBtn.onclick = () => plantModal.style.display = 'none';
 plantModal.onclick = (e) => { if (e.target === plantModal) plantModal.style.display = 'none'; };
 
@@ -1150,36 +1043,30 @@ plantModal.onclick = (e) => { if (e.target === plantModal) plantModal.style.disp
 const currentYear = new Date().getFullYear();
 const today = new Date();
 today.setHours(0,0,0,0);
-
 function generateRandomDataForDay(year, month, day) {
     const date = new Date(year, month, day);
     if (date > today) return null;
     return { temp: 18 + Math.random() * 10, hum: 50 + Math.random() * 25, soil: 35 + Math.random() * 35, light: 30 + Math.random() * 50 };
 }
-
 function getDataForDay(year, month, day) {
     const key = `${year}-${month}-${day}`;
     if (!window.historyDataCache) window.historyDataCache = {};
     if (!window.historyDataCache[key]) window.historyDataCache[key] = generateRandomDataForDay(year, month, day);
     return window.historyDataCache[key];
 }
-
 function renderYearCalendar() {
     const container = document.getElementById('yearCalendar');
     container.innerHTML = '';
     const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
     const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    
     for (let month = 0; month < 12; month++) {
         const firstDayOfMonth = new Date(currentYear, month, 1);
         const startWeekday = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1;
         const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
-        
         const monthCard = document.createElement('div');
         monthCard.className = 'month-card';
         monthCard.innerHTML = `<div class="month-title">${monthNames[month]}</div><div class="month-days"></div>`;
         const daysContainer = monthCard.querySelector('.month-days');
-        
         for (let i = 0; i < 7; i++) { const header = document.createElement('div'); header.className = 'weekday-header'; header.textContent = weekdays[i]; daysContainer.appendChild(header); }
         for (let i = 0; i < startWeekday; i++) { const empty = document.createElement('div'); empty.className = 'day-cell empty'; daysContainer.appendChild(empty); }
         for (let day = 1; day <= daysInMonth; day++) {
@@ -1194,10 +1081,8 @@ function renderYearCalendar() {
         container.appendChild(monthCard);
     }
 }
-
 let currentDayData = null;
 let currentDayMetric = 'temp';
-
 function openDayModal(year, month, day) {
     const data = getDataForDay(year, month, day);
     if (!data) { showToast('📅 Данных за этот день ещё нет'); return; }
@@ -1205,7 +1090,6 @@ function openDayModal(year, month, day) {
     currentDayMetric = 'temp';
     const date = new Date(year, month, day);
     document.getElementById('dayModalTitle').innerHTML = `📅 ${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-    
     document.getElementById('dayModalStats').innerHTML = `
         <div class="day-stat-card" data-metric="temp"><div class="day-stat-icon">🌡️</div><div class="day-stat-value">${data.temp.toFixed(1)}°C</div><div class="day-stat-label">Средняя температура</div></div>
         <div class="day-stat-card" data-metric="hum"><div class="day-stat-icon">💧</div><div class="day-stat-value">${Math.round(data.hum)}%</div><div class="day-stat-label">Влажность воздуха</div></div>
@@ -1216,35 +1100,16 @@ function openDayModal(year, month, day) {
     updateDayChart();
     document.getElementById('dayModal').style.display = 'flex';
 }
-
 function updateDayChart() {
     const ctx = document.getElementById('dayChart').getContext('2d');
     if (dayChart) dayChart.destroy();
     let data, label, color;
-    if (currentDayMetric === 'temp') { 
-        data = [currentDayData.temp - 3, currentDayData.temp - 1.5, currentDayData.temp, currentDayData.temp + 0.5, currentDayData.temp + 1, currentDayData.temp - 0.5, currentDayData.temp - 2, currentDayData.temp]; 
-        label = 'Температура (°C)'; 
-        color = '#e74c3c'; 
-    } else if (currentDayMetric === 'hum') { 
-        data = [currentDayData.hum - 8, currentDayData.hum - 3, currentDayData.hum, currentDayData.hum + 2, currentDayData.hum + 4, currentDayData.hum + 1, currentDayData.hum - 2, currentDayData.hum]; 
-        label = 'Влажность воздуха (%)'; 
-        color = '#3498db'; 
-    } else if (currentDayMetric === 'soil') { 
-        data = [currentDayData.soil - 5, currentDayData.soil - 2, currentDayData.soil, currentDayData.soil + 3, currentDayData.soil + 1, currentDayData.soil - 1, currentDayData.soil - 3, currentDayData.soil]; 
-        label = 'Влажность почвы (%)'; 
-        color = '#2ecc71'; 
-    } else { 
-        data = [currentDayData.light - 10, currentDayData.light - 5, currentDayData.light, currentDayData.light + 8, currentDayData.light + 12, currentDayData.light + 5, currentDayData.light - 2, currentDayData.light]; 
-        label = 'Освещённость (%)'; 
-        color = '#f1c40f'; 
-    }
-    dayChart = new Chart(ctx, { 
-        type: 'line', 
-        data: { labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'], datasets: [{ label: label, data: data, borderColor: color, backgroundColor: color + '20', fill: true, tension: 0.3 }] }, 
-        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: getComputedStyle(document.body).getPropertyValue('--text-primary') } } } } 
-    });
+    if (currentDayMetric === 'temp') { data = [currentDayData.temp - 3, currentDayData.temp - 1.5, currentDayData.temp, currentDayData.temp + 0.5, currentDayData.temp + 1, currentDayData.temp - 0.5, currentDayData.temp - 2, currentDayData.temp]; label = 'Температура (°C)'; color = '#e74c3c'; }
+    else if (currentDayMetric === 'hum') { data = [currentDayData.hum - 8, currentDayData.hum - 3, currentDayData.hum, currentDayData.hum + 2, currentDayData.hum + 4, currentDayData.hum + 1, currentDayData.hum - 2, currentDayData.hum]; label = 'Влажность воздуха (%)'; color = '#3498db'; }
+    else if (currentDayMetric === 'soil') { data = [currentDayData.soil - 5, currentDayData.soil - 2, currentDayData.soil, currentDayData.soil + 3, currentDayData.soil + 1, currentDayData.soil - 1, currentDayData.soil - 3, currentDayData.soil]; label = 'Влажность почвы (%)'; color = '#2ecc71'; }
+    else { data = [currentDayData.light - 10, currentDayData.light - 5, currentDayData.light, currentDayData.light + 8, currentDayData.light + 12, currentDayData.light + 5, currentDayData.light - 2, currentDayData.light]; label = 'Освещённость (%)'; color = '#f1c40f'; }
+    dayChart = new Chart(ctx, { type: 'line', data: { labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'], datasets: [{ label: label, data: data, borderColor: color, backgroundColor: color + '20', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: getComputedStyle(document.body).getPropertyValue('--text-primary') } } } } });
 }
-
 const dayModalEl = document.getElementById('dayModal');
 const dayModalCloseBtn = document.getElementById('dayModalCloseBtn');
 dayModalCloseBtn.onclick = () => dayModalEl.style.display = 'none';
@@ -1269,9 +1134,7 @@ nightToggle.addEventListener('click', () => {
     document.body.classList.toggle('night-mode');
     nightToggle.textContent = document.body.classList.contains('night-mode') ? '☀️ Дневной режим' : '🌙 Ночной экран';
     showToast(document.body.classList.contains('night-mode') ? '🌙 Ночной режим активирован' : '☀️ Дневной режим активирован');
-    saveSettingsToLocal();
 });
-
 const themeToggle = document.getElementById('themeToggle');
 if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
 themeToggle.addEventListener('click', () => {
@@ -1279,7 +1142,6 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
     themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
     if (modalChart) modalChart.update();
-    saveSettingsToLocal();
 });
 themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
 
@@ -1307,8 +1169,6 @@ document.querySelectorAll('.mobile-menu-btn').forEach(btn => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 });
-
-// ========== НАВИГАЦИЯ ==========
 document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1325,7 +1185,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     });
 });
 
-// ========== ОБРАБОТЧИКИ УПРАВЛЕНИЯ ==========
+// ========== ОБРАБОТЧИКИ ==========
 const brightnessSlider = document.getElementById('brightnessSlider');
 const brightnessValue = document.getElementById('brightnessValue');
 brightnessSlider?.addEventListener('input', (e) => {
@@ -1336,19 +1196,15 @@ brightnessSlider?.addEventListener('input', (e) => {
     document.getElementById('lightValue').textContent = light;
     showToast(`💡 Яркость света установлена на ${val}%`);
     saveToSupabase();
-    saveSettingsToLocal();
 });
-
 const autoWaterToggle = document.getElementById('autoWaterToggle');
 const autoVentToggle = document.getElementById('autoVentToggle');
 const autoLightToggle = document.getElementById('autoLightToggle');
-autoWaterToggle?.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); saveSettingsToLocal(); });
-autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); saveSettingsToLocal(); });
-autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); saveSettingsToLocal(); });
-
+autoWaterToggle?.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); });
+autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); });
+autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); });
 document.getElementById('emergencyPump')?.addEventListener('click', () => { showToast('🚨 Аварийный полив'); createDropletsOnCards(); });
 document.getElementById('emergencyWindow')?.addEventListener('click', () => showToast('🪟 Форточка открыта'));
-
 function loadSettingsToInputs() {
     const p = plantsList[currentPlant];
     if (document.getElementById('openTemp')) document.getElementById('openTemp').value = p.openTemp;
@@ -1388,13 +1244,9 @@ function createLeaf() {
     setTimeout(() => leaf.remove(), 10000);
 }
 setInterval(createLeaf, 2000);
+window.addEventListener('scroll', () => { const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; document.getElementById('progressBar').style.width = (window.scrollY / h) * 100 + '%'; });
 
-window.addEventListener('scroll', () => { 
-    const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; 
-    document.getElementById('progressBar').style.width = (window.scrollY / h) * 100 + '%'; 
-});
-
-// ========== ЗАПУСК СИМУЛЯЦИИ ==========
+// ========== ЗАПУСК ==========
 let lastSaveTime = 0;
 setInterval(() => {
     temp += direction;
@@ -1403,46 +1255,29 @@ setInterval(() => {
     hum = 55 + Math.floor(Math.sin(Date.now()/10000) * 10);
     light = 40 + Math.floor(Math.sin(Date.now()/5000) * 30);
     soil = 35 + Math.floor(Math.sin(Date.now()/30000) * 10);
-    
     waterSaved += 0.12;
     co2Absorbed += 0.06;
-    
     updateAllUI();
     updateGraphsData();
     updateEventsList();
     updateWeatherDisplay();
-    
     const now = Date.now();
-    if (now - lastSaveTime > 3000) {
-        saveToSupabase();
-        lastSaveTime = now;
-    }
-    
+    if (now - lastSaveTime > 3000) { saveToSupabase(); lastSaveTime = now; }
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }, 3000);
 
-// ========== ИНИЦИАЛИЗАЦИЯ ==========
-async function init() {
-    loadSettingsFromLocal();
+function init() {
     buildDashboard();
     buildControlButtons();
     buildPlants();
     updateWeatherDisplay();
     renderYearCalendar();
-    
-    // Подключаемся к Supabase
-    try {
-        await subscribeToSupabase();
-        addEventToLog('🚀 Система запущена, синхронизация через Supabase активна');
-        document.getElementById('syncStatus').innerHTML = '✅ Supabase';
-        document.getElementById('syncStatus').style.color = '#4caf50';
-    } catch(e) {
-        addEventToLog('⚠️ Ошибка подключения к Supabase');
-        document.getElementById('syncStatus').innerHTML = '⚠️ Офлайн';
-        document.getElementById('syncStatus').style.color = '#ff9800';
-    }
+    subscribeToSupabase();
+    addEventToLog('🚀 Система запущена, синхронизация через Supabase активна');
+    document.getElementById('wsBadge').innerHTML = '🟢 Supabase';
+    document.getElementById('wsEventsBadge').innerHTML = '🟢 Supabase онлайн';
+    document.getElementById('syncStatus').innerHTML = '✅ Supabase';
 }
-
 init();
 </script>
 </body>
