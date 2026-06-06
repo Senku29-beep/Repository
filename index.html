@@ -581,13 +581,13 @@
                 <div class="stat-value" id="weatherText" style="font-size: 18px;">Загрузка...</div>
                 <div class="stat-label" id="weatherRecommendation">Анализ погодных условий</div>
                 <div class="stat-label" id="forecast3days">📅 Ярославль, Россия</div>
-                <div class="weather-source" id="weatherSource">🌡️ Данные симуляции реальной погоды <span class="websocket-badge" id="syncBadge">🟢 GitHub</span></div>
+                <div class="weather-source" id="weatherSource">🌡️ Данные симуляции реальной погоды</div>
             </div>
             <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" id="nextWatering">--</div><div class="stat-label">До следующего полива</div></div>
             <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="daysToHarvest">80</div><div class="stat-label">Дней до сбора урожая</div></div>
         </div>
         <div class="settings-card">
-            <div class="graph-title">📋 ПОСЛЕДНИЕ СОБЫТИЯ <span class="websocket-badge" id="eventsBadge">🟢 GitHub онлайн</span></div>
+            <div class="graph-title">📋 ПОСЛЕДНИЕ СОБЫТИЯ</div>
             <div id="eventsList" style="max-height: 200px; overflow-y: auto;"></div>
         </div>
         <div class="stats-grid" id="statsBottomGrid"></div>
@@ -688,7 +688,7 @@
     </div>
 
     <div id="about" class="section">
-        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система для контроля микроклимата в теплице с облачной синхронизацией через GitHub Gist.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (GitHub)</p></div>
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени через GitHub Gist.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (GitHub)</p></div>
     </div>
     <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | GitHub Синхронизация</div>
 </div>
@@ -769,7 +769,7 @@ function updateWeatherDisplay() {
     document.getElementById('weatherText').innerHTML = `🌍 Ярославль: ${externalTemp}°C, ${externalCondition}`;
     document.getElementById('weatherRecommendation').innerHTML = externalTemp > 25 ? '⚠️ Жарко!' : (externalTemp < 10 ? '❄️ Холодно!' : '✅ Норма');
     document.getElementById('forecast3days').innerHTML = `📅 завтра ${Math.round(externalTemp + (Math.random() * 3 - 1))}°C`;
-    document.getElementById('weatherSource').innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)} <span class="websocket-badge">🟢 GitHub</span>`;
+    document.getElementById('weatherSource').innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)}`;
 }
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
@@ -1370,9 +1370,10 @@ setInterval(() => {
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }, 3000);
 
-// ========== GitHub СИНХРОНИЗАЦИЯ ==========
+// ========== GitHub СИНХРОНИЗАЦИЯ (исправленная CORS) ==========
 const GIST_ID = 'd03a4da3332da9901e8a8019bf56e7fa';
 const GITHUB_TOKEN = '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';
+const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
 
 let deviceId = localStorage.getItem('device_id_github');
 if (!deviceId) {
@@ -1393,7 +1394,8 @@ async function syncToGitHub() {
     if (isGitHubSyncing) return;
     
     try {
-        const getRes = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        // Используем CORS-прокси для обхода ограничений
+        const getRes = await fetch(`${CORS_PROXY}https://api.github.com/gists/${GIST_ID}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
         const gist = await getRes.json();
@@ -1423,7 +1425,7 @@ async function syncToGitHub() {
         if (allData.history.length > 100) allData.history.shift();
         allData.last = newRecord;
         
-        await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        await fetch(`${CORS_PROXY}https://api.github.com/gists/${GIST_ID}`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `token ${GITHUB_TOKEN}`,
@@ -1442,8 +1444,8 @@ async function syncToGitHub() {
         addEventToLog('📤 Данные отправлены в GitHub');
         
     } catch(e) {
-        console.log('Ошибка отправки в GitHub:', e);
-        addEventToLog('❌ Ошибка отправки в GitHub');
+        console.log('Ошибка отправки:', e);
+        addEventToLog('⚠️ GitHub: ошибка отправки');
     }
 }
 
@@ -1451,7 +1453,7 @@ async function loadFromGitHub() {
     if (isGitHubSyncing) return;
     
     try {
-        const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        const res = await fetch(`${CORS_PROXY}https://api.github.com/gists/${GIST_ID}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
         const gist = await res.json();
@@ -1476,18 +1478,18 @@ async function loadFromGitHub() {
                 buildControlButtons();
                 updateLastSyncTime();
                 addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные из GitHub');
-                showToast('🔄 Данные синхронизированы с GitHub');
+                showToast('🔄 Данные синхронизированы');
                 
                 setTimeout(() => { isGitHubSyncing = false; }, 500);
             }
         }
     } catch(e) {
-        console.log('Ошибка загрузки из GitHub:', e);
-        addEventToLog('⚠️ Ошибка загрузки из GitHub');
+        console.log('Ошибка загрузки:', e);
+        addEventToLog('⚠️ GitHub: ошибка загрузки');
     }
 }
 
-// Запускаем GitHub синхронизацию
+// Запускаем синхронизацию
 setInterval(() => {
     syncToGitHub();
     loadFromGitHub();
@@ -1495,7 +1497,7 @@ setInterval(() => {
 
 setTimeout(() => {
     loadFromGitHub();
-    addEventToLog('☁️ GitHub синхронизация активирована');
+    addEventToLog('☁️ GitHub синхронизация запущена');
 }, 2000);
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
@@ -1508,7 +1510,7 @@ function init() {
     renderYearCalendar();
     setupAutoSaveSettings();
     
-    addEventToLog('🚀 Система запущена, синхронизация через GitHub');
+    addEventToLog('🚀 Система запущена');
 }
 
 init();
