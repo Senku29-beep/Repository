@@ -1539,5 +1539,111 @@ function init() {
 
 init();
 </script>
+
+<!-- ТЕСТОВАЯ ПАНЕЛЬ -->
+<div style="position: fixed; bottom: 10px; right: 10px; background: #2d5a2e; color: white; padding: 10px; border-radius: 10px; z-index: 9999; font-size: 12px;">
+    <div id="testStatus">Тест не запущен</div>
+    <button id="testWriteBtn" style="margin-top:5px; padding:5px; background:white; color:#2d5a2e; border:none; border-radius:5px;">📝 Тест записи</button>
+    <button id="testReadBtn" style="margin-top:5px; padding:5px; background:white; color:#2d5a2e; border:none; border-radius:5px;">📖 Тест чтения</button>
+</div>
+
+<script>
+// ТЕСТОВЫЕ ФУНКЦИИ
+const TEST_GIST_ID = '352bdb9b6b35d9604caff6399093b8b4';
+const TEST_TOKEN = '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';
+const TEST_API_URL = `https://api.github.com/gists/${TEST_GIST_ID}`;
+
+document.getElementById('testWriteBtn').onclick = async () => {
+    const statusDiv = document.getElementById('testStatus');
+    statusDiv.innerHTML = '🔄 Тест записи...';
+    statusDiv.style.background = '#ff9800';
+    
+    try {
+        // Читаем текущий gist
+        const getRes = await fetch(TEST_API_URL, {
+            headers: { 'Authorization': `token ${TEST_TOKEN}` }
+        });
+        const gist = await getRes.json();
+        
+        let data = {};
+        if (gist.files && gist.files['data.json']) {
+            data = JSON.parse(gist.files['data.json'].content);
+        }
+        
+        // Добавляем тестовую запись
+        const testRecord = {
+            test: true,
+            time: Date.now(),
+            message: 'Тестовая запись с ' + navigator.userAgent.slice(0, 50)
+        };
+        
+        data.last_test = testRecord;
+        
+        // Записываем обратно
+        const updateRes = await fetch(TEST_API_URL, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `token ${TEST_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: {
+                    'data.json': {
+                        content: JSON.stringify(data, null, 2)
+                    }
+                }
+            })
+        });
+        
+        if (updateRes.ok) {
+            statusDiv.innerHTML = '✅ Тест записи УСПЕШЕН!';
+            statusDiv.style.background = '#4caf50';
+            setTimeout(() => {
+                statusDiv.innerHTML = 'Готово';
+                statusDiv.style.background = '#2d5a2e';
+            }, 3000);
+        } else {
+            const err = await updateRes.json();
+            statusDiv.innerHTML = '❌ Ошибка: ' + (err.message || 'Неизвестно');
+            statusDiv.style.background = '#f44336';
+        }
+    } catch(e) {
+        statusDiv.innerHTML = '❌ Ошибка: ' + e.message;
+        statusDiv.style.background = '#f44336';
+    }
+};
+
+document.getElementById('testReadBtn').onclick = async () => {
+    const statusDiv = document.getElementById('testStatus');
+    statusDiv.innerHTML = '🔄 Тест чтения...';
+    statusDiv.style.background = '#ff9800';
+    
+    try {
+        const res = await fetch(TEST_API_URL, {
+            headers: { 'Authorization': `token ${TEST_TOKEN}` }
+        });
+        const gist = await res.json();
+        
+        if (gist.files && gist.files['data.json']) {
+            const data = JSON.parse(gist.files['data.json'].content);
+            statusDiv.innerHTML = '✅ Данные получены! last_test: ' + (data.last_test ? 'Есть' : 'Нет');
+            statusDiv.style.background = '#4caf50';
+            console.log('Полученные данные:', data);
+        } else {
+            statusDiv.innerHTML = '❌ Файл data.json не найден';
+            statusDiv.style.background = '#f44336';
+        }
+        
+        setTimeout(() => {
+            statusDiv.innerHTML = 'Готово';
+            statusDiv.style.background = '#2d5a2e';
+        }, 3000);
+    } catch(e) {
+        statusDiv.innerHTML = '❌ Ошибка: ' + e.message;
+        statusDiv.style.background = '#f44336';
+    }
+};
+</script>
+
 </body>
 </html>
