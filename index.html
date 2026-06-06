@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <title>Умная теплица | GitHub Синхронизация</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="config.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1370,159 +1371,141 @@ setInterval(() => {
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }, 3000);
 
-// ========== GitHub СИНХРОНИЗАЦИЯ (ИСПРАВЛЕННАЯ) ==========
-const GITHUB_TOKEN = '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';
-const GIST_ID = '352bdb9b6b35d9604caff6399093b8b4';
-const API_URL = `https://api.github.com/gists/${GIST_ID}`;
-
-let deviceId = localStorage.getItem('device_id_github');
-if (!deviceId) {
-    deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-    localStorage.setItem('device_id_github', deviceId);
-}
-addEventToLog('🆔 Мой ID устройства: ' + deviceId);
-
-let isGitHubSyncing = false;
-let lastData = null;
-
-function updateLastSyncTime() {
-    const now = new Date();
-    document.getElementById('lastSyncTime').innerHTML = now.toLocaleTimeString();
-    document.getElementById('syncStatus').innerHTML = '✅ GitHub';
-    document.getElementById('syncStatus').style.color = '#4caf50';
-}
-
-// Отправка данных в GitHub
-async function syncToGitHub() {
-    if (isGitHubSyncing) return;
+// ========== GitHub СИНХРОНИЗАЦИЯ (ТОКЕН ИЗ CONFIG.JS) ==========
+if (typeof GITHUB_TOKEN === 'undefined' || typeof GIST_ID === 'undefined') {
+    console.error('Ошибка: файл config.js не загружен! Создайте config.js с GITHUB_TOKEN и GIST_ID');
+    addEventToLog('❌ ОШИБКА: config.js не найден! Токен не загружен');
+} else {
+    const API_URL = `https://api.github.com/gists/${GIST_ID}`;
     
-    try {
-        const getRes = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-        });
-        const gist = await getRes.json();
-        
-        let allData = {};
-        if (gist.files && gist.files['data.json']) {
-            try {
-                allData = JSON.parse(gist.files['data.json'].content);
-            } catch(e) { allData = { history: [] }; }
-        }
-        if (!allData.history) allData.history = [];
-        
-        const newRecord = {
-            deviceId: deviceId,
-            temp: temp,
-            hum: hum,
-            soil: soil,
-            light: light,
-            devices: devices,
-            currentPlant: currentPlant,
-            waterSaved: waterSaved,
-            co2Absorbed: co2Absorbed,
-            timestamp: Date.now()
-        };
-        
-        allData.history.push(newRecord);
-        if (allData.history.length > 50) allData.history.shift();
-        allData.last = newRecord;
-        
-        await fetch(API_URL, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                files: {
-                    'data.json': {
-                        content: JSON.stringify(allData, null, 2)
-                    }
-                }
-            })
-        });
-        
-        updateLastSyncTime();
-        addEventToLog('📤 Данные отправлены в GitHub');
-        
-    } catch(e) {
-        console.log('Ошибка отправки:', e);
+    let deviceId = localStorage.getItem('device_id_github');
+    if (!deviceId) {
+        deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+        localStorage.setItem('device_id_github', deviceId);
     }
-}
-
-// Загрузка данных из GitHub (упрощённая, без лишних проверок)
-async function loadFromGitHub() {
-    if (isGitHubSyncing) return;
+    addEventToLog('🆔 Мой ID устройства: ' + deviceId);
     
-    try {
-        const res = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-        });
-        const gist = await res.json();
+    let isGitHubSyncing = false;
+    let lastData = null;
+    
+    function updateLastSyncTime() {
+        const now = new Date();
+        document.getElementById('lastSyncTime').innerHTML = now.toLocaleTimeString();
+        document.getElementById('syncStatus').innerHTML = '✅ GitHub';
+        document.getElementById('syncStatus').style.color = '#4caf50';
+    }
+    
+    async function syncToGitHub() {
+        if (isGitHubSyncing) return;
         
-        if (gist.files && gist.files['data.json']) {
-            const data = JSON.parse(gist.files['data.json'].content);
+        try {
+            const getRes = await fetch(API_URL, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            const gist = await getRes.json();
             
-            if (data && data.last) {
-                // Если данные от ДРУГОГО устройства
-                if (data.last.deviceId && data.last.deviceId !== deviceId) {
-                    // Проверяем, что данные действительно новые
-                    const newDataStr = JSON.stringify(data.last);
-                    if (lastData !== newDataStr) {
-                        lastData = newDataStr;
-                        isGitHubSyncing = true;
-                        
-                        addEventToLog('🔄 Найдены данные с другого устройства! ID: ' + data.last.deviceId);
-                        
-                        temp = data.last.temp;
-                        hum = data.last.hum;
-                        soil = data.last.soil;
-                        light = data.last.light;
-                        devices = data.last.devices || devices;
-                        if (data.last.currentPlant) currentPlant = data.last.currentPlant;
-                        if (data.last.waterSaved) waterSaved = data.last.waterSaved;
-                        if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
-                        
-                        updateAllUI();
-                        buildPlants();
-                        buildControlButtons();
-                        updateLastSyncTime();
-                        addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные обновлены');
-                        showToast('🔄 Данные синхронизированы');
-                        
-                        setTimeout(() => { isGitHubSyncing = false; }, 500);
+            let allData = {};
+            if (gist.files && gist.files['data.json']) {
+                try {
+                    allData = JSON.parse(gist.files['data.json'].content);
+                } catch(e) { allData = { history: [] }; }
+            }
+            if (!allData.history) allData.history = [];
+            
+            const newRecord = {
+                deviceId: deviceId,
+                temp: temp,
+                hum: hum,
+                soil: soil,
+                light: light,
+                devices: devices,
+                currentPlant: currentPlant,
+                waterSaved: waterSaved,
+                co2Absorbed: co2Absorbed,
+                timestamp: Date.now()
+            };
+            
+            allData.history.push(newRecord);
+            if (allData.history.length > 50) allData.history.shift();
+            allData.last = newRecord;
+            
+            await fetch(API_URL, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    files: {
+                        'data.json': {
+                            content: JSON.stringify(allData, null, 2)
+                        }
+                    }
+                })
+            });
+            
+            updateLastSyncTime();
+            addEventToLog('📤 Данные отправлены в GitHub');
+        } catch(e) {
+            console.log('Ошибка отправки:', e);
+        }
+    }
+    
+    async function loadFromGitHub() {
+        if (isGitHubSyncing) return;
+        
+        try {
+            const res = await fetch(API_URL, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            const gist = await res.json();
+            
+            if (gist.files && gist.files['data.json']) {
+                const data = JSON.parse(gist.files['data.json'].content);
+                
+                if (data && data.last) {
+                    if (data.last.deviceId && data.last.deviceId !== deviceId) {
+                        const newDataStr = JSON.stringify(data.last);
+                        if (lastData !== newDataStr) {
+                            lastData = newDataStr;
+                            isGitHubSyncing = true;
+                            
+                            addEventToLog('🔄 Найдены данные с другого устройства!');
+                            
+                            temp = data.last.temp;
+                            hum = data.last.hum;
+                            soil = data.last.soil;
+                            light = data.last.light;
+                            devices = data.last.devices || devices;
+                            if (data.last.currentPlant) currentPlant = data.last.currentPlant;
+                            if (data.last.waterSaved) waterSaved = data.last.waterSaved;
+                            if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
+                            
+                            updateAllUI();
+                            buildPlants();
+                            buildControlButtons();
+                            updateLastSyncTime();
+                            addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные обновлены');
+                            showToast('🔄 Данные синхронизированы');
+                            
+                            setTimeout(() => { isGitHubSyncing = false; }, 500);
+                        }
                     }
                 }
             }
+        } catch(e) {
+            console.log('Ошибка загрузки:', e);
         }
-    } catch(e) {
-        console.log('Ошибка загрузки:', e);
     }
+    
+    setInterval(syncToGitHub, 5000);
+    setInterval(loadFromGitHub, 5000);
+    
+    setTimeout(() => {
+        loadFromGitHub();
+        addEventToLog('☁️ GitHub синхронизация активна');
+    }, 2000);
 }
-
-// Отправка каждые 5 секунд
-setInterval(syncToGitHub, 5000);
-
-// Загрузка каждые 5 секунд
-setInterval(loadFromGitHub, 5000);
-
-// Загружаем при старте
-setTimeout(() => {
-    loadFromGitHub();
-    addEventToLog('☁️ GitHub синхронизация активна');
-}, 2000);
-
-// Кнопка принудительной синхронизации
-const forceBtn = document.createElement('button');
-forceBtn.textContent = '🔄 ПРИНУДИТЕЛЬНАЯ СИНХРОНИЗАЦИЯ';
-forceBtn.style.cssText = 'position:fixed; bottom:10px; left:10px; background:#2d5a2e; color:white; border:none; padding:8px 15px; border-radius:20px; font-size:12px; cursor:pointer; z-index:9999;';
-document.body.appendChild(forceBtn);
-forceBtn.onclick = async () => {
-    addEventToLog('🔧 Принудительная синхронизация...');
-    isGitHubSyncing = false;
-    await loadFromGitHub();
-    await syncToGitHub();
-};
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 function init() {
@@ -1539,111 +1522,5 @@ function init() {
 
 init();
 </script>
-
-<!-- ТЕСТОВАЯ ПАНЕЛЬ -->
-<div style="position: fixed; bottom: 10px; right: 10px; background: #2d5a2e; color: white; padding: 10px; border-radius: 10px; z-index: 9999; font-size: 12px;">
-    <div id="testStatus">Тест не запущен</div>
-    <button id="testWriteBtn" style="margin-top:5px; padding:5px; background:white; color:#2d5a2e; border:none; border-radius:5px;">📝 Тест записи</button>
-    <button id="testReadBtn" style="margin-top:5px; padding:5px; background:white; color:#2d5a2e; border:none; border-radius:5px;">📖 Тест чтения</button>
-</div>
-
-<script>
-// ТЕСТОВЫЕ ФУНКЦИИ
-const TEST_GIST_ID = '352bdb9b6b35d9604caff6399093b8b4';
-const TEST_TOKEN = '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';
-const TEST_API_URL = `https://api.github.com/gists/${TEST_GIST_ID}`;
-
-document.getElementById('testWriteBtn').onclick = async () => {
-    const statusDiv = document.getElementById('testStatus');
-    statusDiv.innerHTML = '🔄 Тест записи...';
-    statusDiv.style.background = '#ff9800';
-    
-    try {
-        // Читаем текущий gist
-        const getRes = await fetch(TEST_API_URL, {
-            headers: { 'Authorization': `token ${TEST_TOKEN}` }
-        });
-        const gist = await getRes.json();
-        
-        let data = {};
-        if (gist.files && gist.files['data.json']) {
-            data = JSON.parse(gist.files['data.json'].content);
-        }
-        
-        // Добавляем тестовую запись
-        const testRecord = {
-            test: true,
-            time: Date.now(),
-            message: 'Тестовая запись с ' + navigator.userAgent.slice(0, 50)
-        };
-        
-        data.last_test = testRecord;
-        
-        // Записываем обратно
-        const updateRes = await fetch(TEST_API_URL, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `token ${TEST_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                files: {
-                    'data.json': {
-                        content: JSON.stringify(data, null, 2)
-                    }
-                }
-            })
-        });
-        
-        if (updateRes.ok) {
-            statusDiv.innerHTML = '✅ Тест записи УСПЕШЕН!';
-            statusDiv.style.background = '#4caf50';
-            setTimeout(() => {
-                statusDiv.innerHTML = 'Готово';
-                statusDiv.style.background = '#2d5a2e';
-            }, 3000);
-        } else {
-            const err = await updateRes.json();
-            statusDiv.innerHTML = '❌ Ошибка: ' + (err.message || 'Неизвестно');
-            statusDiv.style.background = '#f44336';
-        }
-    } catch(e) {
-        statusDiv.innerHTML = '❌ Ошибка: ' + e.message;
-        statusDiv.style.background = '#f44336';
-    }
-};
-
-document.getElementById('testReadBtn').onclick = async () => {
-    const statusDiv = document.getElementById('testStatus');
-    statusDiv.innerHTML = '🔄 Тест чтения...';
-    statusDiv.style.background = '#ff9800';
-    
-    try {
-        const res = await fetch(TEST_API_URL, {
-            headers: { 'Authorization': `token ${TEST_TOKEN}` }
-        });
-        const gist = await res.json();
-        
-        if (gist.files && gist.files['data.json']) {
-            const data = JSON.parse(gist.files['data.json'].content);
-            statusDiv.innerHTML = '✅ Данные получены! last_test: ' + (data.last_test ? 'Есть' : 'Нет');
-            statusDiv.style.background = '#4caf50';
-            console.log('Полученные данные:', data);
-        } else {
-            statusDiv.innerHTML = '❌ Файл data.json не найден';
-            statusDiv.style.background = '#f44336';
-        }
-        
-        setTimeout(() => {
-            statusDiv.innerHTML = 'Готово';
-            statusDiv.style.background = '#2d5a2e';
-        }, 3000);
-    } catch(e) {
-        statusDiv.innerHTML = '❌ Ошибка: ' + e.message;
-        statusDiv.style.background = '#f44336';
-    }
-};
-</script>
-
 </body>
 </html>
