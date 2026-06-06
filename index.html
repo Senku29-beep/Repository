@@ -1455,49 +1455,39 @@ async function autoLoadFromGitHub() {
     if (isGitHubSyncing) return;
     
     try {
-        // Пробуем через RAW URL
+        // Пробуем через RAW (быстрее, нет CORS)
         const res = await fetch(RAW_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error('RAW не доступен');
         
-        if (res.ok) {
-            const data = await res.json();
+        const data = await res.json();
+        
+        if (data && data.last && data.last.timestamp && data.last.timestamp > lastLoadedTimestamp) {
+            lastLoadedTimestamp = data.last.timestamp;
             
-            // Проверяем, что есть данные и они не от нашего устройства
-            if (data && data.last && data.last.deviceId && data.last.deviceId !== deviceId) {
+            if (data.last.deviceId !== deviceId) {
                 isGitHubSyncing = true;
                 
-                console.log('📥 Загружаем данные с GitHub:', data.last);
-                addEventToLog('📥 Найдены данные с другого устройства');
-                
-                // Обновляем все показатели
                 temp = data.last.temp;
                 hum = data.last.hum;
                 soil = data.last.soil;
                 light = data.last.light;
-                devices = data.last.devices || devices;
+                devices = data.last.devices;
                 if (data.last.currentPlant) currentPlant = data.last.currentPlant;
                 if (data.last.waterSaved) waterSaved = data.last.waterSaved;
                 if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
                 
-                // Обновляем интерфейс
                 updateAllUI();
                 buildPlants();
                 buildControlButtons();
                 updateLastSyncTime();
-                
-                addEventToLog('🔄 СИНХРОНИЗАЦИЯ! Данные с другого устройства');
+                addEventToLog('🔄 АВТО-СИНХРОНИЗАЦИЯ! Получены данные с другого устройства');
                 showToast('🔄 Данные синхронизированы');
                 
                 setTimeout(() => { isGitHubSyncing = false; }, 500);
-            } else {
-                console.log('Нет новых данных или данные свои');
             }
-        } else {
-            console.log('RAW недоступен, статус:', res.status);
         }
     } catch(e) {
-        console.log('Ошибка загрузки через RAW:', e);
-        
-        // Пробуем через API как запасной вариант
+        // RAW не сработал, пробуем через API
         try {
             const res = await fetch(API_URL, {
                 headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
@@ -1507,28 +1497,34 @@ async function autoLoadFromGitHub() {
             if (gist.files && gist.files['data.json']) {
                 const data = JSON.parse(gist.files['data.json'].content);
                 
-                if (data && data.last && data.last.deviceId && data.last.deviceId !== deviceId) {
-                    isGitHubSyncing = true;
+                if (data && data.last && data.last.timestamp && data.last.timestamp > lastLoadedTimestamp) {
+                    lastLoadedTimestamp = data.last.timestamp;
                     
-                    temp = data.last.temp;
-                    hum = data.last.hum;
-                    soil = data.last.soil;
-                    light = data.last.light;
-                    devices = data.last.devices || devices;
-                    if (data.last.currentPlant) currentPlant = data.last.currentPlant;
-                    
-                    updateAllUI();
-                    buildPlants();
-                    buildControlButtons();
-                    updateLastSyncTime();
-                    addEventToLog('🔄 СИНХРОНИЗАЦИЯ (API)! Данные с другого устройства');
-                    showToast('🔄 Данные синхронизированы');
-                    
-                    setTimeout(() => { isGitHubSyncing = false; }, 500);
+                    if (data.last.deviceId !== deviceId) {
+                        isGitHubSyncing = true;
+                        
+                        temp = data.last.temp;
+                        hum = data.last.hum;
+                        soil = data.last.soil;
+                        light = data.last.light;
+                        devices = data.last.devices;
+                        if (data.last.currentPlant) currentPlant = data.last.currentPlant;
+                        if (data.last.waterSaved) waterSaved = data.last.waterSaved;
+                        if (data.last.co2Absorbed) co2Absorbed = data.last.co2Absorbed;
+                        
+                        updateAllUI();
+                        buildPlants();
+                        buildControlButtons();
+                        updateLastSyncTime();
+                        addEventToLog('🔄 АВТО-СИНХРОНИЗАЦИЯ! Получены данные с другого устройства');
+                        showToast('🔄 Данные синхронизированы');
+                        
+                        setTimeout(() => { isGitHubSyncing = false; }, 500);
+                    }
                 }
             }
         } catch(err) {
-            console.log('Ошибка загрузки через API:', err);
+            // тихо
         }
     }
 }
