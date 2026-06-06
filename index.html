@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>Умная теплица | Локальная работа</title>
+    <title>Умная теплица | PocketBase Синхронизация</title>
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Умная%20теплица%22,%22short_name%22:%22Теплица%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%232d5a2e%22,%22background_color%22:%22%23e8f5e9%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='72' font-size='55' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d5a2e'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='white'%3E🌱%3C/text%3E%3C/svg%3E">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -544,7 +546,7 @@
 <div class="container">
     <div class="header">
         <div>
-            <h1>🌱 Умная теплица | Локальная работа</h1>
+            <h1>🌱 Умная теплица | PocketBase Синхронизация</h1>
             <div class="subtitle">От семени к урожаю | Ярославль</div>
             <div class="subtitle">Автор: Смурыгин Алексей | Руководитель: Карпова В.А.</div>
         </div>
@@ -581,13 +583,13 @@
                 <div class="stat-value" id="weatherText" style="font-size: 18px;">Загрузка...</div>
                 <div class="stat-label" id="weatherRecommendation">Анализ погодных условий</div>
                 <div class="stat-label" id="forecast3days">📅 Ярославль, Россия</div>
-                <div class="weather-source" id="weatherSource">🌡️ Данные симуляции реальной погоды</div>
+                <div class="weather-source" id="weatherSource">🌡️ Данные симуляции реальной погоды <span class="websocket-badge" id="wsBadge">🟢 PocketBase</span></div>
             </div>
             <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" id="nextWatering">--</div><div class="stat-label">До следующего полива</div></div>
             <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="daysToHarvest">80</div><div class="stat-label">Дней до сбора урожая</div></div>
         </div>
         <div class="settings-card">
-            <div class="graph-title">📋 ПОСЛЕДНИЕ СОБЫТИЯ</div>
+            <div class="graph-title">📋 ПОСЛЕДНИЕ СОБЫТИЯ <span class="websocket-badge" id="wsEventsBadge">🟢 PocketBase онлайн</span></div>
             <div id="eventsList" style="max-height: 200px; overflow-y: auto;"></div>
         </div>
         <div class="stats-grid" id="statsBottomGrid"></div>
@@ -678,19 +680,19 @@
             <div class="graph-title">☁️ Статус синхронизации</div>
             <div class="setting-row">
                 <span>🌐 Облачная синхронизация</span>
-                <span id="syncStatus" style="font-weight: bold; color: #f44336;">❌ Отключена</span>
+                <span id="syncStatus" style="font-weight: bold; color: #4caf50;">✅ PocketBase</span>
             </div>
             <div class="setting-row">
-                <span>🔄 Локальная работа</span>
-                <span id="lastSyncTime">Активна</span>
+                <span>🔄 Последняя синхронизация</span>
+                <span id="lastSyncTime">--:--:--</span>
             </div>
         </div>
     </div>
 
     <div id="about" class="section">
-        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система для контроля микроклимата в теплице.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений</p></div>
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени через PocketBase.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (PocketBase)</p></div>
     </div>
-    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | Локальная работа</div>
+    <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | PocketBase Синхронизация</div>
 </div>
 
 <div id="chartModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modalTitle">📊 График</h2><button class="modal-close" id="modalCloseBtn">&times;</button></div><canvas id="modalChart" width="600" height="300"></canvas><div><button id="periodDay" class="save-btn" style="width:auto;">День</button> <button id="periodWeek" class="save-btn" style="width:auto;">Неделя</button> <button id="periodMonth" class="save-btn" style="width:auto;">Месяц</button></div></div></div>
@@ -769,7 +771,7 @@ function updateWeatherDisplay() {
     document.getElementById('weatherText').innerHTML = `🌍 Ярославль: ${externalTemp}°C, ${externalCondition}`;
     document.getElementById('weatherRecommendation').innerHTML = externalTemp > 25 ? '⚠️ Жарко!' : (externalTemp < 10 ? '❄️ Холодно!' : '✅ Норма');
     document.getElementById('forecast3days').innerHTML = `📅 завтра ${Math.round(externalTemp + (Math.random() * 3 - 1))}°C`;
-    document.getElementById('weatherSource').innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)}`;
+    document.getElementById('weatherSource').innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)} <span class="websocket-badge">🟢 PocketBase</span>`;
 }
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
@@ -779,6 +781,11 @@ function showToast(msg) {
     t.innerText = msg; 
     document.body.appendChild(t); 
     setTimeout(() => t.remove(), 2500); 
+}
+
+function updateLastSyncTime() {
+    const now = new Date();
+    document.getElementById('lastSyncTime').innerHTML = now.toLocaleTimeString();
 }
 
 function getOptimumBadge(v, min, max) { 
@@ -805,6 +812,65 @@ function createDropletsOnCards() {
             setTimeout(() => drop.remove(), 1000);
         }
     });
+}
+
+// ========== POCKETBASE СИНХРОНИЗАЦИЯ ==========
+let isSyncingFromCloud = false;
+let pbInitialized = false;
+
+async function syncToCloud() {
+    if (isSyncingFromCloud) return;
+    
+    try {
+        const response = await fetch('https://teplitsa.pockethost.io/api/collections/sensors/records', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                temp: temp,
+                hum: hum,
+                soil: soil,
+                light: light,
+                devices: devices,
+                water_saved: waterSaved,
+                co2_absorbed: co2Absorbed,
+                current_plant: currentPlant
+            })
+        });
+        
+        if (response.ok) {
+            updateLastSyncTime();
+            addEventToLog('📤 Данные отправлены в PocketBase');
+            document.getElementById('syncStatus').innerHTML = '✅ PocketBase';
+            document.getElementById('syncStatus').style.color = '#4caf50';
+        }
+    } catch(e) {
+        console.log('Ошибка отправки:', e);
+    }
+}
+
+async function loadFromCloud() {
+    try {
+        const response = await fetch('https://teplitsa.pockethost.io/api/collections/sensors/records?sort=-created&perPage=1');
+        const data = await response.json();
+        
+        if (data.items && data.items.length > 0 && !isSyncingFromCloud) {
+            isSyncingFromCloud = true;
+            const d = data.items[0];
+            temp = d.temp;
+            hum = d.hum;
+            soil = d.soil;
+            light = d.light;
+            if (d.devices) devices = d.devices;
+            if (d.current_plant) currentPlant = d.current_plant;
+            updateAllUI();
+            buildPlants();
+            buildControlButtons();
+            addEventToLog('📥 Загружены данные из PocketBase');
+            setTimeout(() => { isSyncingFromCloud = false; }, 500);
+        }
+    } catch(e) {
+        console.log('Ошибка загрузки:', e);
+    }
 }
 
 // Сохранение настроек в локальное хранилище
@@ -968,6 +1034,7 @@ function buildControlButtons() {
             btn.innerHTML = `${icons[id]} ${labels[id]}<br><small>${devices[id] ? (id==='window'?'ОТКР':'ВКЛ') : (id==='window'?'ЗАКР':'ВЫКЛ')}</small>`; 
             showToast(`${labels[id]} ${devices[id] ? 'включён' : 'выключен'}`); 
             if (id === 'pump') createDropletsOnCards();
+            syncToCloud();
             saveSettingsToLocal();
         };
         container.appendChild(btn);
@@ -993,6 +1060,7 @@ function buildPlants() {
                 buildDashboard(); 
                 updateWeatherDisplay();
                 showToast(`🌱 ${p.name}`); 
+                syncToCloud();
                 saveSettingsToLocal();
             } 
         };
@@ -1256,6 +1324,7 @@ brightnessSlider?.addEventListener('input', (e) => {
     document.getElementById('currentLightLevel').innerHTML = light + '%';
     document.getElementById('lightValue').textContent = light;
     showToast(`💡 Яркость света установлена на ${val}%`);
+    syncToCloud();
     saveSettingsToLocal();
 });
 
@@ -1345,6 +1414,7 @@ window.addEventListener('scroll', () => {
 });
 
 // ========== ЗАПУСК СИМУЛЯЦИИ ==========
+let lastSyncTime = 0;
 setInterval(() => {
     // Плавное изменение данных
     temp += direction;
@@ -1364,6 +1434,13 @@ setInterval(() => {
     updateEventsList();
     updateWeatherDisplay();
     
+    // Отправка в облако (не чаще 1 раза в 3 секунды)
+    const now = Date.now();
+    if (now - lastSyncTime > 3000) {
+        syncToCloud();
+        lastSyncTime = now;
+    }
+    
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }, 3000);
 
@@ -1376,8 +1453,15 @@ function init() {
     updateWeatherDisplay();
     renderYearCalendar();
     setupAutoSaveSettings();
+    loadFromCloud();
     
-    addEventToLog('🚀 Система запущена (локальная работа)');
+    // Обновляем статус в UI
+    const wsBadge = document.getElementById('wsBadge');
+    const wsEventsBadge = document.getElementById('wsEventsBadge');
+    if (wsBadge) wsBadge.innerHTML = '🟢 PocketBase';
+    if (wsEventsBadge) wsEventsBadge.innerHTML = '🟢 PocketBase онлайн';
+    
+    addEventToLog('🚀 Система запущена, синхронизация через PocketBase');
 }
 
 init();
