@@ -554,7 +554,7 @@
         </div>
     </div>
 
-    <!-- Панель настроек (показывается только при первом входе или по кнопке) -->
+    <!-- Панель настроек (показывается только при первом входе) -->
     <div id="settingsPanel" class="settings-card" style="background: #ff9800; color: #333; margin-bottom: 20px;">
         <div class="graph-title">🔐 Настройки подключения к GitHub</div>
         <div class="setting-row">
@@ -571,7 +571,7 @@
         </div>
         <div class="setting-row">
             <span>Статус:</span>
-            <span id="settingsStatus">⚙️ Настройки не сохранены</span>
+            <span id="settingsStatus">⚙️ Введите токен и ID Gist</span>
         </div>
     </div>
 
@@ -709,7 +709,7 @@
     </div>
 
     <div id="about" class="section">
-        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени через GitHub Gist.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (GitHub Gist)</p><br><p><strong>Инструкция:</strong><br>1. Создайте секретный Gist с файлом teplitsa.json<br>2. Создайте токен GitHub с доступом к gist<br>3. Введите выше токен и ID Gist и нажмите "Сохранить"<br>4. Данные будут синхронизироваться автоматически каждые 3 секунды</p></div>
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени через GitHub Gist.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (GitHub Gist)</p><br><p><strong>Инструкция:</strong><br>1. Создайте секретный Gist с файлом teplitsa.json<br>2. Создайте токен GitHub с доступом к gist<br>3. Введите выше токен и ID Gist и нажмите "Сохранить"<br>4. Панель настроек скроется, синхронизация запустится автоматически<br>5. Данные будут синхронизироваться каждые 3 секунды</p></div>
     </div>
     <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | GitHub Gist Синхронизация</div>
 </div>
@@ -1395,7 +1395,11 @@ setInterval(() => {
 let ghToken = localStorage.getItem('github_token');
 let gistId = localStorage.getItem('gist_id');
 
-// Обновляем отображение статуса настроек
+// Если настройки уже есть - скрываем панель
+if (ghToken && gistId) {
+    document.getElementById('settingsPanel').style.display = 'none';
+}
+
 function updateSettingsStatus() {
     const statusSpan = document.getElementById('settingsStatus');
     if (ghToken && gistId) {
@@ -1403,13 +1407,11 @@ function updateSettingsStatus() {
         statusSpan.style.color = '#4caf50';
         document.getElementById('syncStatus').innerHTML = '✅ GitHub Gist';
         document.getElementById('syncStatus').style.color = '#4caf50';
-        document.getElementById('settingsPanel').style.background = '#e8f5e9';
     } else {
         statusSpan.innerHTML = '⚙️ Введите токен и ID Gist выше';
         statusSpan.style.color = '#ff9800';
         document.getElementById('syncStatus').innerHTML = '❌ Не настроена';
         document.getElementById('syncStatus').style.color = '#f44336';
-        document.getElementById('settingsPanel').style.background = '#ff9800';
     }
 }
 
@@ -1424,6 +1426,10 @@ document.getElementById('saveSettingsBtn').onclick = () => {
         gistId = id;
         updateSettingsStatus();
         showToast('✅ Настройки сохранены! Синхронизация запущена');
+        
+        // СКРЫВАЕМ ПАНЕЛЬ НАСТРОЕК
+        document.getElementById('settingsPanel').style.display = 'none';
+        
         // Инициализируем синхронизацию
         initSync();
         // Загружаем данные
@@ -1437,12 +1443,15 @@ document.getElementById('saveSettingsBtn').onclick = () => {
 document.getElementById('resetSettingsBtn').onclick = () => {
     localStorage.removeItem('github_token');
     localStorage.removeItem('gist_id');
+    localStorage.removeItem('device_id_gist');
     ghToken = null;
     gistId = null;
     document.getElementById('tokenInput').value = '';
     document.getElementById('gistIdInput').value = '';
+    document.getElementById('settingsPanel').style.display = 'block';
     updateSettingsStatus();
-    showToast('🗑️ Настройки сброшены');
+    stopSync();
+    showToast('🗑️ Настройки сброшены. Обновите страницу.');
 };
 
 let isSyncing = false;
@@ -1598,6 +1607,10 @@ function initSync() {
 // Первоначальная проверка настроек
 updateSettingsStatus();
 
+// Заполняем поля настроек, если они есть
+if (ghToken) document.getElementById('tokenInput').value = ghToken;
+if (gistId) document.getElementById('gistIdInput').value = gistId;
+
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 function init() {
     loadSettingsFromLocal();
@@ -1607,10 +1620,6 @@ function init() {
     updateWeatherDisplay();
     renderYearCalendar();
     setupAutoSaveSettings();
-    
-    // Заполняем поля настроек, если они есть
-    if (ghToken) document.getElementById('tokenInput').value = ghToken;
-    if (gistId) document.getElementById('gistIdInput').value = gistId;
     
     // Запускаем синхронизацию
     initSync();
