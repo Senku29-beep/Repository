@@ -835,8 +835,8 @@ function getOptimumBadge(v, min, max) {
 function getDailyMinMax() { 
     return { 
         temp: { min: Math.min(...tempData24).toFixed(1), max: Math.max(...tempData24).toFixed(1) }, 
-        hum: { min: Math.min(...humData24), max: Math.max(...humData24) }, 
-        soil: { min: Math.min(...soilData24), max: Math.max(...soilData24) } 
+        hum: { min: Math.round(Math.min(...humData24)), max: Math.round(Math.max(...humData24)) }, 
+        soil: { min: Math.round(Math.min(...soilData24)), max: Math.round(Math.max(...soilData24)) } 
     }; 
 }
 
@@ -945,7 +945,7 @@ function updateAllUI() {
 
 function updateEventsList() {
     const timeStr = new Date().toLocaleTimeString().slice(0,5);
-    let events = [`🟢 Система | ${timeStr}`, `🌡️ ${temp.toFixed(1)}°C`, `💧 ${hum}%`, `🌱 ${soil}%`, `☀️ ${light}%`];
+    let events = [`🟢 Система | ${timeStr}`, `🌡️ ${temp.toFixed(1)}°C`, `💧 ${Math.round(hum)}%`, `🌱 ${Math.round(soil)}%`, `☀️ ${Math.round(light)}%`];
     if (temp > 28) events.unshift(`🔥 ЖАР!`);
     if (soil < 40) events.unshift(`💧 ПОЛИВ!`);
     const eventsListEl = document.getElementById('eventsList');
@@ -955,11 +955,11 @@ function updateEventsList() {
 function updateGraphsData() {
     tempData24.push(Number(temp.toFixed(1)));
     tempData24.shift();
-    humData24.push(hum);
+    humData24.push(Math.round(hum));
     humData24.shift();
-    lightData24.push(light);
+    lightData24.push(Math.round(light));
     lightData24.shift();
-    soilData24.push(soil);
+    soilData24.push(Math.round(soil));
     soilData24.shift();
     
     if (modalChart && document.getElementById('chartModal') && document.getElementById('chartModal').style.display === 'flex') updateModalChart();
@@ -1246,7 +1246,7 @@ if(exportCsvBtn) {
     exportCsvBtn.onclick = () => {
         let csv = "Дата,Время,Температура,Влажность,Почва,Освещённость\n";
         const now = new Date();
-        for (let i = 0; i < tempData24.length; i++) csv += `${now.toLocaleDateString()},${hours24[i]},${tempData24[i]},${humData24[i]},${soilData24[i]},${lightData24[i]}\n`;
+        for (let i = 0; i < tempData24.length; i++) csv += `${now.toLocaleDateString()},${hours24[i]},${tempData24[i]},${Math.round(humData24[i])},${Math.round(soilData24[i])},${Math.round(lightData24[i])}\n`;
         const blob = new Blob([csv], {type: 'text/csv'});
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
@@ -1443,38 +1443,32 @@ window.addEventListener('scroll', () => {
     if(progressBar) progressBar.style.width = (window.scrollY / h) * 100 + '%'; 
 });
 
-// ========== СИНХРОНИЗАЦИЯ ==========
+// ========== СИНХРОНИЗАЦИЯ С АВТООЧИСТКОЙ ==========
 let ghToken = null;
 let gistId = null;
 let syncTimer = null;
 let isSyncing = false;
 
-// Максимальное количество записей в истории (10 записей = ~50KB)
-const MAX_HISTORY_SIZE = 10;
+// Максимум 5 записей в истории (очень экономно)
+const MAX_HISTORY_SIZE = 5;
 
 // Автоматическая очистка старых данных
 function autoCleanHistory(data) {
     if (!data || !data.history) return data;
-    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    let cleaned = data.history.filter(record => record.timestamp > oneWeekAgo);
+    const threeDaysAgo = Date.now() - 3 * 24 * 60 * 60 * 1000;
+    let cleaned = data.history.filter(record => record.timestamp > threeDaysAgo);
     if (cleaned.length > MAX_HISTORY_SIZE) {
         cleaned = cleaned.slice(-MAX_HISTORY_SIZE);
     }
     data.history = cleaned;
     if (data.history.length > 0) {
         data.last = data.history[data.history.length - 1];
+    } else if (data.last) {
+        data.history = [data.last];
     }
     return data;
 }
 
-// Получение размера данных
-function getDataSize(data) {
-    const str = JSON.stringify(data);
-    const bytes = new Blob([str]).size;
-    return (bytes / 1024).toFixed(2);
-}
-
-// Обновление отображения размера Gist
 async function updateGistSizeDisplay() {
     if (!ghToken || !gistId) return;
     try {
@@ -1535,10 +1529,10 @@ async function sendToGitHub() {
         
         allData.history.push(currentData);
         
-        // АВТОМАТИЧЕСКАЯ ОЧИСТКА
+        // АВТОМАТИЧЕСКАЯ ОЧИСТКА (решает проблему с местом)
         allData = autoCleanHistory(allData);
         
-        await fetch(API_URL, {
+        const patchRes = await fetch(API_URL, {
             method: 'PATCH',
             headers: {
                 'Authorization': `token ${ghToken}`,
@@ -1549,13 +1543,32 @@ async function sendToGitHub() {
             })
         });
         
-        const lastSyncTimeEl = document.getElementById('lastSyncTime');
-        if(lastSyncTimeEl) lastSyncTimeEl.innerHTML = new Date().toLocaleTimeString();
-        const syncBadge = document.getElementById('syncBadge');
-        if(syncBadge) syncBadge.className = 'websocket-badge sync-ok';
-        setTimeout(() => { if(syncBadge) syncBadge.className = 'websocket-badge'; }, 1000);
-        
-        updateGistSizeDisplay();
+        if (patchRes.ok) {
+            const lastSyncTimeEl = document.getElementById('lastSyncTime');
+            if(lastSyncTimeEl) lastSyncTimeEl.innerHTML = new Date().toLocaleTimeString();
+            const syncBadge = document.getElementById('syncBadge');
+            if(syncBadge) syncBadge.className = 'websocket-badge sync-ok';
+            setTimeout(() => { if(syncBadge) syncBadge.className = 'websocket-badge'; }, 1000);
+            updateGistSizeDisplay();
+        } else {
+            const errorText = await patchRes.text();
+            if (errorText.includes('too large') || errorText.includes('size')) {
+                showToast('⚠️ Gist переполнен! Выполняется принудительная очистка...');
+                allData.history = allData.history.slice(-3);
+                allData = autoCleanHistory(allData);
+                await fetch(API_URL, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `token ${ghToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        files: { 'teplitsa.json': { content: JSON.stringify(allData, null, 2) } }
+                    })
+                });
+                showToast('✅ Очистка выполнена');
+            }
+        }
     } catch(e) {
         console.log('Ошибка отправки:', e);
         const syncBadge = document.getElementById('syncBadge');
@@ -1666,8 +1679,8 @@ function startSync() {
     syncTimer = setInterval(() => {
         sendToGitHub();
         loadFromGitHub();
-    }, 10000);
-    addEventToLog('☁️ Синхронизация запущена (каждые 10 сек)');
+    }, 15000);
+    addEventToLog('☁️ Синхронизация запущена (каждые 15 сек)');
 }
 
 function updateGistStatus() {
