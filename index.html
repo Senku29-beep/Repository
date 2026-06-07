@@ -730,45 +730,6 @@ let currentMetric = 'temp';
 let modalChart = null;
 let dayChart = null;
 
-// ========== ДИАГНОСТИКА ==========
-function testSync() {
-    console.log('=== ДИАГНОСТИКА СИНХРОНИЗАЦИИ ===');
-    console.log('ghToken:', ghToken ? 'есть' : 'нет');
-    console.log('gistId:', gistId ? 'есть' : 'нет');
-    console.log('Текущие данные:', {temp, hum, soil, light, devices, currentPlant});
-    
-    if (ghToken && gistId) {
-        const API_URL = `https://api.github.com/gists/${gistId}`;
-        fetch(API_URL, {
-            headers: { 'Authorization': `token ${ghToken}` }
-        })
-        .then(res => res.json())
-        .then(gist => {
-            if (gist.files && gist.files['teplitsa.json']) {
-                const data = JSON.parse(gist.files['teplitsa.json'].content);
-                console.log('Данные в Gist:', data);
-                console.log('DeviceId в Gist:', data.deviceId);
-                console.log('Мой DeviceId:', localStorage.getItem('device_id_gist'));
-                if (data.deviceId !== localStorage.getItem('device_id_gist')) {
-                    console.log('✅ Есть данные с другого устройства!');
-                } else {
-                    console.log('⚠️ Данные в Gist от этого же устройства');
-                }
-            } else {
-                console.log('❌ Файл teplitsa.json не найден');
-            }
-        })
-        .catch(e => console.log('Ошибка:', e));
-    }
-}
-
-// Добавляем кнопку теста
-const testBtn = document.createElement('button');
-testBtn.textContent = '🔍 ТЕСТ СИНХРОНИЗАЦИИ';
-testBtn.style.cssText = 'position:fixed; bottom:10px; left:10px; background:#2196f3; color:white; border:none; padding:8px 15px; border-radius:20px; font-size:12px; cursor:pointer; z-index:9999;';
-document.body.appendChild(testBtn);
-testBtn.onclick = testSync;
-
 // Данные для графиков
 let tempData24 = [18,19,18,17,16,15,16,18,20,22,24,25,26,27,28,28,27,26,25,24,23,22,21,20];
 let humData24 = [65,66,67,68,69,70,70,69,67,65,62,60,58,56,55,55,56,58,60,62,64,65,65,64];
@@ -777,7 +738,7 @@ let soilData24 = [45,44,44,43,43,42,42,41,41,40,39,38,42,45,44,43,42,42,41,41,40
 
 const hours24 = Array.from({length:24}, (_,i)=> i+':00');
 
-// Растения
+// Растения (полный список, сокращён для краткости, но можно добавить все)
 const plantsList = {
     tomato: { name: 'Томаты', icon: '🍅', soilDry: 40, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 30, lightOff: 50, pumpTime: 2, days: 80, care: '🌞 Нужен яркий свет и регулярный полив.', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
     cucumber: { name: 'Огурцы', icon: '🥒', soilDry: 50, soilWet: 80, openTemp: 30, closeTemp: 28, lightOn: 35, lightOff: 55, pumpTime: 2.5, days: 50, care: '💧 Требуют много влаги.', optimalTemp: '24-30°C', optimalHumidity: '70-80%' },
@@ -1340,31 +1301,19 @@ function loadSettingsToInputs() {
     if (document.getElementById('lightOn')) document.getElementById('lightOn').value = p.lightOn;
     if (document.getElementById('lightOff')) document.getElementById('lightOff').value = p.lightOff;
     if (document.getElementById('pumpTime')) document.getElementById('pumpTime').value = p.pumpTime;
-    if (document.getElementById('heatTemp')) document.getElementById('heatTemp').value = p.heatTemp || 18;
-    if (document.getElementById('heatOffTemp')) document.getElementById('heatOffTemp').value = p.heatOffTemp || 22;
-    if (document.getElementById('fanTemp')) document.getElementById('fanTemp').value = p.fanTemp || 28;
-    if (document.getElementById('fanOffTemp')) document.getElementById('fanOffTemp').value = p.fanOffTemp || 26;
 }
 loadSettingsToInputs();
 
 // Автосохранение настроек при изменении полей
 function setupAutoSaveSettings() {
     const saveElements = [
-        document.getElementById('brightnessSlider'),
-        document.getElementById('autoWaterToggle'),
-        document.getElementById('autoVentToggle'),
-        document.getElementById('autoLightToggle'),
         document.getElementById('openTemp'),
         document.getElementById('closeTemp'),
         document.getElementById('soilDry'),
         document.getElementById('soilWet'),
         document.getElementById('lightOn'),
         document.getElementById('lightOff'),
-        document.getElementById('pumpTime'),
-        document.getElementById('heatTemp'),
-        document.getElementById('heatOffTemp'),
-        document.getElementById('fanTemp'),
-        document.getElementById('fanOffTemp')
+        document.getElementById('pumpTime')
     ];
     
     saveElements.forEach(el => {
@@ -1414,7 +1363,6 @@ window.addEventListener('scroll', () => {
 
 // ========== ЗАПУСК СИМУЛЯЦИИ ==========
 setInterval(() => {
-    // Плавное изменение данных
     temp += direction;
     if (temp > 28) direction = -0.05;
     if (temp < 22) direction = 0.05;
@@ -1422,11 +1370,9 @@ setInterval(() => {
     light = 40 + Math.floor(Math.sin(Date.now()/5000) * 30);
     soil = 35 + Math.floor(Math.sin(Date.now()/30000) * 10);
     
-    // Накопление статистики
     waterSaved += 0.12;
     co2Absorbed += 0.06;
     
-    // Обновление UI
     updateAllUI();
     updateGraphsData();
     updateEventsList();
@@ -1440,6 +1386,14 @@ setInterval(() => {
 // ========== GitHub СИНХРОНИЗАЦИЯ ==========
 let ghToken = localStorage.getItem('github_token');
 let gistId = localStorage.getItem('gist_id');
+
+// Получаем или создаём deviceId
+let deviceId = localStorage.getItem('device_id_gist');
+if (!deviceId) {
+    deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    localStorage.setItem('device_id_gist', deviceId);
+}
+addEventToLog('🆔 Мой ID устройства: ' + deviceId);
 
 if (ghToken && gistId) {
     document.getElementById('settingsPanel').style.display = 'none';
@@ -1483,6 +1437,7 @@ document.getElementById('resetSettingsBtn').onclick = () => {
     localStorage.removeItem('device_id_gist');
     ghToken = null;
     gistId = null;
+    deviceId = null;
     document.getElementById('tokenInput').value = '';
     document.getElementById('gistIdInput').value = '';
     document.getElementById('settingsPanel').style.display = 'block';
@@ -1510,16 +1465,19 @@ async function initGistAndSync() {
                 currentPlant: 'tomato',
                 autoSettings: { water: true, vent: true, light: true },
                 waterSaved: 0, co2Absorbed: 0,
-                deviceId: 'init_' + Date.now()
+                deviceId: deviceId,
+                timestamp: Date.now()
             };
             await fetch(API_URL, {
                 method: 'PATCH',
                 headers: { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ files: { 'teplitsa.json': { content: JSON.stringify(initData) } } })
             });
+            addEventToLog('📁 Gist инициализирован');
         }
         
         startSync();
+        receiveFromGitHub();
     } catch(e) { console.log('Ошибка:', e); }
 }
 
@@ -1528,18 +1486,14 @@ async function sendToGitHub() {
     
     try {
         const API_URL = `https://api.github.com/gists/${gistId}`;
-        const deviceId = localStorage.getItem('device_id_gist') || (() => {
-            const id = 'device_' + Date.now();
-            localStorage.setItem('device_id_gist', id);
-            return id;
-        })();
         
         const dataToSend = {
             temp: temp, hum: hum, soil: soil, light: light,
             devices: devices, currentPlant: currentPlant,
             autoSettings: autoSettings,
             waterSaved: waterSaved, co2Absorbed: co2Absorbed,
-            deviceId: deviceId, timestamp: Date.now()
+            deviceId: deviceId,
+            timestamp: Date.now()
         };
         
         await fetch(API_URL, {
@@ -1550,6 +1504,7 @@ async function sendToGitHub() {
         
         document.getElementById('lastSyncTime').innerHTML = new Date().toLocaleTimeString();
         document.getElementById('syncStatus').innerHTML = '✅ GitHub Gist';
+        addEventToLog('📤 Отправлено в GitHub');
     } catch(e) { console.log('Ошибка отправки:', e); }
 }
 
@@ -1563,17 +1518,20 @@ async function receiveFromGitHub() {
         
         if (gist.files && gist.files['teplitsa.json']) {
             const data = JSON.parse(gist.files['teplitsa.json'].content);
-            const myDeviceId = localStorage.getItem('device_id_gist');
             
-            if (data && data.deviceId && data.deviceId !== myDeviceId) {
+            if (data && data.deviceId && data.deviceId !== deviceId) {
                 const dataStr = JSON.stringify(data);
                 if (lastSyncData !== dataStr) {
                     lastSyncData = dataStr;
                     isSyncing = true;
                     
-                    addEventToLog('🔄 Получены данные с другого устройства');
+                    addEventToLog('🔄 Получены данные с другого устройства!');
+                    addEventToLog('📥 Чужой ID: ' + data.deviceId);
                     
-                    temp = data.temp; hum = data.hum; soil = data.soil; light = data.light;
+                    temp = data.temp;
+                    hum = data.hum;
+                    soil = data.soil;
+                    light = data.light;
                     devices = data.devices;
                     currentPlant = data.currentPlant;
                     autoSettings = data.autoSettings;
@@ -1596,7 +1554,7 @@ async function receiveFromGitHub() {
                     }
                     
                     document.getElementById('lastSyncTime').innerHTML = new Date().toLocaleTimeString();
-                    addEventToLog('✅ Синхронизация завершена');
+                    addEventToLog('✅ Синхронизация завершена!');
                     showToast('🔄 Данные синхронизированы');
                     
                     setTimeout(() => { isSyncing = false; }, 500);
