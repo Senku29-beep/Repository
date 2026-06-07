@@ -518,7 +518,6 @@
         
         .sync-ok { background: #4caf50; }
         .sync-warning { background: #ff9800; animation: none; }
-        .gist-size { font-size: 11px; margin-left: 10px; opacity: 0.7; }
         
         @media (max-width: 768px) {
             .year-calendar { grid-template-columns: repeat(2, 1fr); gap: 15px; }
@@ -689,12 +688,8 @@
                 <span id="lastSyncTime">--:--:--</span>
             </div>
             <div class="setting-row">
-                <span>📊 Размер хранилища</span>
-                <span id="gistSize">0 KB</span>
-            </div>
-            <div class="setting-row">
-                <span>🗑️ Очистка истории</span>
-                <button id="clearHistoryBtn" class="save-btn" style="width:auto; padding:5px 15px; background:#f44336;">Очистить устаревшие данные</button>
+                <span>📊 Размер Gist</span>
+                <span id="gistSize">0 KB / 1000 KB</span>
             </div>
         </div>
         
@@ -977,9 +972,9 @@ function buildDashboard() {
     if(statsGrid) {
         statsGrid.innerHTML = `
             <div class="stat-card" data-metric="temp"><div class="stat-icon">🌡️</div><div class="stat-value" id="tempValue">${temp.toFixed(1)}</div><div class="stat-label">Температура (°C) ${getOptimumBadge(temp, 18, 28)}</div><div class="minmax-info">📉 мин ${daily.temp.min}°C | 📈 макс ${daily.temp.max}°C</div></div>
-            <div class="stat-card" data-metric="hum"><div class="stat-icon">💧</div><div class="stat-value" id="humValue">${hum}</div><div class="stat-label">Влажность (%) ${getOptimumBadge(hum, 45, 75)}</div><div class="minmax-info">📉 мин ${daily.hum.min}% | 📈 макс ${daily.hum.max}%</div></div>
-            <div class="stat-card" data-metric="light"><div class="stat-icon">☀️</div><div class="stat-value" id="lightValue">${light}</div><div class="stat-label">Освещённость (%) ${getOptimumBadge(light, 30, 85)}</div><div class="minmax-info">🌞 0-100%</div></div>
-            <div class="stat-card" data-metric="soil"><div class="stat-icon">🌱</div><div class="stat-value" id="soilValue">${soil}</div><div class="stat-label">Почва (%) ${getOptimumBadge(soil, 40, 70)}</div><div class="minmax-info">📉 мин ${daily.soil.min}% | 📈 макс ${daily.soil.max}%</div></div>
+            <div class="stat-card" data-metric="hum"><div class="stat-icon">💧</div><div class="stat-value" id="humValue">${Math.round(hum)}</div><div class="stat-label">Влажность (%) ${getOptimumBadge(hum, 45, 75)}</div><div class="minmax-info">📉 мин ${daily.hum.min}% | 📈 макс ${daily.hum.max}%</div></div>
+            <div class="stat-card" data-metric="light"><div class="stat-icon">☀️</div><div class="stat-value" id="lightValue">${Math.round(light)}</div><div class="stat-label">Освещённость (%) ${getOptimumBadge(light, 30, 85)}</div><div class="minmax-info">🌞 0-100%</div></div>
+            <div class="stat-card" data-metric="soil"><div class="stat-icon">🌱</div><div class="stat-value" id="soilValue">${Math.round(soil)}</div><div class="stat-label">Почва (%) ${getOptimumBadge(soil, 40, 70)}</div><div class="minmax-info">📉 мин ${daily.soil.min}% | 📈 макс ${daily.soil.max}%</div></div>
             <div class="stat-card"><div class="stat-icon">💧</div><div class="stat-value">FULL</div><div class="stat-label">Вода</div></div>
             <div class="stat-card"><div class="stat-icon">${p.icon}</div><div class="stat-value">${p.name}</div><div class="stat-label">Растение</div></div>
         `;
@@ -1339,7 +1334,7 @@ if(brightnessSliderEl && brightnessValueEl) {
         const currentLightLevelEl = document.getElementById('currentLightLevel');
         if(currentLightLevelEl) currentLightLevelEl.innerHTML = light + '%';
         const lightValueEl = document.getElementById('lightValue');
-        if(lightValueEl) lightValueEl.textContent = light;
+        if(lightValueEl) lightValueEl.textContent = Math.round(light);
         showToast(`💡 Яркость света установлена на ${val}%`);
         saveSettingsToLocal();
         
@@ -1448,32 +1443,31 @@ window.addEventListener('scroll', () => {
     if(progressBar) progressBar.style.width = (window.scrollY / h) * 100 + '%'; 
 });
 
-// ========== СИНХРОНИЗАЦИЯ С ОЧИСТКОЙ ИСТОРИИ ==========
+// ========== СИНХРОНИЗАЦИЯ ==========
 let ghToken = null;
 let gistId = null;
 let syncTimer = null;
 let isSyncing = false;
 
-// Максимальное количество записей в истории (ограничение для Gist)
-const MAX_HISTORY_SIZE = 20;
+// Максимальное количество записей в истории (10 записей = ~50KB)
+const MAX_HISTORY_SIZE = 10;
 
-// Функция очистки старых данных
-function cleanHistoryData(data) {
+// Автоматическая очистка старых данных
+function autoCleanHistory(data) {
     if (!data || !data.history) return data;
-    
-    // Оставляем только последние MAX_HISTORY_SIZE записей
-    if (data.history.length > MAX_HISTORY_SIZE) {
-        data.history = data.history.slice(-MAX_HISTORY_SIZE);
-    }
-    
-    // Также можно удалить очень старые записи (старше 7 дней), если нужно еще сильнее сократить
     const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    data.history = data.history.filter(record => record.timestamp > oneWeekAgo);
-    
+    let cleaned = data.history.filter(record => record.timestamp > oneWeekAgo);
+    if (cleaned.length > MAX_HISTORY_SIZE) {
+        cleaned = cleaned.slice(-MAX_HISTORY_SIZE);
+    }
+    data.history = cleaned;
+    if (data.history.length > 0) {
+        data.last = data.history[data.history.length - 1];
+    }
     return data;
 }
 
-// Получение размера данных в KB
+// Получение размера данных
 function getDataSize(data) {
     const str = JSON.stringify(data);
     const bytes = new Blob([str]).size;
@@ -1494,19 +1488,9 @@ async function updateGistSizeDisplay() {
                 const size = (gist.files['teplitsa.json'].size / 1024).toFixed(2);
                 const gistSizeEl = document.getElementById('gistSize');
                 if (gistSizeEl) gistSizeEl.innerHTML = `${size} KB / 1000 KB`;
-                
-                // Предупреждение если близко к лимиту
-                if (parseFloat(size) > 900) {
-                    showToast('⚠️ Внимание! Gist почти заполнен. Очистите историю!');
-                    if (gistSizeEl) gistSizeEl.style.color = '#f44336';
-                } else {
-                    if (gistSizeEl) gistSizeEl.style.color = '';
-                }
             }
         }
-    } catch(e) {
-        console.log('Ошибка получения размера:', e);
-    }
+    } catch(e) { console.log('Ошибка получения размера:', e); }
 }
 
 async function sendToGitHub() {
@@ -1538,9 +1522,9 @@ async function sendToGitHub() {
         const currentData = {
             deviceId: myDeviceId,
             temp: temp,
-            hum: hum,
-            soil: soil,
-            light: light,
+            hum: Math.round(hum),
+            soil: Math.round(soil),
+            light: Math.round(light),
             devices: devices,
             currentPlant: currentPlant,
             waterSaved: waterSaved,
@@ -1551,18 +1535,10 @@ async function sendToGitHub() {
         
         allData.history.push(currentData);
         
-        // Очистка истории перед сохранением
-        allData = cleanHistoryData(allData);
-        allData.last = currentData;
+        // АВТОМАТИЧЕСКАЯ ОЧИСТКА
+        allData = autoCleanHistory(allData);
         
-        const dataSize = getDataSize(allData);
-        if (parseFloat(dataSize) > 900) {
-            console.log('Данные занимают много места, принудительная очистка...');
-            allData.history = allData.history.slice(-10);
-            allData = cleanHistoryData(allData);
-        }
-        
-        const patchRes = await fetch(API_URL, {
+        await fetch(API_URL, {
             method: 'PATCH',
             headers: {
                 'Authorization': `token ${ghToken}`,
@@ -1573,21 +1549,13 @@ async function sendToGitHub() {
             })
         });
         
-        if (patchRes.ok) {
-            const lastSyncTimeEl = document.getElementById('lastSyncTime');
-            if(lastSyncTimeEl) lastSyncTimeEl.innerHTML = new Date().toLocaleTimeString();
-            const syncBadge = document.getElementById('syncBadge');
-            if(syncBadge) syncBadge.className = 'websocket-badge sync-ok';
-            setTimeout(() => { if(syncBadge) syncBadge.className = 'websocket-badge'; }, 1000);
-            
-            // Обновляем отображение размера
-            setTimeout(() => updateGistSizeDisplay(), 500);
-        } else {
-            const errorText = await patchRes.text();
-            if (errorText.includes('too large') || errorText.includes('size')) {
-                showToast('❌ Ошибка: Gist переполнен! Нажмите "Очистить устаревшие данные"');
-            }
-        }
+        const lastSyncTimeEl = document.getElementById('lastSyncTime');
+        if(lastSyncTimeEl) lastSyncTimeEl.innerHTML = new Date().toLocaleTimeString();
+        const syncBadge = document.getElementById('syncBadge');
+        if(syncBadge) syncBadge.className = 'websocket-badge sync-ok';
+        setTimeout(() => { if(syncBadge) syncBadge.className = 'websocket-badge'; }, 1000);
+        
+        updateGistSizeDisplay();
     } catch(e) {
         console.log('Ошибка отправки:', e);
         const syncBadge = document.getElementById('syncBadge');
@@ -1615,14 +1583,7 @@ async function loadFromGitHub() {
             let data = JSON.parse(gist.files['teplitsa.json'].content);
             const myDeviceId = localStorage.getItem('device_id_gist');
             
-            // Проверяем, нужно ли очистить данные при загрузке
-            const dataSize = getDataSize(data);
-            if (parseFloat(dataSize) > 900) {
-                addEventToLog('⚠️ Gist почти заполнен! Рекомендуется очистить историю');
-            }
-            
             if (data && data.last && data.last.deviceId && data.last.deviceId !== myDeviceId) {
-                // Обновляем локальные данные из облака
                 temp = data.last.temp;
                 hum = data.last.hum;
                 soil = data.last.soil;
@@ -1666,60 +1627,6 @@ async function loadFromGitHub() {
     return false;
 }
 
-// Функция полной очистки истории
-async function clearGistHistory() {
-    if (!ghToken || !gistId) {
-        showToast('❌ Синхронизация не настроена');
-        return;
-    }
-    
-    showToast('🧹 Очистка истории...');
-    
-    try {
-        const API_URL = `https://api.github.com/gists/${gistId}`;
-        const getRes = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${ghToken}` }
-        });
-        const gist = await getRes.json();
-        
-        let allData = {};
-        if (gist.files && gist.files['teplitsa.json']) {
-            try {
-                allData = JSON.parse(gist.files['teplitsa.json'].content);
-            } catch(e) { allData = { history: [], last: null }; }
-        }
-        
-        // Оставляем только последнюю запись
-        if (allData.history && allData.history.length > 0) {
-            const lastRecord = allData.history[allData.history.length - 1];
-            allData.history = [lastRecord];
-            allData.last = lastRecord;
-        } else {
-            allData.history = [];
-            allData.last = null;
-        }
-        
-        await fetch(API_URL, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `token ${ghToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                files: { 'teplitsa.json': { content: JSON.stringify(allData, null, 2) } }
-            })
-        });
-        
-        showToast('✅ История очищена!');
-        addEventToLog('🗑️ История Gist очищена');
-        
-        setTimeout(() => updateGistSizeDisplay(), 500);
-    } catch(e) {
-        console.log('Ошибка очистки:', e);
-        showToast('❌ Ошибка очистки истории');
-    }
-}
-
 async function initGist() {
     if (!ghToken || !gistId) return;
     
@@ -1748,8 +1655,7 @@ async function initGist() {
             addEventToLog('📁 Файл teplitsa.json создан в Gist');
         }
         
-        // Проверяем размер после инициализации
-        setTimeout(() => updateGistSizeDisplay(), 1000);
+        updateGistSizeDisplay();
     } catch(e) {
         console.log('Ошибка инициализации Gist:', e);
     }
@@ -1757,12 +1663,11 @@ async function initGist() {
 
 function startSync() {
     if (syncTimer) clearInterval(syncTimer);
-    // Увеличиваем интервал до 15 секунд для экономии места
     syncTimer = setInterval(() => {
         sendToGitHub();
         loadFromGitHub();
-    }, 15000);
-    addEventToLog('☁️ Синхронизация запущена (каждые 15 сек)');
+    }, 10000);
+    addEventToLog('☁️ Синхронизация запущена (каждые 10 сек)');
 }
 
 function updateGistStatus() {
@@ -1833,16 +1738,6 @@ if(modalSaveBtn) {
         const modal = document.getElementById('gistSettingsModal');
         if(modal) modal.style.display = 'none';
         showToast('✅ Настройки сохранены! Синхронизация запущена');
-    };
-}
-
-// Кнопка очистки истории
-const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-if(clearHistoryBtn) {
-    clearHistoryBtn.onclick = () => {
-        if (confirm('⚠️ Вы уверены, что хотите очистить историю синхронизации? Старые данные будут удалены безвозвратно.')) {
-            clearGistHistory();
-        }
     };
 }
 
