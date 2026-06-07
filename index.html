@@ -516,6 +516,10 @@
         .websocket-badge { display: inline-block; background: #4caf50; color: white; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-left: 10px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
         
+        .sync-ok { background: #4caf50; }
+        .sync-warning { background: #ff9800; animation: none; }
+        .gist-size { font-size: 11px; margin-left: 10px; opacity: 0.7; }
+        
         @media (max-width: 768px) {
             .year-calendar { grid-template-columns: repeat(2, 1fr); gap: 15px; }
             .day-modal-body { flex-direction: column; }
@@ -684,9 +688,16 @@
                 <span>🔄 Последняя синхронизация</span>
                 <span id="lastSyncTime">--:--:--</span>
             </div>
+            <div class="setting-row">
+                <span>📊 Размер хранилища</span>
+                <span id="gistSize">0 KB</span>
+            </div>
+            <div class="setting-row">
+                <span>🗑️ Очистка истории</span>
+                <button id="clearHistoryBtn" class="save-btn" style="width:auto; padding:5px 15px; background:#f44336;">Очистить устаревшие данные</button>
+            </div>
         </div>
         
-        <!-- НОВАЯ КНОПКА ДЛЯ НАСТРОЙКИ СИНХРОНИЗАЦИИ -->
         <div class="settings-card">
             <div class="graph-title">🔐 Настройки облачной синхронизации</div>
             <div class="setting-row">
@@ -706,7 +717,6 @@
     <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | GitHub Gist Синхронизация</div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО ДЛЯ ВВОДА НАСТРОЕК -->
 <div id="gistSettingsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 10000; justify-content: center; align-items: center;">
     <div style="background: white; border-radius: 30px; padding: 30px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
         <h2 style="color: #2d5a2e; margin-bottom: 20px;">🔐 Настройка синхронизации</h2>
@@ -719,15 +729,18 @@
     </div>
 </div>
 
-<div id="chartModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modalTitle">📊 График</h2><button class="modal-close" id="modalCloseBtn">&times;</button></div><canvas id="modalChart" width="600" height="300"></canvas><div><button id="periodDay" class="save-btn" style="width:auto;">День</button> <button id="periodWeek" class="save-btn" style="width:auto;">Неделя</button> <button id="periodMonth" class="save-btn" style="width:auto;">Месяц</button></div></div></div>
+<div id="chartModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modalTitle">📊 График</h2><button class="modal-close" id="modalCloseBtn2">&times;</button></div><canvas id="modalChart" width="600" height="300"></canvas><div><button id="periodDay" class="save-btn" style="width:auto;">День</button> <button id="periodWeek" class="save-btn" style="width:auto;">Неделя</button> <button id="periodMonth" class="save-btn" style="width:auto;">Месяц</button></div></div></div>
 <div id="plantInfoModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="plantModalTitle">🌱 Информация о растении</h2><button class="modal-close" id="plantModalCloseBtn">&times;</button></div><div id="plantModalContent"></div></div></div>
 <div id="dayModal" class="day-modal"><div class="day-modal-content"><div class="day-modal-header"><h2 id="dayModalTitle">📅 Данные за день</h2><button class="day-modal-close" id="dayModalCloseBtn">&times;</button></div><div class="day-modal-body"><div class="day-modal-chart"><canvas id="dayChart" width="400" height="220" style="width:100%; height:auto; max-height:220px;"></canvas></div><div class="day-modal-stats" id="dayModalStats"></div></div></div></div>
 
 <script>
 // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
-let temp = 22.5, direction = 0.05;
-let hum = 58, light = 65, soil = 42;
-let waterSaved = 0, co2Absorbed = 0;
+let temp = 22.5;
+let hum = 58;
+let light = 65;
+let soil = 42;
+let waterSaved = 0;
+let co2Absorbed = 0;
 let devices = { pump: false, light: false, window: false, heater: false, fan: false };
 let autoSettings = { water: true, vent: true, light: true };
 let currentPlant = 'tomato';
@@ -736,7 +749,6 @@ let currentMetric = 'temp';
 let modalChart = null;
 let dayChart = null;
 
-// Данные для графиков
 let tempData24 = [18,19,18,17,16,15,16,18,20,22,24,25,26,27,28,28,27,26,25,24,23,22,21,20];
 let humData24 = [65,66,67,68,69,70,70,69,67,65,62,60,58,56,55,55,56,58,60,62,64,65,65,64];
 let lightData24 = [0,0,0,0,0,5,15,30,45,60,70,75,78,80,75,70,60,45,30,15,5,0,0,0];
@@ -744,7 +756,6 @@ let soilData24 = [45,44,44,43,43,42,42,41,41,40,39,38,42,45,44,43,42,42,41,41,40
 
 const hours24 = Array.from({length:24}, (_,i)=> i+':00');
 
-// Растения
 const plantsList = {
     tomato: { name: 'Томаты', icon: '🍅', soilDry: 40, soilWet: 70, openTemp: 28, closeTemp: 26, lightOn: 30, lightOff: 50, pumpTime: 2, days: 80, care: '🌞 Нужен яркий свет и регулярный полив.', optimalTemp: '22-28°C', optimalHumidity: '60-70%' },
     cucumber: { name: 'Огурцы', icon: '🥒', soilDry: 50, soilWet: 80, openTemp: 30, closeTemp: 28, lightOn: 35, lightOff: 55, pumpTime: 2.5, days: 50, care: '💧 Требуют много влаги.', optimalTemp: '24-30°C', optimalHumidity: '70-80%' },
@@ -791,14 +802,18 @@ setInterval(() => {
 }, 300000);
 
 function updateWeatherDisplay() {
-    document.getElementById('weatherIcon').innerHTML = externalIcon;
-    document.getElementById('weatherText').innerHTML = `🌍 Ярославль: ${externalTemp}°C, ${externalCondition}`;
-    document.getElementById('weatherRecommendation').innerHTML = externalTemp > 25 ? '⚠️ Жарко!' : (externalTemp < 10 ? '❄️ Холодно!' : '✅ Норма');
-    document.getElementById('forecast3days').innerHTML = `📅 завтра ${Math.round(externalTemp + (Math.random() * 3 - 1))}°C`;
-    document.getElementById('weatherSource').innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)}`;
+    const weatherIconEl = document.getElementById('weatherIcon');
+    if(weatherIconEl) weatherIconEl.innerHTML = externalIcon;
+    const weatherTextEl = document.getElementById('weatherText');
+    if(weatherTextEl) weatherTextEl.innerHTML = `🌍 Ярославль: ${externalTemp}°C, ${externalCondition}`;
+    const weatherRecommendationEl = document.getElementById('weatherRecommendation');
+    if(weatherRecommendationEl) weatherRecommendationEl.innerHTML = externalTemp > 25 ? '⚠️ Жарко!' : (externalTemp < 10 ? '❄️ Холодно!' : '✅ Норма');
+    const forecast3daysEl = document.getElementById('forecast3days');
+    if(forecast3daysEl) forecast3daysEl.innerHTML = `📅 завтра ${Math.round(externalTemp + (Math.random() * 3 - 1))}°C`;
+    const weatherSourceEl = document.getElementById('weatherSource');
+    if(weatherSourceEl) weatherSourceEl.innerHTML = `🌡️ Ярославль: ${externalTemp}°C, обновлено ${new Date().toLocaleTimeString().slice(0,5)}`;
 }
 
-// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function showToast(msg) { 
     const t = document.createElement('div'); 
     t.className = 'toast'; 
@@ -844,12 +859,12 @@ function createDropletsOnCards() {
     });
 }
 
-// Сохранение настроек в локальное хранилище
 function saveSettingsToLocal() {
     const settings = {
         currentPlant: currentPlant,
         autoSettings: autoSettings,
         light: light,
+        devices: devices,
         theme: document.body.classList.contains('dark') ? 'dark' : 'light',
         nightMode: document.body.classList.contains('night-mode'),
         thresholds: {
@@ -877,6 +892,7 @@ function loadSettingsFromLocal() {
             if (settings.currentPlant) currentPlant = settings.currentPlant;
             if (settings.autoSettings) autoSettings = settings.autoSettings;
             if (settings.light) light = settings.light;
+            if (settings.devices) devices = settings.devices;
             if (settings.theme === 'dark') document.body.classList.add('dark');
             if (settings.nightMode) document.body.classList.add('night-mode');
             if (settings.thresholds) {
@@ -897,7 +913,6 @@ function loadSettingsFromLocal() {
     }
 }
 
-// ========== UI ПОСТРОЕНИЕ ==========
 function updateAllUI() {
     buildDashboard();
     buildControlButtons();
@@ -911,19 +926,26 @@ function updateAllUI() {
         document.getElementById('currentLightLevel').innerHTML = light + '%';
     }
     
-    document.getElementById('nextWatering').innerHTML = `~${Math.floor(Math.random() * 5) + 2} ч`;
-    document.getElementById('daysToHarvest').innerHTML = plantsList[currentPlant].days;
+    const nextWateringEl = document.getElementById('nextWatering');
+    if(nextWateringEl) nextWateringEl.innerHTML = `~${Math.floor(Math.random() * 5) + 2} ч`;
+    const daysToHarvestEl = document.getElementById('daysToHarvest');
+    if(daysToHarvestEl) daysToHarvestEl.innerHTML = plantsList[currentPlant].days;
     
     let health = 100;
     if (temp > 30) health -= 12;
     if (temp < 15) health -= 10;
     if (soil < 35) health -= 18;
     health = Math.max(0, Math.min(100, health));
-    document.getElementById('plantHealth').innerHTML = health + '%';
-    document.getElementById('healthBar').style.width = health + '%';
-    document.getElementById('waterSaved').innerHTML = waterSaved.toFixed(1) + ' л';
-    document.getElementById('co2Absorbed').innerHTML = co2Absorbed.toFixed(1) + ' кг';
-    document.getElementById('vsYesterday').innerHTML = (externalTemp - (externalTemp - 0.7)).toFixed(1) + '°C';
+    const plantHealthEl = document.getElementById('plantHealth');
+    if(plantHealthEl) plantHealthEl.innerHTML = health + '%';
+    const healthBarEl = document.getElementById('healthBar');
+    if(healthBarEl) healthBarEl.style.width = health + '%';
+    const waterSavedEl = document.getElementById('waterSaved');
+    if(waterSavedEl) waterSavedEl.innerHTML = waterSaved.toFixed(1) + ' л';
+    const co2AbsorbedEl = document.getElementById('co2Absorbed');
+    if(co2AbsorbedEl) co2AbsorbedEl.innerHTML = co2Absorbed.toFixed(1) + ' кг';
+    const vsYesterdayEl = document.getElementById('vsYesterday');
+    if(vsYesterdayEl) vsYesterdayEl.innerHTML = (externalTemp - (externalTemp - 0.7)).toFixed(1) + '°C';
 }
 
 function updateEventsList() {
@@ -931,7 +953,8 @@ function updateEventsList() {
     let events = [`🟢 Система | ${timeStr}`, `🌡️ ${temp.toFixed(1)}°C`, `💧 ${hum}%`, `🌱 ${soil}%`, `☀️ ${light}%`];
     if (temp > 28) events.unshift(`🔥 ЖАР!`);
     if (soil < 40) events.unshift(`💧 ПОЛИВ!`);
-    document.getElementById('eventsList').innerHTML = events.slice(0,5).map(e => `<div class="setting-row">${e}</div>`).join('');
+    const eventsListEl = document.getElementById('eventsList');
+    if(eventsListEl) eventsListEl.innerHTML = events.slice(0,5).map(e => `<div class="setting-row">${e}</div>`).join('');
 }
 
 function updateGraphsData() {
@@ -944,37 +967,45 @@ function updateGraphsData() {
     soilData24.push(soil);
     soilData24.shift();
     
-    if (modalChart && modal.style.display === 'flex') updateModalChart();
+    if (modalChart && document.getElementById('chartModal') && document.getElementById('chartModal').style.display === 'flex') updateModalChart();
 }
 
 function buildDashboard() {
     const daily = getDailyMinMax();
     const p = plantsList[currentPlant];
-    document.getElementById('statsGrid').innerHTML = `
-        <div class="stat-card" data-metric="temp"><div class="stat-icon">🌡️</div><div class="stat-value" id="tempValue">${temp.toFixed(1)}</div><div class="stat-label">Температура (°C) ${getOptimumBadge(temp, 18, 28)}</div><div class="minmax-info">📉 мин ${daily.temp.min}°C | 📈 макс ${daily.temp.max}°C</div></div>
-        <div class="stat-card" data-metric="hum"><div class="stat-icon">💧</div><div class="stat-value" id="humValue">${hum}</div><div class="stat-label">Влажность (%) ${getOptimumBadge(hum, 45, 75)}</div><div class="minmax-info">📉 мин ${daily.hum.min}% | 📈 макс ${daily.hum.max}%</div></div>
-        <div class="stat-card" data-metric="light"><div class="stat-icon">☀️</div><div class="stat-value" id="lightValue">${light}</div><div class="stat-label">Освещённость (%) ${getOptimumBadge(light, 30, 85)}</div><div class="minmax-info">🌞 0-100%</div></div>
-        <div class="stat-card" data-metric="soil"><div class="stat-icon">🌱</div><div class="stat-value" id="soilValue">${soil}</div><div class="stat-label">Почва (%) ${getOptimumBadge(soil, 40, 70)}</div><div class="minmax-info">📉 мин ${daily.soil.min}% | 📈 макс ${daily.soil.max}%</div></div>
-        <div class="stat-card"><div class="stat-icon">💧</div><div class="stat-value">FULL</div><div class="stat-label">Вода</div></div>
-        <div class="stat-card"><div class="stat-icon">${p.icon}</div><div class="stat-value">${p.name}</div><div class="stat-label">Растение</div></div>
-    `;
+    const statsGrid = document.getElementById('statsGrid');
+    if(statsGrid) {
+        statsGrid.innerHTML = `
+            <div class="stat-card" data-metric="temp"><div class="stat-icon">🌡️</div><div class="stat-value" id="tempValue">${temp.toFixed(1)}</div><div class="stat-label">Температура (°C) ${getOptimumBadge(temp, 18, 28)}</div><div class="minmax-info">📉 мин ${daily.temp.min}°C | 📈 макс ${daily.temp.max}°C</div></div>
+            <div class="stat-card" data-metric="hum"><div class="stat-icon">💧</div><div class="stat-value" id="humValue">${hum}</div><div class="stat-label">Влажность (%) ${getOptimumBadge(hum, 45, 75)}</div><div class="minmax-info">📉 мин ${daily.hum.min}% | 📈 макс ${daily.hum.max}%</div></div>
+            <div class="stat-card" data-metric="light"><div class="stat-icon">☀️</div><div class="stat-value" id="lightValue">${light}</div><div class="stat-label">Освещённость (%) ${getOptimumBadge(light, 30, 85)}</div><div class="minmax-info">🌞 0-100%</div></div>
+            <div class="stat-card" data-metric="soil"><div class="stat-icon">🌱</div><div class="stat-value" id="soilValue">${soil}</div><div class="stat-label">Почва (%) ${getOptimumBadge(soil, 40, 70)}</div><div class="minmax-info">📉 мин ${daily.soil.min}% | 📈 макс ${daily.soil.max}%</div></div>
+            <div class="stat-card"><div class="stat-icon">💧</div><div class="stat-value">FULL</div><div class="stat-label">Вода</div></div>
+            <div class="stat-card"><div class="stat-icon">${p.icon}</div><div class="stat-value">${p.name}</div><div class="stat-label">Растение</div></div>
+        `;
+    }
     document.querySelectorAll('.stat-card[data-metric]').forEach(card => card.addEventListener('click', () => openModal(card.dataset.metric)));
     
-    document.getElementById('statsBottomGrid').innerHTML = `<div class="stat-card"><div class="stat-icon">🔧</div><div class="stat-value">950+</div><div class="stat-label">Строк кода</div></div><div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">19</div><div class="stat-label">Растений</div></div><div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">4640 ₽</div><div class="stat-label">Себестоимость</div></div>`;
+    const statsBottomGrid = document.getElementById('statsBottomGrid');
+    if(statsBottomGrid) {
+        statsBottomGrid.innerHTML = `<div class="stat-card"><div class="stat-icon">🔧</div><div class="stat-value">950+</div><div class="stat-label">Строк кода</div></div><div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">19</div><div class="stat-label">Растений</div></div><div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">4640 ₽</div><div class="stat-label">Себестоимость</div></div>`;
+    }
     
-    if (!document.getElementById('advisorCard')) { 
+    let advisorCard = document.getElementById('advisorCard');
+    if (!advisorCard && document.getElementById('dashboard')) { 
         const d = document.createElement('div'); 
         d.className = 'settings-card'; 
         d.id = 'advisorCard'; 
         d.innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${plantsList[currentPlant].care}</div>`; 
         document.getElementById('dashboard').appendChild(d); 
-    } else {
-        document.getElementById('advisorCard').innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${plantsList[currentPlant].care}</div>`;
+    } else if(advisorCard) {
+        advisorCard.innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${plantsList[currentPlant].care}</div>`;
     }
 }
 
 function buildControlButtons() {
     const container = document.getElementById('controlGrid');
+    if(!container) return;
     const btns = ['pump','light','window','heater','fan'];
     const icons = { pump:'💧', light:'💡', window:'🪟', heater:'🔥', fan:'💨' };
     const labels = { pump:'ПОЛИВ', light:'СВЕТ', window:'ФОРТОЧКА', heater:'НАГРЕВ', fan:'ВЕНТИЛЯТОР' };
@@ -1001,6 +1032,7 @@ function buildControlButtons() {
 
 function buildPlants() {
     const grid = document.getElementById('plantsGrid');
+    if(!grid) return;
     grid.innerHTML = '';
     Object.keys(plantsList).forEach(key => {
         const p = plantsList[key];
@@ -1029,14 +1061,13 @@ function buildPlants() {
     });
 }
 
-// ========== МОДАЛЬНЫЕ ОКНА ==========
-const modal = document.getElementById('chartModal');
-const modalCloseBtn = document.getElementById('modalCloseBtn');
+const modalChartEl = document.getElementById('chartModal');
+const modalCloseBtn2 = document.getElementById('modalCloseBtn2');
 
 function openModal(metric) { 
     currentMetric = metric; 
     updateModalChart(); 
-    modal.style.display = 'flex'; 
+    if(modalChartEl) modalChartEl.style.display = 'flex'; 
 }
 
 function updateModalChart() {
@@ -1060,7 +1091,8 @@ function updateModalChart() {
         labels = hours24; 
     }
     
-    const ctx = document.getElementById('modalChart').getContext('2d');
+    const ctx = document.getElementById('modalChart')?.getContext('2d');
+    if(!ctx) return;
     if (modalChart) modalChart.destroy();
     modalChart = new Chart(ctx, {
         type: 'line',
@@ -1069,41 +1101,47 @@ function updateModalChart() {
     });
 }
 
-modalCloseBtn.onclick = () => modal.style.display = 'none';
-document.getElementById('periodDay').onclick = () => { currentPeriod = 'day'; updateModalChart(); };
-document.getElementById('periodWeek').onclick = () => { currentPeriod = 'week'; updateModalChart(); };
-document.getElementById('periodMonth').onclick = () => { currentPeriod = 'month'; updateModalChart(); };
+if(modalCloseBtn2) modalCloseBtn2.onclick = () => { if(modalChartEl) modalChartEl.style.display = 'none'; };
+const periodDayBtn = document.getElementById('periodDay');
+if(periodDayBtn) periodDayBtn.onclick = () => { currentPeriod = 'day'; updateModalChart(); };
+const periodWeekBtn = document.getElementById('periodWeek');
+if(periodWeekBtn) periodWeekBtn.onclick = () => { currentPeriod = 'week'; updateModalChart(); };
+const periodMonthBtn = document.getElementById('periodMonth');
+if(periodMonthBtn) periodMonthBtn.onclick = () => { currentPeriod = 'month'; updateModalChart(); };
 
-const plantModal = document.getElementById('plantInfoModal');
-const plantModalCloseBtn = document.getElementById('plantModalCloseBtn');
+const plantModalEl = document.getElementById('plantInfoModal');
+const plantModalCloseBtnEl = document.getElementById('plantModalCloseBtn');
 
 function openPlantInfoModal(plantKey) {
     const p = plantsList[plantKey];
-    document.getElementById('plantModalTitle').innerHTML = `${p.icon} ${p.name} — условия выращивания`;
-    document.getElementById('plantModalContent').innerHTML = `
-        <div class="plant-detail-row"><span class="plant-detail-label">🌡️ Оптимальная температура:</span><span class="plant-detail-value">${p.optimalTemp || '22-28°C'}</span></div>
-        <div class="plant-detail-row"><span class="plant-detail-label">💧 Оптимальная влажность:</span><span class="plant-detail-value">${p.optimalHumidity || '60-70%'}</span></div>
-        <div class="plant-detail-row"><span class="plant-detail-label">💧 Полив:</span><span class="plant-detail-value">при влажности &lt; ${p.soilDry}% → полив до ${p.soilWet}%</span></div>
-        <div class="plant-detail-row"><span class="plant-detail-label">🪟 Проветривание:</span><span class="plant-detail-value">открывать при &gt; ${p.openTemp}°C, закрывать при &lt; ${p.closeTemp}°C</span></div>
-        <div class="plant-detail-row"><span class="plant-detail-label">💡 Освещение:</span><span class="plant-detail-value">включать при &lt; ${p.lightOn}%, выключать при &gt; ${p.lightOff}%</span></div>
-        <div class="plant-detail-row"><span class="plant-detail-label">⏱️ Время полива:</span><span class="plant-detail-value">${p.pumpTime} сек</span></div>
-        <div class="plant-detail-row"><span class="plant-detail-label">📅 Срок созревания:</span><span class="plant-detail-value">${p.days} дней</span></div>
-        <div class="plant-care-text">💚 <strong>Совет по уходу:</strong> ${p.care}</div>
-    `;
-    plantModal.style.display = 'flex';
+    const plantModalTitle = document.getElementById('plantModalTitle');
+    if(plantModalTitle) plantModalTitle.innerHTML = `${p.icon} ${p.name} — условия выращивания`;
+    const plantModalContent = document.getElementById('plantModalContent');
+    if(plantModalContent) {
+        plantModalContent.innerHTML = `
+            <div class="plant-detail-row"><span class="plant-detail-label">🌡️ Оптимальная температура:</span><span class="plant-detail-value">${p.optimalTemp || '22-28°C'}</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">💧 Оптимальная влажность:</span><span class="plant-detail-value">${p.optimalHumidity || '60-70%'}</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">💧 Полив:</span><span class="plant-detail-value">при влажности &lt; ${p.soilDry}% → полив до ${p.soilWet}%</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">🪟 Проветривание:</span><span class="plant-detail-value">открывать при &gt; ${p.openTemp}°C, закрывать при &lt; ${p.closeTemp}°C</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">💡 Освещение:</span><span class="plant-detail-value">включать при &lt; ${p.lightOn}%, выключать при &gt; ${p.lightOff}%</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">⏱️ Время полива:</span><span class="plant-detail-value">${p.pumpTime} сек</span></div>
+            <div class="plant-detail-row"><span class="plant-detail-label">📅 Срок созревания:</span><span class="plant-detail-value">${p.days} дней</span></div>
+            <div class="plant-care-text">💚 <strong>Совет по уходу:</strong> ${p.care}</div>
+        `;
+    }
+    if(plantModalEl) plantModalEl.style.display = 'flex';
 }
 
-plantModalCloseBtn.onclick = () => plantModal.style.display = 'none';
-plantModal.onclick = (e) => { if (e.target === plantModal) plantModal.style.display = 'none'; };
+if(plantModalCloseBtnEl) plantModalCloseBtnEl.onclick = () => { if(plantModalEl) plantModalEl.style.display = 'none'; };
+if(plantModalEl) plantModalEl.onclick = (e) => { if (e.target === plantModalEl) plantModalEl.style.display = 'none'; };
 
-// ========== КАЛЕНДАРЬ ==========
 const currentYear = new Date().getFullYear();
-const today = new Date();
-today.setHours(0,0,0,0);
+const todayDate = new Date();
+todayDate.setHours(0,0,0,0);
 
 function generateRandomDataForDay(year, month, day) {
     const date = new Date(year, month, day);
-    if (date > today) return null;
+    if (date > todayDate) return null;
     return { temp: 18 + Math.random() * 10, hum: 50 + Math.random() * 25, soil: 35 + Math.random() * 35, light: 30 + Math.random() * 50 };
 }
 
@@ -1116,13 +1154,15 @@ function getDataForDay(year, month, day) {
 
 function renderYearCalendar() {
     const container = document.getElementById('yearCalendar');
+    if(!container) return;
     container.innerHTML = '';
     const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
     const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     
     for (let month = 0; month < 12; month++) {
         const firstDayOfMonth = new Date(currentYear, month, 1);
-        const startWeekday = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1;
+        let startWeekday = firstDayOfMonth.getDay();
+        startWeekday = startWeekday === 0 ? 6 : startWeekday - 1;
         const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
         
         const monthCard = document.createElement('div');
@@ -1137,7 +1177,7 @@ function renderYearCalendar() {
             dayCell.className = 'day-cell';
             dayCell.textContent = day;
             const date = new Date(currentYear, month, day);
-            if (date <= today) dayCell.classList.add('past');
+            if (date <= todayDate) dayCell.classList.add('past');
             dayCell.onclick = (function(y, m, d) { return function() { openDayModal(y, m, d); }; })(currentYear, month, day);
             daysContainer.appendChild(dayCell);
         }
@@ -1154,21 +1194,27 @@ function openDayModal(year, month, day) {
     currentDayData = data;
     currentDayMetric = 'temp';
     const date = new Date(year, month, day);
-    document.getElementById('dayModalTitle').innerHTML = `📅 ${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    const dayModalTitle = document.getElementById('dayModalTitle');
+    if(dayModalTitle) dayModalTitle.innerHTML = `📅 ${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
     
-    document.getElementById('dayModalStats').innerHTML = `
-        <div class="day-stat-card" data-metric="temp"><div class="day-stat-icon">🌡️</div><div class="day-stat-value">${data.temp.toFixed(1)}°C</div><div class="day-stat-label">Средняя температура</div></div>
-        <div class="day-stat-card" data-metric="hum"><div class="day-stat-icon">💧</div><div class="day-stat-value">${Math.round(data.hum)}%</div><div class="day-stat-label">Влажность воздуха</div></div>
-        <div class="day-stat-card" data-metric="soil"><div class="day-stat-icon">🌱</div><div class="day-stat-value">${Math.round(data.soil)}%</div><div class="day-stat-label">Влажность почвы</div></div>
-        <div class="day-stat-card" data-metric="light"><div class="day-stat-icon">☀️</div><div class="day-stat-value">${Math.round(data.light)}%</div><div class="day-stat-label">Освещённость</div></div>
-    `;
+    const dayModalStats = document.getElementById('dayModalStats');
+    if(dayModalStats) {
+        dayModalStats.innerHTML = `
+            <div class="day-stat-card" data-metric="temp"><div class="day-stat-icon">🌡️</div><div class="day-stat-value">${data.temp.toFixed(1)}°C</div><div class="day-stat-label">Средняя температура</div></div>
+            <div class="day-stat-card" data-metric="hum"><div class="day-stat-icon">💧</div><div class="day-stat-value">${Math.round(data.hum)}%</div><div class="day-stat-label">Влажность воздуха</div></div>
+            <div class="day-stat-card" data-metric="soil"><div class="day-stat-icon">🌱</div><div class="day-stat-value">${Math.round(data.soil)}%</div><div class="day-stat-label">Влажность почвы</div></div>
+            <div class="day-stat-card" data-metric="light"><div class="day-stat-icon">☀️</div><div class="day-stat-value">${Math.round(data.light)}%</div><div class="day-stat-label">Освещённость</div></div>
+        `;
+    }
     document.querySelectorAll('.day-stat-card').forEach(card => { card.addEventListener('click', () => { currentDayMetric = card.dataset.metric; updateDayChart(); }); });
     updateDayChart();
-    document.getElementById('dayModal').style.display = 'flex';
+    const dayModalEl = document.getElementById('dayModal');
+    if(dayModalEl) dayModalEl.style.display = 'flex';
 }
 
 function updateDayChart() {
-    const ctx = document.getElementById('dayChart').getContext('2d');
+    const ctx = document.getElementById('dayChart')?.getContext('2d');
+    if(!ctx || !currentDayData) return;
     if (dayChart) dayChart.destroy();
     let data, label, color;
     if (currentDayMetric === 'temp') { 
@@ -1196,52 +1242,59 @@ function updateDayChart() {
 }
 
 const dayModalEl = document.getElementById('dayModal');
-const dayModalCloseBtn = document.getElementById('dayModalCloseBtn');
-dayModalCloseBtn.onclick = () => dayModalEl.style.display = 'none';
-dayModalEl.onclick = (e) => { if (e.target === dayModalEl) dayModalEl.style.display = 'none'; };
+const dayModalCloseBtnEl = document.getElementById('dayModalCloseBtn');
+if(dayModalCloseBtnEl) dayModalCloseBtnEl.onclick = () => { if(dayModalEl) dayModalEl.style.display = 'none'; };
+if(dayModalEl) dayModalEl.onclick = (e) => { if (e.target === dayModalEl) dayModalEl.style.display = 'none'; };
 
-// ========== ЭКСПОРТ CSV ==========
-document.getElementById('exportCsvBtn').onclick = () => {
-    let csv = "Дата,Время,Температура,Влажность,Почва,Освещённость\n";
-    const now = new Date();
-    for (let i = 0; i < tempData24.length; i++) csv += `${now.toLocaleDateString()},${hours24[i]},${tempData24[i]},${humData24[i]},${soilData24[i]},${lightData24[i]}\n`;
-    const blob = new Blob([csv], {type: 'text/csv'});
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `teplitsa_${now.toISOString().slice(0,19)}.csv`;
-    link.click();
-    showToast('📊 Данные экспортированы в CSV');
-};
+const exportCsvBtn = document.getElementById('exportCsvBtn');
+if(exportCsvBtn) {
+    exportCsvBtn.onclick = () => {
+        let csv = "Дата,Время,Температура,Влажность,Почва,Освещённость\n";
+        const now = new Date();
+        for (let i = 0; i < tempData24.length; i++) csv += `${now.toLocaleDateString()},${hours24[i]},${tempData24[i]},${humData24[i]},${soilData24[i]},${lightData24[i]}\n`;
+        const blob = new Blob([csv], {type: 'text/csv'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `teplitsa_${now.toISOString().slice(0,19)}.csv`;
+        link.click();
+        showToast('📊 Данные экспортированы в CSV');
+    };
+}
 
-// ========== НАСТРОЙКИ И ТЕМА ==========
-const nightToggle = document.getElementById('nightToggle');
-nightToggle.addEventListener('click', () => {
-    document.body.classList.toggle('night-mode');
-    nightToggle.textContent = document.body.classList.contains('night-mode') ? '☀️ Дневной режим' : '🌙 Ночной экран';
-    showToast(document.body.classList.contains('night-mode') ? '🌙 Ночной режим активирован' : '☀️ Дневной режим активирован');
-    saveSettingsToLocal();
-});
+const nightToggleBtn = document.getElementById('nightToggle');
+if(nightToggleBtn) {
+    nightToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('night-mode');
+        nightToggleBtn.textContent = document.body.classList.contains('night-mode') ? '☀️ Дневной режим' : '🌙 Ночной экран';
+        showToast(document.body.classList.contains('night-mode') ? '🌙 Ночной режим активирован' : '☀️ Дневной режим активирован');
+        saveSettingsToLocal();
+    });
+}
 
-const themeToggle = document.getElementById('themeToggle');
-if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
-themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-    themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
-    if (modalChart) modalChart.update();
-    saveSettingsToLocal();
-});
-themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
+const themeToggleBtn = document.getElementById('themeToggle');
+if(themeToggleBtn) {
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+    themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        themeToggleBtn.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
+        if (modalChart) modalChart.update();
+        saveSettingsToLocal();
+    });
+    themeToggleBtn.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
+}
 
-// ========== БУРГЕР МЕНЮ ==========
-const burgerBtn = document.getElementById('burgerBtn');
+const burgerBtnEl = document.getElementById('burgerBtn');
 const mobileMenuEl = document.getElementById('mobileMenu');
-burgerBtn?.addEventListener('click', (e) => { e.stopPropagation(); mobileMenuEl.classList.toggle('active'); });
-document.addEventListener('click', (e) => {
-    if (mobileMenuEl.classList.contains('active') && !mobileMenuEl.contains(e.target) && e.target !== burgerBtn) {
-        mobileMenuEl.classList.remove('active');
-    }
-});
+if(burgerBtnEl && mobileMenuEl) {
+    burgerBtnEl.addEventListener('click', (e) => { e.stopPropagation(); mobileMenuEl.classList.toggle('active'); });
+    document.addEventListener('click', (e) => {
+        if (mobileMenuEl.classList.contains('active') && !mobileMenuEl.contains(e.target) && e.target !== burgerBtnEl) {
+            mobileMenuEl.classList.remove('active');
+        }
+    });
+}
+
 document.querySelectorAll('.mobile-menu-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const section = btn.dataset.section;
@@ -1250,15 +1303,15 @@ document.querySelectorAll('.mobile-menu-btn').forEach(btn => {
         const correspondingNavBtn = document.querySelector(`.nav-btn[data-section="${section}"]`);
         if (correspondingNavBtn) correspondingNavBtn.classList.add('active');
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(section).classList.add('active');
-        mobileMenuEl.classList.remove('active');
+        const sectionEl = document.getElementById(section);
+        if(sectionEl) sectionEl.classList.add('active');
+        if(mobileMenuEl) mobileMenuEl.classList.remove('active');
         if (section === 'history') renderYearCalendar();
         if (section === 'plants') buildPlants();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 });
 
-// ========== НАВИГАЦИЯ ==========
 document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1268,53 +1321,65 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
             else b.classList.remove('active');
         });
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(btn.dataset.section).classList.add('active');
+        const sectionEl = document.getElementById(btn.dataset.section);
+        if(sectionEl) sectionEl.classList.add('active');
         if (btn.dataset.section === 'history') renderYearCalendar();
         if (btn.dataset.section === 'plants') buildPlants();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 });
 
-// ========== ОБРАБОТЧИКИ УПРАВЛЕНИЯ ==========
-const brightnessSlider = document.getElementById('brightnessSlider');
-const brightnessValue = document.getElementById('brightnessValue');
-brightnessSlider?.addEventListener('input', (e) => {
-    const val = e.target.value;
-    brightnessValue.innerHTML = val + '%';
-    light = parseInt(val);
-    document.getElementById('currentLightLevel').innerHTML = light + '%';
-    document.getElementById('lightValue').textContent = light;
-    showToast(`💡 Яркость света установлена на ${val}%`);
-    saveSettingsToLocal();
-    
-    if (ghToken && gistId) {
-        sendToGitHub();
-    }
-});
+const brightnessSliderEl = document.getElementById('brightnessSlider');
+const brightnessValueEl = document.getElementById('brightnessValue');
+if(brightnessSliderEl && brightnessValueEl) {
+    brightnessSliderEl.addEventListener('input', (e) => {
+        const val = e.target.value;
+        brightnessValueEl.innerHTML = val + '%';
+        light = parseInt(val);
+        const currentLightLevelEl = document.getElementById('currentLightLevel');
+        if(currentLightLevelEl) currentLightLevelEl.innerHTML = light + '%';
+        const lightValueEl = document.getElementById('lightValue');
+        if(lightValueEl) lightValueEl.textContent = light;
+        showToast(`💡 Яркость света установлена на ${val}%`);
+        saveSettingsToLocal();
+        
+        if (ghToken && gistId) {
+            sendToGitHub();
+        }
+    });
+}
 
-const autoWaterToggle = document.getElementById('autoWaterToggle');
-const autoVentToggle = document.getElementById('autoVentToggle');
-const autoLightToggle = document.getElementById('autoLightToggle');
-autoWaterToggle?.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); });
-autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); });
-autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); });
+const autoWaterToggleEl = document.getElementById('autoWaterToggle');
+const autoVentToggleEl = document.getElementById('autoVentToggle');
+const autoLightToggleEl = document.getElementById('autoLightToggle');
+if(autoWaterToggleEl) autoWaterToggleEl.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); });
+if(autoVentToggleEl) autoVentToggleEl.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); });
+if(autoLightToggleEl) autoLightToggleEl.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); });
 
-document.getElementById('emergencyPump')?.addEventListener('click', () => { showToast('🚨 Аварийный полив'); createDropletsOnCards(); if (ghToken && gistId) sendToGitHub(); });
-document.getElementById('emergencyWindow')?.addEventListener('click', () => { showToast('🪟 Форточка открыта'); if (ghToken && gistId) sendToGitHub(); });
+const emergencyPumpBtn = document.getElementById('emergencyPump');
+if(emergencyPumpBtn) emergencyPumpBtn.addEventListener('click', () => { showToast('🚨 Аварийный полив'); createDropletsOnCards(); if (ghToken && gistId) sendToGitHub(); });
+const emergencyWindowBtn = document.getElementById('emergencyWindow');
+if(emergencyWindowBtn) emergencyWindowBtn.addEventListener('click', () => { showToast('🪟 Форточка открыта'); if (ghToken && gistId) sendToGitHub(); });
 
 function loadSettingsToInputs() {
     const p = plantsList[currentPlant];
-    if (document.getElementById('openTemp')) document.getElementById('openTemp').value = p.openTemp;
-    if (document.getElementById('closeTemp')) document.getElementById('closeTemp').value = p.closeTemp;
-    if (document.getElementById('soilDry')) document.getElementById('soilDry').value = p.soilDry;
-    if (document.getElementById('soilWet')) document.getElementById('soilWet').value = p.soilWet;
-    if (document.getElementById('lightOn')) document.getElementById('lightOn').value = p.lightOn;
-    if (document.getElementById('lightOff')) document.getElementById('lightOff').value = p.lightOff;
-    if (document.getElementById('pumpTime')) document.getElementById('pumpTime').value = p.pumpTime;
+    const openTempEl = document.getElementById('openTemp');
+    if(openTempEl) openTempEl.value = p.openTemp;
+    const closeTempEl = document.getElementById('closeTemp');
+    if(closeTempEl) closeTempEl.value = p.closeTemp;
+    const soilDryEl = document.getElementById('soilDry');
+    if(soilDryEl) soilDryEl.value = p.soilDry;
+    const soilWetEl = document.getElementById('soilWet');
+    if(soilWetEl) soilWetEl.value = p.soilWet;
+    const lightOnEl = document.getElementById('lightOn');
+    if(lightOnEl) lightOnEl.value = p.lightOn;
+    const lightOffEl = document.getElementById('lightOff');
+    if(lightOffEl) lightOffEl.value = p.lightOff;
+    const pumpTimeEl = document.getElementById('pumpTime');
+    if(pumpTimeEl) pumpTimeEl.value = p.pumpTime;
 }
 loadSettingsToInputs();
 
-// Автосохранение настроек при изменении полей
 function setupAutoSaveSettings() {
     const saveElements = [
         document.getElementById('brightnessSlider'),
@@ -1348,20 +1413,21 @@ function setupAutoSaveSettings() {
     });
 }
 
-// ========== УВЕДОМЛЕНИЯ ==========
 let notificationPermission = false;
-document.getElementById('requestNotificationBtn')?.addEventListener('click', () => {
-    if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                notificationPermission = true;
-                showToast('🔔 Уведомления включены!');
-            }
-        });
-    }
-});
+const requestNotificationBtn = document.getElementById('requestNotificationBtn');
+if(requestNotificationBtn) {
+    requestNotificationBtn.addEventListener('click', () => {
+        if ('Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    notificationPermission = true;
+                    showToast('🔔 Уведомления включены!');
+                }
+            });
+        }
+    });
+}
 
-// ========== АНИМАЦИИ ==========
 function createLeaf() {
     const leaf = document.createElement('div');
     leaf.className = 'leaf';
@@ -1378,18 +1444,74 @@ setInterval(createLeaf, 2000);
 
 window.addEventListener('scroll', () => { 
     const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; 
-    document.getElementById('progressBar').style.width = (window.scrollY / h) * 100 + '%'; 
+    const progressBar = document.getElementById('progressBar');
+    if(progressBar) progressBar.style.width = (window.scrollY / h) * 100 + '%'; 
 });
 
-// ========== СИНХРОНИЗАЦИЯ ==========
+// ========== СИНХРОНИЗАЦИЯ С ОЧИСТКОЙ ИСТОРИИ ==========
 let ghToken = null;
 let gistId = null;
 let syncTimer = null;
-let lastSyncData = '';
+let isSyncing = false;
 
-// Отправка данных в Gist
-async function sendToGitHub() {
+// Максимальное количество записей в истории (ограничение для Gist)
+const MAX_HISTORY_SIZE = 20;
+
+// Функция очистки старых данных
+function cleanHistoryData(data) {
+    if (!data || !data.history) return data;
+    
+    // Оставляем только последние MAX_HISTORY_SIZE записей
+    if (data.history.length > MAX_HISTORY_SIZE) {
+        data.history = data.history.slice(-MAX_HISTORY_SIZE);
+    }
+    
+    // Также можно удалить очень старые записи (старше 7 дней), если нужно еще сильнее сократить
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    data.history = data.history.filter(record => record.timestamp > oneWeekAgo);
+    
+    return data;
+}
+
+// Получение размера данных в KB
+function getDataSize(data) {
+    const str = JSON.stringify(data);
+    const bytes = new Blob([str]).size;
+    return (bytes / 1024).toFixed(2);
+}
+
+// Обновление отображения размера Gist
+async function updateGistSizeDisplay() {
     if (!ghToken || !gistId) return;
+    try {
+        const API_URL = `https://api.github.com/gists/${gistId}`;
+        const res = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${ghToken}` }
+        });
+        if (res.ok) {
+            const gist = await res.json();
+            if (gist.files && gist.files['teplitsa.json']) {
+                const size = (gist.files['teplitsa.json'].size / 1024).toFixed(2);
+                const gistSizeEl = document.getElementById('gistSize');
+                if (gistSizeEl) gistSizeEl.innerHTML = `${size} KB / 1000 KB`;
+                
+                // Предупреждение если близко к лимиту
+                if (parseFloat(size) > 900) {
+                    showToast('⚠️ Внимание! Gist почти заполнен. Очистите историю!');
+                    if (gistSizeEl) gistSizeEl.style.color = '#f44336';
+                } else {
+                    if (gistSizeEl) gistSizeEl.style.color = '';
+                }
+            }
+        }
+    } catch(e) {
+        console.log('Ошибка получения размера:', e);
+    }
+}
+
+async function sendToGitHub() {
+    if (!ghToken || !gistId || isSyncing) return;
+    isSyncing = true;
     
     try {
         const API_URL = `https://api.github.com/gists/${gistId}`;
@@ -1403,18 +1525,18 @@ async function sendToGitHub() {
         if (gist.files && gist.files['teplitsa.json']) {
             try {
                 allData = JSON.parse(gist.files['teplitsa.json'].content);
-            } catch(e) { allData = { history: [] }; }
+            } catch(e) { allData = { history: [], last: null }; }
         }
         if (!allData.history) allData.history = [];
         
-        const myDeviceId = localStorage.getItem('device_id_gist');
+        let myDeviceId = localStorage.getItem('device_id_gist');
         if (!myDeviceId) {
-            const newId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-            localStorage.setItem('device_id_gist', newId);
+            myDeviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+            localStorage.setItem('device_id_gist', myDeviceId);
         }
         
         const currentData = {
-            deviceId: localStorage.getItem('device_id_gist'),
+            deviceId: myDeviceId,
             temp: temp,
             hum: hum,
             soil: soil,
@@ -1428,10 +1550,19 @@ async function sendToGitHub() {
         };
         
         allData.history.push(currentData);
-        if (allData.history.length > 30) allData.history.shift();
+        
+        // Очистка истории перед сохранением
+        allData = cleanHistoryData(allData);
         allData.last = currentData;
         
-        await fetch(API_URL, {
+        const dataSize = getDataSize(allData);
+        if (parseFloat(dataSize) > 900) {
+            console.log('Данные занимают много места, принудительная очистка...');
+            allData.history = allData.history.slice(-10);
+            allData = cleanHistoryData(allData);
+        }
+        
+        const patchRes = await fetch(API_URL, {
             method: 'PATCH',
             headers: {
                 'Authorization': `token ${ghToken}`,
@@ -1442,16 +1573,33 @@ async function sendToGitHub() {
             })
         });
         
-        document.getElementById('lastSyncTime').innerHTML = new Date().toLocaleTimeString();
-        addEventToLog('📤 Данные отправлены в Gist');
+        if (patchRes.ok) {
+            const lastSyncTimeEl = document.getElementById('lastSyncTime');
+            if(lastSyncTimeEl) lastSyncTimeEl.innerHTML = new Date().toLocaleTimeString();
+            const syncBadge = document.getElementById('syncBadge');
+            if(syncBadge) syncBadge.className = 'websocket-badge sync-ok';
+            setTimeout(() => { if(syncBadge) syncBadge.className = 'websocket-badge'; }, 1000);
+            
+            // Обновляем отображение размера
+            setTimeout(() => updateGistSizeDisplay(), 500);
+        } else {
+            const errorText = await patchRes.text();
+            if (errorText.includes('too large') || errorText.includes('size')) {
+                showToast('❌ Ошибка: Gist переполнен! Нажмите "Очистить устаревшие данные"');
+            }
+        }
     } catch(e) {
         console.log('Ошибка отправки:', e);
+        const syncBadge = document.getElementById('syncBadge');
+        if(syncBadge) syncBadge.className = 'websocket-badge sync-warning';
+    } finally {
+        isSyncing = false;
     }
 }
 
-// Загрузка данных из Gist
 async function loadFromGitHub() {
-    if (!ghToken || !gistId) return false;
+    if (!ghToken || !gistId || isSyncing) return false;
+    isSyncing = true;
     
     try {
         const API_URL = `https://api.github.com/gists/${gistId}`;
@@ -1464,55 +1612,114 @@ async function loadFromGitHub() {
         const gist = await res.json();
         
         if (gist.files && gist.files['teplitsa.json']) {
-            const data = JSON.parse(gist.files['teplitsa.json'].content);
+            let data = JSON.parse(gist.files['teplitsa.json'].content);
             const myDeviceId = localStorage.getItem('device_id_gist');
             
+            // Проверяем, нужно ли очистить данные при загрузке
+            const dataSize = getDataSize(data);
+            if (parseFloat(dataSize) > 900) {
+                addEventToLog('⚠️ Gist почти заполнен! Рекомендуется очистить историю');
+            }
+            
             if (data && data.last && data.last.deviceId && data.last.deviceId !== myDeviceId) {
-                const dataStr = JSON.stringify(data.last);
-                if (lastSyncData !== dataStr) {
-                    lastSyncData = dataStr;
-                    
-                    temp = data.last.temp;
-                    hum = data.last.hum;
-                    soil = data.last.soil;
-                    light = data.last.light;
-                    devices = data.last.devices;
-                    currentPlant = data.last.currentPlant;
-                    waterSaved = data.last.waterSaved;
-                    co2Absorbed = data.last.co2Absorbed;
-                    if (data.last.autoSettings) autoSettings = data.last.autoSettings;
-                    
-                    updateAllUI();
-                    buildPlants();
-                    buildControlButtons();
-                    
-                    if (document.getElementById('autoWaterToggle')) {
-                        document.getElementById('autoWaterToggle').checked = autoSettings.water;
-                        document.getElementById('autoVentToggle').checked = autoSettings.vent;
-                        document.getElementById('autoLightToggle').checked = autoSettings.light;
-                    }
-                    
-                    if (document.getElementById('brightnessSlider')) {
-                        document.getElementById('brightnessSlider').value = light;
-                        document.getElementById('brightnessValue').innerHTML = light + '%';
-                        document.getElementById('currentLightLevel').innerHTML = light + '%';
-                    }
-                    
-                    document.getElementById('lastSyncTime').innerHTML = new Date(data.last.timestamp).toLocaleTimeString();
-                    addEventToLog('🔄 Данные синхронизированы из Gist');
-                    showToast('🔄 Данные синхронизированы');
-                    
-                    return true;
+                // Обновляем локальные данные из облака
+                temp = data.last.temp;
+                hum = data.last.hum;
+                soil = data.last.soil;
+                light = data.last.light;
+                devices = data.last.devices;
+                currentPlant = data.last.currentPlant;
+                waterSaved = data.last.waterSaved;
+                co2Absorbed = data.last.co2Absorbed;
+                if (data.last.autoSettings) autoSettings = data.last.autoSettings;
+                
+                updateAllUI();
+                buildPlants();
+                buildControlButtons();
+                
+                if (document.getElementById('autoWaterToggle')) {
+                    document.getElementById('autoWaterToggle').checked = autoSettings.water;
+                    document.getElementById('autoVentToggle').checked = autoSettings.vent;
+                    document.getElementById('autoLightToggle').checked = autoSettings.light;
                 }
+                
+                if (document.getElementById('brightnessSlider')) {
+                    document.getElementById('brightnessSlider').value = light;
+                    document.getElementById('brightnessValue').innerHTML = light + '%';
+                    document.getElementById('currentLightLevel').innerHTML = light + '%';
+                }
+                
+                const lastSyncTimeEl = document.getElementById('lastSyncTime');
+                if(lastSyncTimeEl) lastSyncTimeEl.innerHTML = new Date(data.last.timestamp).toLocaleTimeString();
+                const syncBadge = document.getElementById('syncBadge');
+                if(syncBadge) syncBadge.className = 'websocket-badge sync-ok';
+                setTimeout(() => { if(syncBadge) syncBadge.className = 'websocket-badge'; }, 1000);
+                
+                return true;
             }
         }
     } catch(e) {
         console.log('Ошибка загрузки:', e);
+    } finally {
+        isSyncing = false;
     }
     return false;
 }
 
-// Инициализация Gist
+// Функция полной очистки истории
+async function clearGistHistory() {
+    if (!ghToken || !gistId) {
+        showToast('❌ Синхронизация не настроена');
+        return;
+    }
+    
+    showToast('🧹 Очистка истории...');
+    
+    try {
+        const API_URL = `https://api.github.com/gists/${gistId}`;
+        const getRes = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${ghToken}` }
+        });
+        const gist = await getRes.json();
+        
+        let allData = {};
+        if (gist.files && gist.files['teplitsa.json']) {
+            try {
+                allData = JSON.parse(gist.files['teplitsa.json'].content);
+            } catch(e) { allData = { history: [], last: null }; }
+        }
+        
+        // Оставляем только последнюю запись
+        if (allData.history && allData.history.length > 0) {
+            const lastRecord = allData.history[allData.history.length - 1];
+            allData.history = [lastRecord];
+            allData.last = lastRecord;
+        } else {
+            allData.history = [];
+            allData.last = null;
+        }
+        
+        await fetch(API_URL, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `token ${ghToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: { 'teplitsa.json': { content: JSON.stringify(allData, null, 2) } }
+            })
+        });
+        
+        showToast('✅ История очищена!');
+        addEventToLog('🗑️ История Gist очищена');
+        
+        setTimeout(() => updateGistSizeDisplay(), 500);
+    } catch(e) {
+        console.log('Ошибка очистки:', e);
+        showToast('❌ Ошибка очистки истории');
+    }
+}
+
 async function initGist() {
     if (!ghToken || !gistId) return;
     
@@ -1540,89 +1747,105 @@ async function initGist() {
             });
             addEventToLog('📁 Файл teplitsa.json создан в Gist');
         }
+        
+        // Проверяем размер после инициализации
+        setTimeout(() => updateGistSizeDisplay(), 1000);
     } catch(e) {
         console.log('Ошибка инициализации Gist:', e);
     }
 }
 
-// Запуск синхронизации
 function startSync() {
     if (syncTimer) clearInterval(syncTimer);
+    // Увеличиваем интервал до 15 секунд для экономии места
     syncTimer = setInterval(() => {
         sendToGitHub();
         loadFromGitHub();
-    }, 5000);
-    addEventToLog('☁️ Синхронизация запущена (каждые 5 сек)');
+    }, 15000);
+    addEventToLog('☁️ Синхронизация запущена (каждые 15 сек)');
 }
 
-// Функция обновления статуса в настройках
 function updateGistStatus() {
     const gistStatusSpan = document.getElementById('gistStatus');
     const syncStatusSpan = document.getElementById('syncStatus');
     if (ghToken && gistId) {
-        gistStatusSpan.innerHTML = '✅ Синхронизация активна';
-        gistStatusSpan.style.color = '#4caf50';
-        syncStatusSpan.innerHTML = '✅ GitHub Gist';
-        syncStatusSpan.style.color = '#4caf50';
+        if(gistStatusSpan) { gistStatusSpan.innerHTML = '✅ Синхронизация активна'; gistStatusSpan.style.color = '#4caf50'; }
+        if(syncStatusSpan) { syncStatusSpan.innerHTML = '✅ GitHub Gist'; syncStatusSpan.style.color = '#4caf50'; }
     } else {
-        gistStatusSpan.innerHTML = '⏳ Не настроена';
-        gistStatusSpan.style.color = '#ff9800';
-        syncStatusSpan.innerHTML = '❌ Не настроена';
-        syncStatusSpan.style.color = '#f44336';
+        if(gistStatusSpan) { gistStatusSpan.innerHTML = '⏳ Не настроена'; gistStatusSpan.style.color = '#ff9800'; }
+        if(syncStatusSpan) { syncStatusSpan.innerHTML = '❌ Не настроена'; syncStatusSpan.style.color = '#f44336'; }
     }
 }
 
-// ========== ОБРАБОТЧИКИ МОДАЛЬНОГО ОКНА ==========
-// Открыть окно настроек из кнопки в настройках
-document.getElementById('openGistSettingsBtn').onclick = () => {
-    document.getElementById('gistSettingsModal').style.display = 'flex';
-    document.getElementById('modalToken').value = ghToken || '';
-    document.getElementById('modalGistId').value = gistId || '';
-};
+const openGistSettingsBtn = document.getElementById('openGistSettingsBtn');
+if(openGistSettingsBtn) {
+    openGistSettingsBtn.onclick = () => {
+        const modal = document.getElementById('gistSettingsModal');
+        if(modal) modal.style.display = 'flex';
+        const modalToken = document.getElementById('modalToken');
+        if(modalToken) modalToken.value = ghToken || '';
+        const modalGistId = document.getElementById('modalGistId');
+        if(modalGistId) modalGistId.value = gistId || '';
+    };
+}
 
-// Закрыть окно
-document.getElementById('modalCloseBtn').onclick = () => {
-    document.getElementById('gistSettingsModal').style.display = 'none';
-};
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+if(modalCloseBtn) {
+    modalCloseBtn.onclick = () => {
+        const modal = document.getElementById('gistSettingsModal');
+        if(modal) modal.style.display = 'none';
+    };
+}
 
-// Закрыть при клике вне окна
 window.onclick = (event) => {
     const modal = document.getElementById('gistSettingsModal');
-    if (event.target === modal) {
+    if (event.target === modal && modal) {
         modal.style.display = 'none';
     }
 };
 
-// Сохранение настроек из модального окна
-document.getElementById('modalSaveBtn').onclick = async () => {
-    const token = document.getElementById('modalToken').value.trim();
-    const id = document.getElementById('modalGistId').value.trim();
-    
-    if (!token || !id) {
-        alert('❌ Введите токен и ID Gist');
-        return;
-    }
-    
-    ghToken = token;
-    gistId = id;
-    localStorage.setItem('github_token', token);
-    localStorage.setItem('gist_id', id);
-    
-    if (!localStorage.getItem('device_id_gist')) {
-        const newId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-        localStorage.setItem('device_id_gist', newId);
-    }
-    
-    updateGistStatus();
-    await initGist();
-    startSync();
-    setTimeout(() => loadFromGitHub(), 1000);
-    
-    document.getElementById('gistSettingsModal').style.display = 'none';
-    showToast('✅ Настройки сохранены! Синхронизация запущена');
-};
+const modalSaveBtn = document.getElementById('modalSaveBtn');
+if(modalSaveBtn) {
+    modalSaveBtn.onclick = async () => {
+        const token = document.getElementById('modalToken')?.value.trim() || '';
+        const id = document.getElementById('modalGistId')?.value.trim() || '';
+        
+        if (!token || !id) {
+            alert('❌ Введите токен и ID Gist');
+            return;
+        }
+        
+        ghToken = token;
+        gistId = id;
+        localStorage.setItem('github_token', token);
+        localStorage.setItem('gist_id', id);
+        
+        if (!localStorage.getItem('device_id_gist')) {
+            const newId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+            localStorage.setItem('device_id_gist', newId);
+        }
+        
+        updateGistStatus();
+        await initGist();
+        startSync();
+        setTimeout(() => loadFromGitHub(), 1000);
+        
+        const modal = document.getElementById('gistSettingsModal');
+        if(modal) modal.style.display = 'none';
+        showToast('✅ Настройки сохранены! Синхронизация запущена');
+    };
+}
 
-// Проверяем сохранённые настройки
+// Кнопка очистки истории
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+if(clearHistoryBtn) {
+    clearHistoryBtn.onclick = () => {
+        if (confirm('⚠️ Вы уверены, что хотите очистить историю синхронизации? Старые данные будут удалены безвозвратно.')) {
+            clearGistHistory();
+        }
+    };
+}
+
 const savedToken = localStorage.getItem('github_token');
 const savedId = localStorage.getItem('gist_id');
 
@@ -1639,11 +1862,22 @@ if (savedToken && savedId) {
     initGist();
     startSync();
     setTimeout(() => loadFromGitHub(), 1000);
+    setTimeout(() => updateGistSizeDisplay(), 2000);
 } else {
     updateGistStatus();
 }
 
-// ========== ИНИЦИАЛИЗАЦИЯ ==========
+// Симуляция изменения данных
+setInterval(() => {
+    temp = Math.min(35, Math.max(10, temp + (Math.random() - 0.5) * 0.3));
+    hum = Math.min(85, Math.max(30, hum + (Math.random() - 0.5) * 0.7));
+    soil = Math.min(90, Math.max(20, soil + (Math.random() - 0.5) * 0.8));
+    light = Math.min(100, Math.max(0, light + (Math.random() - 0.5) * 1.5));
+    waterSaved += Math.random() * 0.1;
+    co2Absorbed += Math.random() * 0.05;
+    updateAllUI();
+}, 8000);
+
 function init() {
     loadSettingsFromLocal();
     buildDashboard();
