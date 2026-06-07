@@ -554,7 +554,7 @@
         </div>
     </div>
 
-    <!-- Панель настроек (показывается только при первом входе) -->
+    <!-- Панель настроек -->
     <div id="settingsPanel" class="settings-card" style="background: #ff9800; color: #333; margin-bottom: 20px;">
         <div class="graph-title">🔐 Настройки подключения к GitHub</div>
         <div class="setting-row">
@@ -634,7 +634,7 @@
             <div class="setting-row">
                 <div class="slider-container" style="width: 100%;">
                     <span>🔆 Яркость:</span>
-                    <input type="range" id="brightnessSlider" min="0" max="100" value="65">
+                    <input type="range" id="brightnessSlider" min="0" max="100" value="65" oninput="updateBrightness(this.value); queueSync();">
                     <span class="brightness-value" id="brightnessValue">65%</span>
                 </div>
             </div>
@@ -645,9 +645,9 @@
         </div>
         <div class="settings-card">
             <div class="graph-title">⚙️ Настройки автоматики</div>
-            <div class="setting-row"><span>💧 Автоматический полив</span><label class="switch"><input type="checkbox" id="autoWaterToggle" checked><span class="slider-switch"></span></label></div>
-            <div class="setting-row"><span>🪟 Автоматическая вентиляция</span><label class="switch"><input type="checkbox" id="autoVentToggle" checked><span class="slider-switch"></span></label></div>
-            <div class="setting-row"><span>💡 Автоматическое освещение</span><label class="switch"><input type="checkbox" id="autoLightToggle" checked><span class="slider-switch"></span></label></div>
+            <div class="setting-row"><span>💧 Автоматический полив</span><label class="switch"><input type="checkbox" id="autoWaterToggle" onchange="updateAutoSetting('water', this.checked); queueSync();"><span class="slider-switch"></span></label></div>
+            <div class="setting-row"><span>🪟 Автоматическая вентиляция</span><label class="switch"><input type="checkbox" id="autoVentToggle" onchange="updateAutoSetting('vent', this.checked); queueSync();"><span class="slider-switch"></span></label></div>
+            <div class="setting-row"><span>💡 Автоматическое освещение</span><label class="switch"><input type="checkbox" id="autoLightToggle" onchange="updateAutoSetting('light', this.checked); queueSync();"><span class="slider-switch"></span></label></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">⚡ Быстрые команды</div>
@@ -661,29 +661,29 @@
     <div id="settings" class="section">
         <div class="settings-card">
             <div class="graph-title">🌡️ Пороги температуры</div>
-            <div class="setting-row"><span>🌡️ Открыть форточку при выше (°C)</span><input type="number" class="setting-input" id="openTemp" value="28"></div>
-            <div class="setting-row"><span>🌡️ Закрыть форточку при ниже (°C)</span><input type="number" class="setting-input" id="closeTemp" value="26"></div>
-            <div class="setting-row"><span>🔥 Включить обогрев при ниже (°C)</span><input type="number" class="setting-input" id="heatTemp" value="18"></div>
-            <div class="setting-row"><span>❄️ Выключить обогрев при выше (°C)</span><input type="number" class="setting-input" id="heatOffTemp" value="22"></div>
+            <div class="setting-row"><span>🌡️ Открыть форточку при выше (°C)</span><input type="number" class="setting-input" id="openTemp" value="28" onchange="queueSync()"></div>
+            <div class="setting-row"><span>🌡️ Закрыть форточку при ниже (°C)</span><input type="number" class="setting-input" id="closeTemp" value="26" onchange="queueSync()"></div>
+            <div class="setting-row"><span>🔥 Включить обогрев при ниже (°C)</span><input type="number" class="setting-input" id="heatTemp" value="18" onchange="queueSync()"></div>
+            <div class="setting-row"><span>❄️ Выключить обогрев при выше (°C)</span><input type="number" class="setting-input" id="heatOffTemp" value="22" onchange="queueSync()"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">💧 Пороги влажности почвы</div>
-            <div class="setting-row"><span>💧 Включить полив при ниже (%)</span><input type="number" class="setting-input" id="soilDry" value="40"></div>
-            <div class="setting-row"><span>💧 Выключить полив при выше (%)</span><input type="number" class="setting-input" id="soilWet" value="70"></div>
+            <div class="setting-row"><span>💧 Включить полив при ниже (%)</span><input type="number" class="setting-input" id="soilDry" value="40" onchange="queueSync()"></div>
+            <div class="setting-row"><span>💧 Выключить полив при выше (%)</span><input type="number" class="setting-input" id="soilWet" value="70" onchange="queueSync()"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">💡 Пороги освещения</div>
-            <div class="setting-row"><span>💡 Включить фитолампу при ниже (%)</span><input type="number" class="setting-input" id="lightOn" value="30"></div>
-            <div class="setting-row"><span>💡 Выключить фитолампу при выше (%)</span><input type="number" class="setting-input" id="lightOff" value="50"></div>
+            <div class="setting-row"><span>💡 Включить фитолампу при ниже (%)</span><input type="number" class="setting-input" id="lightOn" value="30" onchange="queueSync()"></div>
+            <div class="setting-row"><span>💡 Выключить фитолампу при выше (%)</span><input type="number" class="setting-input" id="lightOff" value="50" onchange="queueSync()"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">💨 Пороги вентиляции</div>
-            <div class="setting-row"><span>💨 Включить вентилятор при выше (°C)</span><input type="number" class="setting-input" id="fanTemp" value="28"></div>
-            <div class="setting-row"><span>💨 Выключить вентилятор при ниже (°C)</span><input type="number" class="setting-input" id="fanOffTemp" value="26"></div>
+            <div class="setting-row"><span>💨 Включить вентилятор при выше (°C)</span><input type="number" class="setting-input" id="fanTemp" value="28" onchange="queueSync()"></div>
+            <div class="setting-row"><span>💨 Выключить вентилятор при ниже (°C)</span><input type="number" class="setting-input" id="fanOffTemp" value="26" onchange="queueSync()"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">⏱️ Время работы устройств</div>
-            <div class="setting-row"><span>💧 Длительность насоса (сек)</span><input type="number" class="setting-input" id="pumpTime" value="2"></div>
+            <div class="setting-row"><span>💧 Длительность насоса (сек)</span><input type="number" class="setting-input" id="pumpTime" value="2" onchange="queueSync()"></div>
         </div>
         <div class="settings-card">
             <div class="graph-title">📈 Экспорт данных</div>
@@ -709,7 +709,7 @@
     </div>
 
     <div id="about" class="section">
-        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени через GitHub Gist.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (GitHub Gist)</p><br><p><strong>Инструкция:</strong><br>1. Создайте секретный Gist с файлом teplitsa.json<br>2. Создайте токен GitHub с доступом к gist<br>3. Введите выше токен и ID Gist и нажмите "Сохранить"<br>4. Панель настроек скроется, синхронизация запустится автоматически<br>5. Данные будут синхронизироваться каждые 3 секунды</p></div>
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени через GitHub Gist.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (GitHub Gist)</p><br><p><strong>Инструкция:</strong><br>1. Создайте секретный Gist с файлом teplitsa.json<br>2. Создайте токен GitHub с доступом к gist<br>3. Введите выше токен и ID Gist и нажмите "Сохранить"</p></div>
     </div>
     <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | GitHub Gist Синхронизация</div>
 </div>
@@ -719,13 +719,31 @@
 <div id="dayModal" class="day-modal"><div class="day-modal-content"><div class="day-modal-header"><h2 id="dayModalTitle">📅 Данные за день</h2><button class="day-modal-close" id="dayModalCloseBtn">&times;</button></div><div class="day-modal-body"><div class="day-modal-chart"><canvas id="dayChart" width="400" height="220" style="width:100%; height:auto; max-height:220px;"></canvas></div><div class="day-modal-stats" id="dayModalStats"></div></div></div></div>
 
 <script>
+// ========== ЕДИНЫЙ ОБЪЕКТ СОСТОЯНИЯ ==========
+let greenhouseState = {
+    sensors: { temp: 22.5, hum: 58, soil: 42, light: 65 },
+    devices: { pump: false, light: false, window: false, heater: false, fan: false },
+    autoSettings: { water: true, vent: true, light: true },
+    currentPlant: 'tomato',
+    waterSaved: 0,
+    co2Absorbed: 0,
+    thresholds: {
+        openTemp: 28,
+        closeTemp: 26,
+        soilDry: 40,
+        soilWet: 70,
+        lightOn: 30,
+        lightOff: 50,
+        pumpTime: 2,
+        heatTemp: 18,
+        heatOffTemp: 22,
+        fanTemp: 28,
+        fanOffTemp: 26
+    },
+    lastUpdated: ""
+};
+
 // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
-let temp = 22.5, direction = 0.05;
-let hum = 58, light = 65, soil = 42;
-let waterSaved = 0, co2Absorbed = 0;
-let devices = { pump: false, light: false, window: false, heater: false, fan: false };
-let autoSettings = { water: true, vent: true, light: true };
-let currentPlant = 'tomato';
 let currentPeriod = 'day';
 let currentMetric = 'temp';
 let modalChart = null;
@@ -828,128 +846,161 @@ function createDropletsOnCards() {
     });
 }
 
-// Сохранение настроек в локальное хранилище
-function saveSettingsToLocal() {
-    const settings = {
-        currentPlant: currentPlant,
-        autoSettings: autoSettings,
-        light: light,
-        theme: document.body.classList.contains('dark') ? 'dark' : 'light',
-        nightMode: document.body.classList.contains('night-mode'),
-        thresholds: {
-            openTemp: document.getElementById('openTemp')?.value || '28',
-            closeTemp: document.getElementById('closeTemp')?.value || '26',
-            soilDry: document.getElementById('soilDry')?.value || '40',
-            soilWet: document.getElementById('soilWet')?.value || '70',
-            lightOn: document.getElementById('lightOn')?.value || '30',
-            lightOff: document.getElementById('lightOff')?.value || '50',
-            pumpTime: document.getElementById('pumpTime')?.value || '2',
-            heatTemp: document.getElementById('heatTemp')?.value || '18',
-            heatOffTemp: document.getElementById('heatOffTemp')?.value || '22',
-            fanTemp: document.getElementById('fanTemp')?.value || '28',
-            fanOffTemp: document.getElementById('fanOffTemp')?.value || '26'
+// ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ИЗ STATE ==========
+function updateUIFromState() {
+    // Обновляем датчики
+    document.getElementById('tempValue').textContent = greenhouseState.sensors.temp.toFixed(1);
+    document.getElementById('humValue').textContent = greenhouseState.sensors.hum;
+    document.getElementById('soilValue').textContent = greenhouseState.sensors.soil;
+    document.getElementById('lightValue').textContent = greenhouseState.sensors.light;
+    
+    // Обновляем устройства
+    const btns = ['pump', 'light', 'window', 'heater', 'fan'];
+    btns.forEach(id => {
+        const btn = document.querySelector(`.control-btn:has(> small:contains(${id === 'pump' ? 'ПОЛИВ' : id === 'light' ? 'СВЕТ' : id === 'window' ? 'ФОРТОЧКА' : id === 'heater' ? 'НАГРЕВ' : 'ВЕНТИЛЯТОР'})`) || 
+                   document.querySelectorAll('.control-btn')[{pump:0, light:1, window:2, heater:3, fan:4}[id]];
+        if (btn) {
+            btn.className = `control-btn ${greenhouseState.devices[id] ? 'on' : 'off'}`;
+            btn.innerHTML = `${id === 'pump' ? '💧' : id === 'light' ? '💡' : id === 'window' ? '🪟' : id === 'heater' ? '🔥' : '💨'} ${id === 'pump' ? 'ПОЛИВ' : id === 'light' ? 'СВЕТ' : id === 'window' ? 'ФОРТОЧКА' : id === 'heater' ? 'НАГРЕВ' : 'ВЕНТИЛЯТОР'}<br><small>${greenhouseState.devices[id] ? (id==='window'?'ОТКР':'ВКЛ') : (id==='window'?'ЗАКР':'ВЫКЛ')}</small>`;
         }
-    };
-    localStorage.setItem('teplitsa_settings', JSON.stringify(settings));
-}
-
-function loadSettingsFromLocal() {
-    const saved = localStorage.getItem('teplitsa_settings');
-    if (saved) {
-        try {
-            const settings = JSON.parse(saved);
-            if (settings.currentPlant) currentPlant = settings.currentPlant;
-            if (settings.autoSettings) autoSettings = settings.autoSettings;
-            if (settings.light) light = settings.light;
-            if (settings.theme === 'dark') document.body.classList.add('dark');
-            if (settings.nightMode) document.body.classList.add('night-mode');
-            if (settings.thresholds) {
-                const th = settings.thresholds;
-                if (document.getElementById('openTemp')) document.getElementById('openTemp').value = th.openTemp;
-                if (document.getElementById('closeTemp')) document.getElementById('closeTemp').value = th.closeTemp;
-                if (document.getElementById('soilDry')) document.getElementById('soilDry').value = th.soilDry;
-                if (document.getElementById('soilWet')) document.getElementById('soilWet').value = th.soilWet;
-                if (document.getElementById('lightOn')) document.getElementById('lightOn').value = th.lightOn;
-                if (document.getElementById('lightOff')) document.getElementById('lightOff').value = th.lightOff;
-                if (document.getElementById('pumpTime')) document.getElementById('pumpTime').value = th.pumpTime;
-                if (document.getElementById('heatTemp')) document.getElementById('heatTemp').value = th.heatTemp;
-                if (document.getElementById('heatOffTemp')) document.getElementById('heatOffTemp').value = th.heatOffTemp;
-                if (document.getElementById('fanTemp')) document.getElementById('fanTemp').value = th.fanTemp;
-                if (document.getElementById('fanOffTemp')) document.getElementById('fanOffTemp').value = th.fanOffTemp;
-            }
-        } catch(e) {}
-    }
-}
-
-// ========== UI ПОСТРОЕНИЕ ==========
-function updateAllUI() {
-    buildDashboard();
-    buildControlButtons();
-    updateWeatherDisplay();
-    updateEventsList();
-    updateGraphsData();
+    });
     
-    if (document.getElementById('brightnessSlider')) {
-        document.getElementById('brightnessSlider').value = light;
-        document.getElementById('brightnessValue').innerHTML = light + '%';
-        document.getElementById('currentLightLevel').innerHTML = light + '%';
+    // Обновляем ползунок яркости
+    const slider = document.getElementById('brightnessSlider');
+    if (slider) {
+        slider.value = greenhouseState.sensors.light;
+        document.getElementById('brightnessValue').innerHTML = greenhouseState.sensors.light + '%';
+        document.getElementById('currentLightLevel').innerHTML = greenhouseState.sensors.light + '%';
     }
     
+    // Обновляем чекбоксы автоматики
+    if (document.getElementById('autoWaterToggle')) {
+        document.getElementById('autoWaterToggle').checked = greenhouseState.autoSettings.water;
+        document.getElementById('autoVentToggle').checked = greenhouseState.autoSettings.vent;
+        document.getElementById('autoLightToggle').checked = greenhouseState.autoSettings.light;
+    }
+    
+    // Обновляем пороги
+    if (document.getElementById('openTemp')) document.getElementById('openTemp').value = greenhouseState.thresholds.openTemp;
+    if (document.getElementById('closeTemp')) document.getElementById('closeTemp').value = greenhouseState.thresholds.closeTemp;
+    if (document.getElementById('soilDry')) document.getElementById('soilDry').value = greenhouseState.thresholds.soilDry;
+    if (document.getElementById('soilWet')) document.getElementById('soilWet').value = greenhouseState.thresholds.soilWet;
+    if (document.getElementById('lightOn')) document.getElementById('lightOn').value = greenhouseState.thresholds.lightOn;
+    if (document.getElementById('lightOff')) document.getElementById('lightOff').value = greenhouseState.thresholds.lightOff;
+    if (document.getElementById('pumpTime')) document.getElementById('pumpTime').value = greenhouseState.thresholds.pumpTime;
+    if (document.getElementById('heatTemp')) document.getElementById('heatTemp').value = greenhouseState.thresholds.heatTemp;
+    if (document.getElementById('heatOffTemp')) document.getElementById('heatOffTemp').value = greenhouseState.thresholds.heatOffTemp;
+    if (document.getElementById('fanTemp')) document.getElementById('fanTemp').value = greenhouseState.thresholds.fanTemp;
+    if (document.getElementById('fanOffTemp')) document.getElementById('fanOffTemp').value = greenhouseState.thresholds.fanOffTemp;
+    
+    // Обновляем выбранное растение
+    const plantCards = document.querySelectorAll('.plant-card');
+    plantCards.forEach(card => {
+        if (card.querySelector('.plant-name')?.textContent === plantsList[greenhouseState.currentPlant]?.name) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    });
+    
+    // Обновляем дополнительные показатели
     document.getElementById('nextWatering').innerHTML = `~${Math.floor(Math.random() * 5) + 2} ч`;
-    document.getElementById('daysToHarvest').innerHTML = plantsList[currentPlant].days;
+    document.getElementById('daysToHarvest').innerHTML = plantsList[greenhouseState.currentPlant]?.days || 80;
     
     let health = 100;
-    if (temp > 30) health -= 12;
-    if (temp < 15) health -= 10;
-    if (soil < 35) health -= 18;
+    if (greenhouseState.sensors.temp > 30) health -= 12;
+    if (greenhouseState.sensors.temp < 15) health -= 10;
+    if (greenhouseState.sensors.soil < 35) health -= 18;
     health = Math.max(0, Math.min(100, health));
     document.getElementById('plantHealth').innerHTML = health + '%';
     document.getElementById('healthBar').style.width = health + '%';
-    document.getElementById('waterSaved').innerHTML = waterSaved.toFixed(1) + ' л';
-    document.getElementById('co2Absorbed').innerHTML = co2Absorbed.toFixed(1) + ' кг';
+    document.getElementById('waterSaved').innerHTML = greenhouseState.waterSaved.toFixed(1) + ' л';
+    document.getElementById('co2Absorbed').innerHTML = greenhouseState.co2Absorbed.toFixed(1) + ' кг';
     document.getElementById('vsYesterday').innerHTML = (externalTemp - (externalTemp - 0.7)).toFixed(1) + '°C';
+    
+    // Обновляем графики
+    updateGraphsDataFromState();
+    
+    greenhouseState.lastUpdated = new Date().toLocaleTimeString();
+    document.getElementById('lastSyncTime').innerHTML = greenhouseState.lastUpdated;
 }
 
-function updateEventsList() {
-    const timeStr = new Date().toLocaleTimeString().slice(0,5);
-    let events = [`🟢 Система | ${timeStr}`, `🌡️ ${temp.toFixed(1)}°C`, `💧 ${hum}%`, `🌱 ${soil}%`, `☀️ ${light}%`];
-    if (temp > 28) events.unshift(`🔥 ЖАР!`);
-    if (soil < 40) events.unshift(`💧 ПОЛИВ!`);
-    document.getElementById('eventsList').innerHTML = events.slice(0,5).map(e => `<div class="setting-row">${e}</div>`).join('');
-}
-
-function addEventToLog(event) {
-    const eventsList = document.getElementById('eventsList');
-    if (eventsList) {
-        const eventDiv = document.createElement('div');
-        eventDiv.className = 'setting-row';
-        eventDiv.innerHTML = `🔵 ${new Date().toLocaleTimeString()} | ${event}`;
-        eventsList.insertBefore(eventDiv, eventsList.firstChild);
-        if (eventsList.children.length > 10) eventsList.removeChild(eventsList.lastChild);
-    }
-}
-
-function updateGraphsData() {
-    tempData24.push(Number(temp.toFixed(1)));
+function updateGraphsDataFromState() {
+    tempData24.push(Number(greenhouseState.sensors.temp.toFixed(1)));
     tempData24.shift();
-    humData24.push(hum);
+    humData24.push(greenhouseState.sensors.hum);
     humData24.shift();
-    lightData24.push(light);
+    lightData24.push(greenhouseState.sensors.light);
     lightData24.shift();
-    soilData24.push(soil);
+    soilData24.push(greenhouseState.sensors.soil);
     soilData24.shift();
     
     if (modalChart && modal.style.display === 'flex') updateModalChart();
 }
 
+// ========== СБОР ВСЕХ ДАННЫХ ИЗ UI В STATE ==========
+function collectAllDataFromUI() {
+    // Собираем датчики
+    greenhouseState.sensors.temp = parseFloat(document.getElementById('tempValue')?.textContent) || 22.5;
+    greenhouseState.sensors.hum = parseInt(document.getElementById('humValue')?.textContent) || 58;
+    greenhouseState.sensors.soil = parseInt(document.getElementById('soilValue')?.textContent) || 42;
+    greenhouseState.sensors.light = parseInt(document.getElementById('lightValue')?.textContent) || 65;
+    
+    // Сохраняем устройства
+    // (устройства уже обновляются при клике)
+    
+    // Сохраняем настройки автоматики
+    greenhouseState.autoSettings.water = document.getElementById('autoWaterToggle')?.checked || false;
+    greenhouseState.autoSettings.vent = document.getElementById('autoVentToggle')?.checked || false;
+    greenhouseState.autoSettings.light = document.getElementById('autoLightToggle')?.checked || false;
+    
+    // Сохраняем пороги
+    greenhouseState.thresholds.openTemp = parseInt(document.getElementById('openTemp')?.value) || 28;
+    greenhouseState.thresholds.closeTemp = parseInt(document.getElementById('closeTemp')?.value) || 26;
+    greenhouseState.thresholds.soilDry = parseInt(document.getElementById('soilDry')?.value) || 40;
+    greenhouseState.thresholds.soilWet = parseInt(document.getElementById('soilWet')?.value) || 70;
+    greenhouseState.thresholds.lightOn = parseInt(document.getElementById('lightOn')?.value) || 30;
+    greenhouseState.thresholds.lightOff = parseInt(document.getElementById('lightOff')?.value) || 50;
+    greenhouseState.thresholds.pumpTime = parseInt(document.getElementById('pumpTime')?.value) || 2;
+    greenhouseState.thresholds.heatTemp = parseInt(document.getElementById('heatTemp')?.value) || 18;
+    greenhouseState.thresholds.heatOffTemp = parseInt(document.getElementById('heatOffTemp')?.value) || 22;
+    greenhouseState.thresholds.fanTemp = parseInt(document.getElementById('fanTemp')?.value) || 28;
+    greenhouseState.thresholds.fanOffTemp = parseInt(document.getElementById('fanOffTemp')?.value) || 26;
+}
+
+// ========== ЗАЩИТА ОТ СПАМА (DEBOUNCE) ==========
+let syncTimeout;
+
+function queueSync() {
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(async () => {
+        collectAllDataFromUI();
+        await sendToGitHub();
+        addEventToLog('📤 Данные отправлены в Gist (пакетом)');
+    }, 1500);
+}
+
+// ========== ОБНОВЛЕНИЕ ОТДЕЛЬНЫХ ПАРАМЕТРОВ ==========
+function updateBrightness(value) {
+    greenhouseState.sensors.light = parseInt(value);
+    document.getElementById('brightnessValue').innerHTML = value + '%';
+    document.getElementById('currentLightLevel').innerHTML = value + '%';
+    document.getElementById('lightValue').textContent = value;
+}
+
+function updateAutoSetting(setting, value) {
+    greenhouseState.autoSettings[setting] = value;
+}
+
+// ========== UI ПОСТРОЕНИЕ ==========
 function buildDashboard() {
     const daily = getDailyMinMax();
-    const p = plantsList[currentPlant];
+    const p = plantsList[greenhouseState.currentPlant];
     document.getElementById('statsGrid').innerHTML = `
-        <div class="stat-card" data-metric="temp"><div class="stat-icon">🌡️</div><div class="stat-value" id="tempValue">${temp.toFixed(1)}</div><div class="stat-label">Температура (°C) ${getOptimumBadge(temp, 18, 28)}</div><div class="minmax-info">📉 мин ${daily.temp.min}°C | 📈 макс ${daily.temp.max}°C</div></div>
-        <div class="stat-card" data-metric="hum"><div class="stat-icon">💧</div><div class="stat-value" id="humValue">${hum}</div><div class="stat-label">Влажность (%) ${getOptimumBadge(hum, 45, 75)}</div><div class="minmax-info">📉 мин ${daily.hum.min}% | 📈 макс ${daily.hum.max}%</div></div>
-        <div class="stat-card" data-metric="light"><div class="stat-icon">☀️</div><div class="stat-value" id="lightValue">${light}</div><div class="stat-label">Освещённость (%) ${getOptimumBadge(light, 30, 85)}</div><div class="minmax-info">🌞 0-100%</div></div>
-        <div class="stat-card" data-metric="soil"><div class="stat-icon">🌱</div><div class="stat-value" id="soilValue">${soil}</div><div class="stat-label">Почва (%) ${getOptimumBadge(soil, 40, 70)}</div><div class="minmax-info">📉 мин ${daily.soil.min}% | 📈 макс ${daily.soil.max}%</div></div>
+        <div class="stat-card" data-metric="temp"><div class="stat-icon">🌡️</div><div class="stat-value" id="tempValue">${greenhouseState.sensors.temp.toFixed(1)}</div><div class="stat-label">Температура (°C) ${getOptimumBadge(greenhouseState.sensors.temp, 18, 28)}</div><div class="minmax-info">📉 мин ${daily.temp.min}°C | 📈 макс ${daily.temp.max}°C</div></div>
+        <div class="stat-card" data-metric="hum"><div class="stat-icon">💧</div><div class="stat-value" id="humValue">${greenhouseState.sensors.hum}</div><div class="stat-label">Влажность (%) ${getOptimumBadge(greenhouseState.sensors.hum, 45, 75)}</div><div class="minmax-info">📉 мин ${daily.hum.min}% | 📈 макс ${daily.hum.max}%</div></div>
+        <div class="stat-card" data-metric="light"><div class="stat-icon">☀️</div><div class="stat-value" id="lightValue">${greenhouseState.sensors.light}</div><div class="stat-label">Освещённость (%) ${getOptimumBadge(greenhouseState.sensors.light, 30, 85)}</div><div class="minmax-info">🌞 0-100%</div></div>
+        <div class="stat-card" data-metric="soil"><div class="stat-icon">🌱</div><div class="stat-value" id="soilValue">${greenhouseState.sensors.soil}</div><div class="stat-label">Почва (%) ${getOptimumBadge(greenhouseState.sensors.soil, 40, 70)}</div><div class="minmax-info">📉 мин ${daily.soil.min}% | 📈 макс ${daily.soil.max}%</div></div>
         <div class="stat-card"><div class="stat-icon">💧</div><div class="stat-value">FULL</div><div class="stat-label">Вода</div></div>
         <div class="stat-card"><div class="stat-icon">${p.icon}</div><div class="stat-value">${p.name}</div><div class="stat-label">Растение</div></div>
     `;
@@ -957,19 +1008,14 @@ function buildDashboard() {
     
     document.getElementById('statsBottomGrid').innerHTML = `<div class="stat-card"><div class="stat-icon">🔧</div><div class="stat-value">950+</div><div class="stat-label">Строк кода</div></div><div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">19</div><div class="stat-label">Растений</div></div><div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">4640 ₽</div><div class="stat-label">Себестоимость</div></div>`;
     
-    document.getElementById('tempValue').textContent = temp.toFixed(1);
-    document.getElementById('humValue').textContent = hum;
-    document.getElementById('lightValue').textContent = light;
-    document.getElementById('soilValue').textContent = soil;
-    
     if (!document.getElementById('advisorCard')) { 
         const d = document.createElement('div'); 
         d.className = 'settings-card'; 
         d.id = 'advisorCard'; 
-        d.innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${plantsList[currentPlant].care}</div>`; 
+        d.innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${p.care}</div>`; 
         document.getElementById('dashboard').appendChild(d); 
     } else {
-        document.getElementById('advisorCard').innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${plantsList[currentPlant].care}</div>`;
+        document.getElementById('advisorCard').innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${p.care}</div>`;
     }
 }
 
@@ -981,16 +1027,15 @@ function buildControlButtons() {
     container.innerHTML = '';
     btns.forEach(id => {
         const btn = document.createElement('button');
-        btn.className = `control-btn ${devices[id] ? 'on' : 'off'}`;
-        btn.innerHTML = `${icons[id]} ${labels[id]}<br><small>${devices[id] ? (id==='window'?'ОТКР':'ВКЛ') : (id==='window'?'ЗАКР':'ВЫКЛ')}</small>`;
+        btn.className = `control-btn ${greenhouseState.devices[id] ? 'on' : 'off'}`;
+        btn.innerHTML = `${icons[id]} ${labels[id]}<br><small>${greenhouseState.devices[id] ? (id==='window'?'ОТКР':'ВКЛ') : (id==='window'?'ЗАКР':'ВЫКЛ')}</small>`;
         btn.onclick = () => { 
-            devices[id] = !devices[id]; 
-            btn.className = `control-btn ${devices[id] ? 'on' : 'off'}`; 
-            btn.innerHTML = `${icons[id]} ${labels[id]}<br><small>${devices[id] ? (id==='window'?'ОТКР':'ВКЛ') : (id==='window'?'ЗАКР':'ВЫКЛ')}</small>`; 
-            showToast(`${labels[id]} ${devices[id] ? 'включён' : 'выключен'}`); 
+            greenhouseState.devices[id] = !greenhouseState.devices[id]; 
+            btn.className = `control-btn ${greenhouseState.devices[id] ? 'on' : 'off'}`; 
+            btn.innerHTML = `${icons[id]} ${labels[id]}<br><small>${greenhouseState.devices[id] ? (id==='window'?'ОТКР':'ВКЛ') : (id==='window'?'ЗАКР':'ВЫКЛ')}</small>`; 
+            showToast(`${labels[id]} ${greenhouseState.devices[id] ? 'включён' : 'выключен'}`); 
             if (id === 'pump') createDropletsOnCards();
-            saveSettingsToLocal();
-            if (ghToken && gistId) sendToGitHub();
+            queueSync();
         };
         container.appendChild(btn);
     });
@@ -1002,21 +1047,20 @@ function buildPlants() {
     Object.keys(plantsList).forEach(key => {
         const p = plantsList[key];
         const card = document.createElement('div');
-        card.className = `plant-card ${currentPlant === key ? 'selected' : ''}`;
+        card.className = `plant-card ${greenhouseState.currentPlant === key ? 'selected' : ''}`;
         card.innerHTML = `<div class="plant-icon">${p.icon}</div><div class="plant-name">${p.name}</div>`;
         card.onclick = (e) => { 
             e.stopPropagation(); 
-            if (currentPlant === key) {
+            if (greenhouseState.currentPlant === key) {
                 openPlantInfoModal(key);
             } else { 
                 document.querySelectorAll('.plant-card').forEach(c => c.classList.remove('selected')); 
                 card.classList.add('selected'); 
-                currentPlant = key; 
+                greenhouseState.currentPlant = key; 
                 buildDashboard(); 
                 updateWeatherDisplay();
                 showToast(`🌱 ${p.name}`); 
-                saveSettingsToLocal();
-                if (ghToken && gistId) sendToGitHub();
+                queueSync();
             } 
         };
         grid.appendChild(card);
@@ -1213,7 +1257,6 @@ nightToggle.addEventListener('click', () => {
     document.body.classList.toggle('night-mode');
     nightToggle.textContent = document.body.classList.contains('night-mode') ? '☀️ Дневной режим' : '🌙 Ночной экран';
     showToast(document.body.classList.contains('night-mode') ? '🌙 Ночной режим активирован' : '☀️ Дневной режим активирован');
-    saveSettingsToLocal();
 });
 
 const themeToggle = document.getElementById('themeToggle');
@@ -1223,7 +1266,6 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
     themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
     if (modalChart) modalChart.update();
-    saveSettingsToLocal();
 });
 themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Светлая тема' : '🌓 Тёмная тема';
 
@@ -1269,71 +1311,21 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     });
 });
 
-// ========== ОБРАБОТЧИКИ УПРАВЛЕНИЯ ==========
-const brightnessSlider = document.getElementById('brightnessSlider');
-const brightnessValue = document.getElementById('brightnessValue');
-brightnessSlider?.addEventListener('input', (e) => {
-    const val = e.target.value;
-    brightnessValue.innerHTML = val + '%';
-    light = parseInt(val);
-    document.getElementById('currentLightLevel').innerHTML = light + '%';
-    document.getElementById('lightValue').textContent = light;
-    showToast(`💡 Яркость света установлена на ${val}%`);
-    saveSettingsToLocal();
-    if (ghToken && gistId) sendToGitHub();
-});
-
-const autoWaterToggle = document.getElementById('autoWaterToggle');
-const autoVentToggle = document.getElementById('autoVentToggle');
-const autoLightToggle = document.getElementById('autoLightToggle');
-autoWaterToggle?.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); saveSettingsToLocal(); });
-autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); saveSettingsToLocal(); });
-autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); saveSettingsToLocal(); });
-
+// ========== ОБРАБОТЧИКИ ==========
 document.getElementById('emergencyPump')?.addEventListener('click', () => { showToast('🚨 Аварийный полив'); createDropletsOnCards(); });
 document.getElementById('emergencyWindow')?.addEventListener('click', () => showToast('🪟 Форточка открыта'));
 
 function loadSettingsToInputs() {
-    const p = plantsList[currentPlant];
-    if (document.getElementById('openTemp')) document.getElementById('openTemp').value = p.openTemp;
-    if (document.getElementById('closeTemp')) document.getElementById('closeTemp').value = p.closeTemp;
-    if (document.getElementById('soilDry')) document.getElementById('soilDry').value = p.soilDry;
-    if (document.getElementById('soilWet')) document.getElementById('soilWet').value = p.soilWet;
-    if (document.getElementById('lightOn')) document.getElementById('lightOn').value = p.lightOn;
-    if (document.getElementById('lightOff')) document.getElementById('lightOff').value = p.lightOff;
-    if (document.getElementById('pumpTime')) document.getElementById('pumpTime').value = p.pumpTime;
+    const p = plantsList[greenhouseState.currentPlant];
+    if (document.getElementById('openTemp')) document.getElementById('openTemp').value = greenhouseState.thresholds.openTemp;
+    if (document.getElementById('closeTemp')) document.getElementById('closeTemp').value = greenhouseState.thresholds.closeTemp;
+    if (document.getElementById('soilDry')) document.getElementById('soilDry').value = greenhouseState.thresholds.soilDry;
+    if (document.getElementById('soilWet')) document.getElementById('soilWet').value = greenhouseState.thresholds.soilWet;
+    if (document.getElementById('lightOn')) document.getElementById('lightOn').value = greenhouseState.thresholds.lightOn;
+    if (document.getElementById('lightOff')) document.getElementById('lightOff').value = greenhouseState.thresholds.lightOff;
+    if (document.getElementById('pumpTime')) document.getElementById('pumpTime').value = greenhouseState.thresholds.pumpTime;
 }
 loadSettingsToInputs();
-
-// Автосохранение настроек при изменении полей
-function setupAutoSaveSettings() {
-    const saveElements = [
-        document.getElementById('brightnessSlider'),
-        document.getElementById('autoWaterToggle'),
-        document.getElementById('autoVentToggle'),
-        document.getElementById('autoLightToggle'),
-        document.getElementById('openTemp'),
-        document.getElementById('closeTemp'),
-        document.getElementById('soilDry'),
-        document.getElementById('soilWet'),
-        document.getElementById('lightOn'),
-        document.getElementById('lightOff'),
-        document.getElementById('pumpTime'),
-        document.getElementById('heatTemp'),
-        document.getElementById('heatOffTemp'),
-        document.getElementById('fanTemp'),
-        document.getElementById('fanOffTemp')
-    ];
-    
-    saveElements.forEach(el => {
-        if (el) {
-            el.addEventListener('change', () => { setTimeout(() => saveSettingsToLocal(), 100); });
-            if (el.type === 'range') {
-                el.addEventListener('input', () => { setTimeout(() => saveSettingsToLocal(), 100); });
-            }
-        }
-    });
-}
 
 // ========== УВЕДОМЛЕНИЯ ==========
 let notificationPermission = false;
@@ -1367,29 +1359,6 @@ window.addEventListener('scroll', () => {
     const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; 
     document.getElementById('progressBar').style.width = (window.scrollY / h) * 100 + '%'; 
 });
-
-// ========== ЗАПУСК СИМУЛЯЦИИ ==========
-setInterval(() => {
-    // Плавное изменение данных
-    temp += direction;
-    if (temp > 28) direction = -0.05;
-    if (temp < 22) direction = 0.05;
-    hum = 55 + Math.floor(Math.sin(Date.now()/10000) * 10);
-    light = 40 + Math.floor(Math.sin(Date.now()/5000) * 30);
-    soil = 35 + Math.floor(Math.sin(Date.now()/30000) * 10);
-    
-    // Накопление статистики
-    waterSaved += 0.12;
-    co2Absorbed += 0.06;
-    
-    // Обновление UI
-    updateAllUI();
-    updateGraphsData();
-    updateEventsList();
-    updateWeatherDisplay();
-    
-    if (modalChart && modal.style.display === 'flex') updateModalChart();
-}, 3000);
 
 // ========== СИНХРОНИЗАЦИЯ ЧЕРЕЗ GITHUB GIST ==========
 let ghToken = localStorage.getItem('github_token');
@@ -1432,8 +1401,6 @@ document.getElementById('saveSettingsBtn').onclick = () => {
         
         // Инициализируем синхронизацию
         initSync();
-        // Загружаем данные
-        setTimeout(() => receiveFromGitHub(), 1000);
     } else {
         showToast('❌ Введите и токен, и ID Gist');
     }
@@ -1461,49 +1428,62 @@ let syncIntervals = [];
 function updateSyncUI() {
     document.getElementById('syncStatus').innerHTML = '✅ GitHub Gist';
     document.getElementById('syncStatus').style.color = '#4caf50';
-    document.getElementById('lastSyncTime').innerHTML = new Date().toLocaleTimeString();
+    document.getElementById('lastSyncTime').innerHTML = greenhouseState.lastUpdated;
 }
 
-// Отправка данных в Gist
+// Инициализация Gist при первом запуске
+async function initGist() {
+    if (!ghToken || !gistId) return;
+    
+    try {
+        const API_URL = `https://api.github.com/gists/${gistId}`;
+        const res = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${ghToken}` }
+        });
+        const gist = await res.json();
+        
+        if (!gist.files || !gist.files['teplitsa.json']) {
+            // Создаём начальную структуру
+            const initData = {
+                history: [],
+                state: greenhouseState
+            };
+            
+            await fetch(API_URL, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${ghToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    files: { 'teplitsa.json': { content: JSON.stringify(initData, null, 2) } }
+                })
+            });
+            
+            addEventToLog('📁 Gist инициализирован начальными данными');
+        }
+    } catch(e) {
+        console.log('Ошибка инициализации Gist:', e);
+    }
+}
+
+// Отправка ВСЕГО состояния в Gist
 async function sendToGitHub() {
     if (!ghToken || !gistId || isSyncing) return;
     
     try {
         const API_URL = `https://api.github.com/gists/${gistId}`;
-        const getRes = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${ghToken}` }
-        });
-        const gist = await getRes.json();
         
-        let allData = {};
-        if (gist.files && gist.files['teplitsa.json']) {
-            try {
-                allData = JSON.parse(gist.files['teplitsa.json'].content);
-            } catch(e) { allData = { history: [] }; }
-        }
-        if (!allData.history) allData.history = [];
-        
-        const currentData = {
+        const dataToSend = {
+            history: [],
+            state: greenhouseState,
             deviceId: localStorage.getItem('device_id_gist') || (() => {
                 const id = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
                 localStorage.setItem('device_id_gist', id);
                 return id;
             })(),
-            temp: temp,
-            hum: hum,
-            soil: soil,
-            light: light,
-            devices: devices,
-            currentPlant: currentPlant,
-            waterSaved: waterSaved,
-            co2Absorbed: co2Absorbed,
-            autoSettings: autoSettings,
             timestamp: Date.now()
         };
-        
-        allData.history.push(currentData);
-        if (allData.history.length > 30) allData.history.shift();
-        allData.last = currentData;
         
         await fetch(API_URL, {
             method: 'PATCH',
@@ -1512,16 +1492,15 @@ async function sendToGitHub() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                files: { 'teplitsa.json': { content: JSON.stringify(allData, null, 2) } }
+                files: { 'teplitsa.json': { content: JSON.stringify(dataToSend, null, 2) } }
             })
         });
         
         updateSyncUI();
-        addEventToLog('📤 Данные отправлены в Gist');
     } catch(e) { console.log('Ошибка отправки:', e); }
 }
 
-// Получение данных из Gist
+// Получение и ПРИМЕНЕНИЕ ВСЕГО состояния из Gist
 async function receiveFromGitHub() {
     if (!ghToken || !gistId || isSyncing) return;
     
@@ -1536,42 +1515,28 @@ async function receiveFromGitHub() {
             const data = JSON.parse(gist.files['teplitsa.json'].content);
             const myDeviceId = localStorage.getItem('device_id_gist');
             
-            if (data && data.last && data.last.deviceId && data.last.deviceId !== myDeviceId) {
-                const dataStr = JSON.stringify(data.last);
+            // Если есть данные и они НЕ от нашего устройства
+            if (data && data.state && data.deviceId && data.deviceId !== myDeviceId) {
+                const dataStr = JSON.stringify(data.state);
                 if (lastSyncData !== dataStr) {
                     lastSyncData = dataStr;
                     isSyncing = true;
                     
                     addEventToLog('🔄 Получены данные с другого устройства');
                     
-                    if (data.last.temp !== undefined) temp = data.last.temp;
-                    if (data.last.hum !== undefined) hum = data.last.hum;
-                    if (data.last.soil !== undefined) soil = data.last.soil;
-                    if (data.last.light !== undefined) light = data.last.light;
-                    if (data.last.devices) devices = data.last.devices;
-                    if (data.last.currentPlant) currentPlant = data.last.currentPlant;
-                    if (data.last.waterSaved !== undefined) waterSaved = data.last.waterSaved;
-                    if (data.last.co2Absorbed !== undefined) co2Absorbed = data.last.co2Absorbed;
-                    if (data.last.autoSettings) autoSettings = data.last.autoSettings;
+                    // ПРИМЕНЯЕМ ВСЁ СОСТОЯНИЕ ЦЕЛИКОМ
+                    greenhouseState = data.state;
                     
-                    updateAllUI();
-                    buildPlants();
+                    // Обновляем весь интерфейс
+                    updateUIFromState();
+                    buildDashboard();
                     buildControlButtons();
+                    buildPlants();
                     updateSyncUI();
+                    updateWeatherDisplay();
                     
-                    if (document.getElementById('autoWaterToggle')) {
-                        document.getElementById('autoWaterToggle').checked = autoSettings.water;
-                        document.getElementById('autoVentToggle').checked = autoSettings.vent;
-                        document.getElementById('autoLightToggle').checked = autoSettings.light;
-                    }
-                    if (document.getElementById('brightnessSlider')) {
-                        document.getElementById('brightnessSlider').value = light;
-                        document.getElementById('brightnessValue').innerHTML = light + '%';
-                        document.getElementById('currentLightLevel').innerHTML = light + '%';
-                    }
-                    
-                    addEventToLog('✅ Синхронизация завершена');
-                    showToast('🔄 Данные синхронизированы');
+                    addEventToLog('✅ Полная синхронизация завершена');
+                    showToast('🔄 Все данные синхронизированы');
                     
                     setTimeout(() => { isSyncing = false; }, 500);
                 }
@@ -1590,17 +1555,29 @@ function stopSync() {
 function startSync() {
     stopSync();
     if (ghToken && gistId) {
-        syncIntervals.push(setInterval(sendToGitHub, 3000));
-        syncIntervals.push(setInterval(receiveFromGitHub, 3000));
-        addEventToLog('☁️ GitHub Gist синхронизация запущена (каждые 3 сек)');
+        syncIntervals.push(setInterval(sendToGitHub, 5000));
+        syncIntervals.push(setInterval(receiveFromGitHub, 5000));
+        addEventToLog('☁️ GitHub Gist синхронизация запущена (каждые 5 сек)');
     }
 }
 
 // Инициализация синхронизации
-function initSync() {
+async function initSync() {
     if (ghToken && gistId) {
+        await initGist();
         startSync();
-        receiveFromGitHub();
+        await receiveFromGitHub();
+    }
+}
+
+function addEventToLog(event) {
+    const eventsList = document.getElementById('eventsList');
+    if (eventsList) {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'setting-row';
+        eventDiv.innerHTML = `🔵 ${new Date().toLocaleTimeString()} | ${event}`;
+        eventsList.insertBefore(eventDiv, eventsList.firstChild);
+        if (eventsList.children.length > 10) eventsList.removeChild(eventsList.lastChild);
     }
 }
 
@@ -1612,17 +1589,16 @@ if (ghToken) document.getElementById('tokenInput').value = ghToken;
 if (gistId) document.getElementById('gistIdInput').value = gistId;
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
-function init() {
-    loadSettingsFromLocal();
+async function init() {
     buildDashboard();
     buildControlButtons();
     buildPlants();
     updateWeatherDisplay();
     renderYearCalendar();
-    setupAutoSaveSettings();
+    updateUIFromState();
     
     // Запускаем синхронизацию
-    initSync();
+    await initSync();
     
     addEventToLog('🚀 Система запущена');
 }
