@@ -730,6 +730,45 @@ let currentMetric = 'temp';
 let modalChart = null;
 let dayChart = null;
 
+// ========== ДИАГНОСТИКА ==========
+function testSync() {
+    console.log('=== ДИАГНОСТИКА СИНХРОНИЗАЦИИ ===');
+    console.log('ghToken:', ghToken ? 'есть' : 'нет');
+    console.log('gistId:', gistId ? 'есть' : 'нет');
+    console.log('Текущие данные:', {temp, hum, soil, light, devices, currentPlant});
+    
+    if (ghToken && gistId) {
+        const API_URL = `https://api.github.com/gists/${gistId}`;
+        fetch(API_URL, {
+            headers: { 'Authorization': `token ${ghToken}` }
+        })
+        .then(res => res.json())
+        .then(gist => {
+            if (gist.files && gist.files['teplitsa.json']) {
+                const data = JSON.parse(gist.files['teplitsa.json'].content);
+                console.log('Данные в Gist:', data);
+                console.log('DeviceId в Gist:', data.deviceId);
+                console.log('Мой DeviceId:', localStorage.getItem('device_id_gist'));
+                if (data.deviceId !== localStorage.getItem('device_id_gist')) {
+                    console.log('✅ Есть данные с другого устройства!');
+                } else {
+                    console.log('⚠️ Данные в Gist от этого же устройства');
+                }
+            } else {
+                console.log('❌ Файл teplitsa.json не найден');
+            }
+        })
+        .catch(e => console.log('Ошибка:', e));
+    }
+}
+
+// Добавляем кнопку теста
+const testBtn = document.createElement('button');
+testBtn.textContent = '🔍 ТЕСТ СИНХРОНИЗАЦИИ';
+testBtn.style.cssText = 'position:fixed; bottom:10px; left:10px; background:#2196f3; color:white; border:none; padding:8px 15px; border-radius:20px; font-size:12px; cursor:pointer; z-index:9999;';
+document.body.appendChild(testBtn);
+testBtn.onclick = testSync;
+
 // Данные для графиков
 let tempData24 = [18,19,18,17,16,15,16,18,20,22,24,25,26,27,28,28,27,26,25,24,23,22,21,20];
 let humData24 = [65,66,67,68,69,70,70,69,67,65,62,60,58,56,55,55,56,58,60,62,64,65,65,64];
