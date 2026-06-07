@@ -549,11 +549,13 @@
         <div id="debugToken">🔑 Токен: ---</div>
         <div id="debugGist">📁 Gist ID: ---</div>
         <div id="debugSync">🔄 Синхронизация: ---</div>
+        <div id="debugRole">👑 Режим: ---</div>
         <div id="debugLastData">📦 Device ID: ---</div>
         <div id="debugGistCheck" style="color: #ff0;">📋 Gist проверка: ---</div>
         <button id="debugForceSync" style="margin-top: 10px; padding: 5px 10px; background: #0f0; color: #000; border: none; border-radius: 5px; cursor: pointer;">🔄 Принудительная синхронизация</button>
         <button id="debugClearCache" style="margin-top: 5px; padding: 5px 10px; background: #f00; color: #fff; border: none; border-radius: 5px; cursor: pointer;">🗑️ Сбросить настройки</button>
         <button id="debugCheckGist" style="margin-top: 5px; padding: 5px 10px; background: #ff9800; color: #000; border: none; border-radius: 5px; cursor: pointer;">📖 Проверить Gist</button>
+        <button id="debugMakeAuthoritative" style="margin-top: 5px; padding: 5px 10px; background: #4caf50; color: #fff; border: none; border-radius: 5px; cursor: pointer;">👑 Сделать главным</button>
     </div>
 
     <div class="header">
@@ -713,7 +715,7 @@
             <div class="graph-title">☁️ Статус синхронизации</div>
             <div class="setting-row">
                 <span>🌐 Облачная синхронизация</span>
-                <span id="syncStatus" style="font-weight: bold; color: #f44336;">❌ Не настроена</span>
+                <span id="syncStatus" style="font-weight: bold; color: #4caf50;">✅ GitHub Gist</span>
             </div>
             <div class="setting-row">
                 <span>🔄 Последняя синхронизация</span>
@@ -744,6 +746,9 @@ let currentPeriod = 'day';
 let currentMetric = 'temp';
 let modalChart = null;
 let dayChart = null;
+
+// Флаг управления: true — это устройство генерирует данные (теплица/ПК)
+let isAuthoritativeDevice = true;
 
 // Данные для графиков
 let tempData24 = [18,19,18,17,16,15,16,18,20,22,24,25,26,27,28,28,27,26,25,24,23,22,21,20];
@@ -971,19 +976,14 @@ function buildDashboard() {
     
     document.getElementById('statsBottomGrid').innerHTML = `<div class="stat-card"><div class="stat-icon">🔧</div><div class="stat-value">950+</div><div class="stat-label">Строк кода</div></div><div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">19</div><div class="stat-label">Растений</div></div><div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">4640 ₽</div><div class="stat-label">Себестоимость</div></div>`;
     
-    document.getElementById('tempValue').textContent = temp.toFixed(1);
-    document.getElementById('humValue').textContent = hum;
-    document.getElementById('lightValue').textContent = light;
-    document.getElementById('soilValue').textContent = soil;
-    
     if (!document.getElementById('advisorCard')) { 
         const d = document.createElement('div'); 
         d.className = 'settings-card'; 
         d.id = 'advisorCard'; 
-        d.innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${plantsList[currentPlant].care}</div>`; 
+        d.innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${p.care}</div>`; 
         document.getElementById('dashboard').appendChild(d); 
     } else {
-        document.getElementById('advisorCard').innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${plantsList[currentPlant].care}</div>`;
+        document.getElementById('advisorCard').innerHTML = `<div class="graph-title">🌿 СОВЕТНИК</div><div class="setting-row">${p.care}</div>`;
     }
 }
 
@@ -1004,6 +1004,12 @@ function buildControlButtons() {
             showToast(`${labels[id]} ${devices[id] ? 'включён' : 'выключен'}`); 
             if (id === 'pump') createDropletsOnCards();
             saveSettingsToLocal();
+            
+            // Мгновенная отправка при клике
+            if (ghToken && gistId) {
+                isAuthoritativeDevice = true;
+                sendToGitHub();
+            }
         };
         container.appendChild(btn);
     });
@@ -1029,6 +1035,11 @@ function buildPlants() {
                 updateWeatherDisplay();
                 showToast(`🌱 ${p.name}`); 
                 saveSettingsToLocal();
+                
+                if (ghToken && gistId) {
+                    isAuthoritativeDevice = true;
+                    sendToGitHub();
+                }
             } 
         };
         grid.appendChild(card);
@@ -1292,17 +1303,22 @@ brightnessSlider?.addEventListener('input', (e) => {
     document.getElementById('lightValue').textContent = light;
     showToast(`💡 Яркость света установлена на ${val}%`);
     saveSettingsToLocal();
+    
+    if (ghToken && gistId) {
+        isAuthoritativeDevice = true;
+        sendToGitHub();
+    }
 });
 
 const autoWaterToggle = document.getElementById('autoWaterToggle');
 const autoVentToggle = document.getElementById('autoVentToggle');
 const autoLightToggle = document.getElementById('autoLightToggle');
-autoWaterToggle?.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); saveSettingsToLocal(); });
-autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); saveSettingsToLocal(); });
-autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); saveSettingsToLocal(); });
+autoWaterToggle?.addEventListener('change', (e) => { autoSettings.water = e.target.checked; showToast(autoSettings.water ? '💧 Автополив включён' : '💧 Автополив выключен'); saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); });
+autoVentToggle?.addEventListener('change', (e) => { autoSettings.vent = e.target.checked; showToast(autoSettings.vent ? '🪟 Автовентиляция включена' : '🪟 Автовентиляция выключена'); saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); });
+autoLightToggle?.addEventListener('change', (e) => { autoSettings.light = e.target.checked; showToast(autoSettings.light ? '💡 Автосвет включён' : '💡 Автосвет выключен'); saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); });
 
-document.getElementById('emergencyPump')?.addEventListener('click', () => { showToast('🚨 Аварийный полив'); createDropletsOnCards(); });
-document.getElementById('emergencyWindow')?.addEventListener('click', () => showToast('🪟 Форточка открыта'));
+document.getElementById('emergencyPump')?.addEventListener('click', () => { showToast('🚨 Аварийный полив'); createDropletsOnCards(); if (ghToken && gistId) sendToGitHub(); });
+document.getElementById('emergencyWindow')?.addEventListener('click', () => { showToast('🪟 Форточка открыта'); if (ghToken && gistId) sendToGitHub(); });
 
 function loadSettingsToInputs() {
     const p = plantsList[currentPlant];
@@ -1338,9 +1354,13 @@ function setupAutoSaveSettings() {
     
     saveElements.forEach(el => {
         if (el) {
-            el.addEventListener('change', () => { setTimeout(() => saveSettingsToLocal(), 100); });
+            el.addEventListener('change', () => { 
+                setTimeout(() => { saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); }, 100); 
+            });
             if (el.type === 'range') {
-                el.addEventListener('input', () => { setTimeout(() => saveSettingsToLocal(), 100); });
+                el.addEventListener('input', () => { 
+                    setTimeout(() => { saveSettingsToLocal(); if (ghToken && gistId) sendToGitHub(); }, 100); 
+                });
             }
         }
     });
@@ -1379,56 +1399,11 @@ window.addEventListener('scroll', () => {
     document.getElementById('progressBar').style.width = (window.scrollY / h) * 100 + '%'; 
 });
 
-// ========== ЗАПУСК СИМУЛЯЦИИ (РАЗ В 10 СЕКУНД) ==========
-let lastApiCall = 0;
-const API_CALL_DELAY = 10000;
-
-setInterval(() => {
-    // Плавное изменение данных
-    temp += direction;
-    if (temp > 28) direction = -0.05;
-    if (temp < 22) direction = 0.05;
-    hum = 55 + Math.floor(Math.sin(Date.now()/10000) * 10);
-    light = 40 + Math.floor(Math.sin(Date.now()/5000) * 30);
-    soil = 35 + Math.floor(Math.sin(Date.now()/30000) * 10);
-    
-    // Накопление статистики
-    waterSaved += 0.12;
-    co2Absorbed += 0.06;
-    
-    // Обновление UI
-    updateAllUI();
-    updateGraphsData();
-    updateEventsList();
-    updateWeatherDisplay();
-    
-    // Отправка в облако с задержкой
-    const now = Date.now();
-    if (now - lastApiCall > API_CALL_DELAY && ghToken && gistId) {
-        sendToGitHub();
-        lastApiCall = now;
-    }
-    
-    if (modalChart && modal.style.display === 'flex') updateModalChart();
-}, 10000);
-
-// ========== ДИАГНОСТИЧЕСКИЕ ФУНКЦИИ ==========
+// ========== ОСНОВНОЙ ЦИКЛ С СИНХРОНИЗАЦИЕЙ ==========
 let ghToken = localStorage.getItem('github_token');
 let gistId = localStorage.getItem('gist_id');
-
-function updateDebugPanel() {
-    const token = localStorage.getItem('github_token');
-    const id = localStorage.getItem('gist_id');
-    const deviceId = localStorage.getItem('device_id_gist');
-    
-    document.getElementById('debugToken').innerHTML = token ? `🔑 Токен: ${token.substring(0, 15)}...` : '🔑 Токен: ❌ не найден';
-    document.getElementById('debugGist').innerHTML = id ? `📁 Gist ID: ${id}` : '📁 Gist ID: ❌ не найден';
-    document.getElementById('debugSync').innerHTML = `🔄 Синхронизация: ${id && token ? '✅ активна' : '❌ не настроена'}`;
-    document.getElementById('debugLastData').innerHTML = `📦 Device ID: ${deviceId || 'нет'}`;
-    document.getElementById('debugStatus').innerHTML = `⏳ Статус: ${id && token ? 'Готов к синхронизации' : 'Введите настройки'}`;
-}
-
-// Кэш для ответов GitHub
+let lastApiCall = 0;
+const API_CALL_DELAY = 10000;
 let githubCache = {};
 let cacheTime = {};
 
@@ -1437,7 +1412,6 @@ async function fetchWithCache(url, token) {
     const now = Date.now();
     
     if (cacheTime[cacheKey] && now - cacheTime[cacheKey] < 30000) {
-        console.log('📦 Используем кэш для:', url);
         return githubCache[cacheKey];
     }
     
@@ -1454,12 +1428,51 @@ async function fetchWithCache(url, token) {
         }
         return null;
     } catch(e) {
-        console.log('Ошибка:', e);
         return null;
     }
 }
 
-// Отправка данных
+// СКАЧИВАНИЕ ДАННЫХ ИЗ ОБЛАКА
+async function loadFromGitHub() {
+    if (!ghToken || !gistId) return false;
+    try {
+        const API_URL = `https://api.github.com/gists/${gistId}`;
+        const gist = await fetchWithCache(API_URL, ghToken);
+        
+        if (gist && gist.files && gist.files['teplitsa.json']) {
+            const cloudData = JSON.parse(gist.files['teplitsa.json'].content);
+            
+            if (cloudData.last) {
+                const remote = cloudData.last;
+                const myDeviceId = localStorage.getItem('device_id_gist');
+                
+                if (remote.deviceId !== myDeviceId) {
+                    temp = remote.temp;
+                    hum = remote.hum;
+                    soil = remote.soil;
+                    light = remote.light;
+                    devices = remote.devices || devices;
+                    currentPlant = remote.currentPlant || currentPlant;
+                    waterSaved = remote.waterSaved || waterSaved;
+                    co2Absorbed = remote.co2Absorbed || co2Absorbed;
+                    
+                    document.getElementById('lastSyncTime').innerHTML = new Date(remote.timestamp).toLocaleTimeString();
+                    addEventToLog('📥 Данные синхронизированы из Gist');
+                    updateAllUI();
+                    buildPlants();
+                    buildControlButtons();
+                    
+                    return true;
+                }
+            }
+        }
+    } catch (e) {
+        console.log('Ошибка скачивания:', e);
+    }
+    return false;
+}
+
+// Отправка данных в Gist
 async function sendToGitHub() {
     if (!ghToken || !gistId) return;
     
@@ -1511,6 +1524,20 @@ async function sendToGitHub() {
     }
 }
 
+// ========== ДИАГНОСТИЧЕСКИЕ ФУНКЦИИ ==========
+function updateDebugPanel() {
+    const token = localStorage.getItem('github_token');
+    const id = localStorage.getItem('gist_id');
+    const deviceId = localStorage.getItem('device_id_gist');
+    
+    document.getElementById('debugToken').innerHTML = token ? `🔑 Токен: ${token.substring(0, 15)}...` : '🔑 Токен: ❌ не найден';
+    document.getElementById('debugGist').innerHTML = id ? `📁 Gist ID: ${id}` : '📁 Gist ID: ❌ не найден';
+    document.getElementById('debugSync').innerHTML = `🔄 Синхронизация: ${id && token ? '✅ активна' : '❌ не настроена'}`;
+    document.getElementById('debugRole').innerHTML = `👑 Режим: ${isAuthoritativeDevice ? 'Главный (генерирует данные)' : 'Наблюдатель (только чтение)'}`;
+    document.getElementById('debugLastData').innerHTML = `📦 Device ID: ${deviceId || 'нет'}`;
+    document.getElementById('debugStatus').innerHTML = `⏳ Статус: ${id && token ? 'Готов к синхронизации' : 'Введите настройки'}`;
+}
+
 // Принудительная отправка
 document.getElementById('debugForceSync').onclick = async () => {
     const token = localStorage.getItem('github_token');
@@ -1522,72 +1549,15 @@ document.getElementById('debugForceSync').onclick = async () => {
     }
     
     document.getElementById('debugStatus').innerHTML = '⏳ Отправка данных...';
-    
-    try {
-        const dataToSend = {
-            deviceId: localStorage.getItem('device_id_gist') || 'unknown',
-            temp: temp,
-            hum: hum,
-            soil: soil,
-            light: light,
-            devices: devices,
-            currentPlant: currentPlant,
-            waterSaved: waterSaved,
-            co2Absorbed: co2Absorbed,
-            timestamp: Date.now()
-        };
-        
-        console.log('📦 Отправляем данные:', dataToSend);
-        
-        const API_URL = `https://api.github.com/gists/${id}`;
-        
-        const getRes = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${token}` }
-        });
-        const gist = await getRes.json();
-        
-        let existingData = {};
-        if (gist.files && gist.files['teplitsa.json']) {
-            try {
-                existingData = JSON.parse(gist.files['teplitsa.json'].content);
-            } catch(e) { existingData = {}; }
-        }
-        
-        existingData.last = dataToSend;
-        if (!existingData.history) existingData.history = [];
-        existingData.history.push(dataToSend);
-        if (existingData.history.length > 20) existingData.history.shift();
-        
-        const updateRes = await fetch(API_URL, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `token ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                files: { 'teplitsa.json': { content: JSON.stringify(existingData, null, 2) } }
-            })
-        });
-        
-        if (updateRes.ok) {
-            document.getElementById('debugStatus').innerHTML = '✅ Данные отправлены!';
-            document.getElementById('debugStatus').style.color = '#0f0';
-            addEventToLog('✅ Данные успешно отправлены в Gist');
-            setTimeout(() => {
-                document.getElementById('debugStatus').innerHTML = '⏳ Готов';
-                document.getElementById('debugStatus').style.color = '#0f0';
-            }, 2000);
-        } else {
-            const err = await updateRes.json();
-            document.getElementById('debugStatus').innerHTML = `❌ Ошибка: ${err.message || 'Неизвестно'}`;
-            document.getElementById('debugStatus').style.color = '#f00';
-            addEventToLog(`❌ Ошибка отправки: ${err.message}`);
-        }
-    } catch(e) {
-        document.getElementById('debugStatus').innerHTML = `❌ Ошибка: ${e.message}`;
-        document.getElementById('debugStatus').style.color = '#f00';
-        addEventToLog(`❌ Ошибка: ${e.message}`);
-    }
+    isAuthoritativeDevice = true;
+    await sendToGitHub();
+    await loadFromGitHub();
+    document.getElementById('debugStatus').innerHTML = '✅ Готово!';
+    updateDebugPanel();
+    addEventToLog('✅ Принудительная синхронизация выполнена');
+    setTimeout(() => {
+        document.getElementById('debugStatus').innerHTML = '⏳ Готов';
+    }, 2000);
 };
 
 // Проверка Gist
@@ -1616,7 +1586,6 @@ document.getElementById('debugCheckGist').onclick = async () => {
             
             if (gist.files && gist.files['teplitsa.json']) {
                 const data = JSON.parse(gist.files['teplitsa.json'].content);
-                console.log('📋 Содержимое Gist:', data);
                 addEventToLog(`📋 В Gist есть данные от ${data.last?.deviceId || 'нет устройства'}`);
             }
         } else {
@@ -1629,6 +1598,14 @@ document.getElementById('debugCheckGist').onclick = async () => {
         document.getElementById('debugGistCheck').style.color = '#f00';
         addEventToLog(`❌ Ошибка проверки Gist: ${e.message}`);
     }
+};
+
+// Сделать устройство главным
+document.getElementById('debugMakeAuthoritative').onclick = () => {
+    isAuthoritativeDevice = true;
+    updateDebugPanel();
+    addEventToLog('👑 Устройство переключено в режим "Главный"');
+    showToast('👑 Устройство теперь генерирует данные');
 };
 
 // Сброс настроек
@@ -1673,12 +1650,15 @@ document.getElementById('saveSettingsBtn').onclick = () => {
         showToast('✅ Настройки сохранены!');
         
         document.getElementById('settingsPanel').style.display = 'none';
-        updateDebugPanel();
         
         if (!localStorage.getItem('device_id_gist')) {
             const newId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
             localStorage.setItem('device_id_gist', newId);
         }
+        
+        updateDebugPanel();
+        // Принудительно загружаем данные после сохранения
+        setTimeout(() => loadFromGitHub(), 1000);
     } else {
         showToast('❌ Введите и токен, и ID Gist');
     }
@@ -1703,15 +1683,65 @@ document.getElementById('resetSettingsBtn').onclick = () => {
 if (ghToken) document.getElementById('tokenInput').value = ghToken;
 if (gistId) document.getElementById('gistIdInput').value = gistId;
 
-// Первоначальная проверка настроек
-updateSettingsStatus();
-updateDebugPanel();
-
 // Создаём device ID если нет
 if (!localStorage.getItem('device_id_gist')) {
     const newId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
     localStorage.setItem('device_id_gist', newId);
 }
+
+// ========== ОСНОВНОЙ ЦИКЛ (10 СЕКУНД) ==========
+setInterval(async () => {
+    const now = Date.now();
+    let dataWasUpdated = false;
+
+    // 1. Попытка забрать данные из облака
+    if (ghToken && gistId) {
+        dataWasUpdated = await loadFromGitHub();
+    }
+    
+    // Если данные скачались с другого устройства, телефон НЕ должен крутить свою симуляцию поверх них
+    if (dataWasUpdated) {
+        isAuthoritativeDevice = false; // Автоматически переключаем телефон в режим "Просмотр"
+        updateDebugPanel();
+    }
+
+    // 2. Если мы «главное» устройство (или оффлайн), продолжаем симулировать датчики
+    if (isAuthoritativeDevice || !ghToken || !gistId) {
+        // Плавное изменение данных
+        temp += direction;
+        if (temp > 28) direction = -0.05;
+        if (temp < 22) direction = 0.05;
+        hum = 55 + Math.floor(Math.sin(Date.now()/10000) * 10);
+        light = 40 + Math.floor(Math.sin(Date.now()/5000) * 30);
+        soil = 35 + Math.floor(Math.sin(Date.now()/30000) * 10);
+        
+        // Накопление статистики
+        waterSaved += 0.12;
+        co2Absorbed += 0.06;
+        
+        // Отправка в облако по таймеру
+        if (now - lastApiCall > API_CALL_DELAY && ghToken && gistId) {
+            await sendToGitHub();
+            lastApiCall = now;
+        }
+    }
+    
+    // 3. Перерисовываем весь UI
+    updateAllUI();
+    updateGraphsData();
+    updateEventsList();
+    updateWeatherDisplay();
+    updateDebugPanel();
+    
+    if (modalChart && modal.style.display === 'flex') updateModalChart();
+}, 10000);
+
+// Первоначальная загрузка данных
+setTimeout(() => {
+    if (ghToken && gistId) {
+        loadFromGitHub();
+    }
+}, 2000);
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 function init() {
@@ -1722,8 +1752,11 @@ function init() {
     updateWeatherDisplay();
     renderYearCalendar();
     setupAutoSaveSettings();
+    updateDebugPanel();
+    updateSettingsStatus();
     
     addEventToLog('🚀 Система запущена');
+    addEventToLog(isAuthoritativeDevice ? '👑 Режим: Главное устройство (генерирует данные)' : '👁️ Режим: Наблюдатель (только чтение)');
 }
 
 init();
