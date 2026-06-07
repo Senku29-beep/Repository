@@ -1379,7 +1379,10 @@ window.addEventListener('scroll', () => {
     document.getElementById('progressBar').style.width = (window.scrollY / h) * 100 + '%'; 
 });
 
-// ========== ЗАПУСК СИМУЛЯЦИИ ==========
+// ========== ЗАПУСК СИМУЛЯЦИИ (РАЗ В 10 СЕКУНД) ==========
+let lastApiCall = 0;
+const API_CALL_DELAY = 10000;
+
 setInterval(() => {
     // Плавное изменение данных
     temp += direction;
@@ -1399,28 +1402,121 @@ setInterval(() => {
     updateEventsList();
     updateWeatherDisplay();
     
+    // Отправка в облако с задержкой
+    const now = Date.now();
+    if (now - lastApiCall > API_CALL_DELAY && ghToken && gistId) {
+        sendToGitHub();
+        lastApiCall = now;
+    }
+    
     if (modalChart && modal.style.display === 'flex') updateModalChart();
-}, 3000);
+}, 10000);
 
 // ========== ДИАГНОСТИЧЕСКИЕ ФУНКЦИИ ==========
+let ghToken = localStorage.getItem('github_token');
+let gistId = localStorage.getItem('gist_id');
+
 function updateDebugPanel() {
     const token = localStorage.getItem('github_token');
-    const gistId = localStorage.getItem('gist_id');
+    const id = localStorage.getItem('gist_id');
     const deviceId = localStorage.getItem('device_id_gist');
     
     document.getElementById('debugToken').innerHTML = token ? `🔑 Токен: ${token.substring(0, 15)}...` : '🔑 Токен: ❌ не найден';
-    document.getElementById('debugGist').innerHTML = gistId ? `📁 Gist ID: ${gistId}` : '📁 Gist ID: ❌ не найден';
-    document.getElementById('debugSync').innerHTML = `🔄 Синхронизация: ${gistId && token ? '✅ активна' : '❌ не настроена'}`;
+    document.getElementById('debugGist').innerHTML = id ? `📁 Gist ID: ${id}` : '📁 Gist ID: ❌ не найден';
+    document.getElementById('debugSync').innerHTML = `🔄 Синхронизация: ${id && token ? '✅ активна' : '❌ не настроена'}`;
     document.getElementById('debugLastData').innerHTML = `📦 Device ID: ${deviceId || 'нет'}`;
-    document.getElementById('debugStatus').innerHTML = `⏳ Статус: ${gistId && token ? 'Готов к синхронизации' : 'Введите настройки'}`;
+    document.getElementById('debugStatus').innerHTML = `⏳ Статус: ${id && token ? 'Готов к синхронизации' : 'Введите настройки'}`;
+}
+
+// Кэш для ответов GitHub
+let githubCache = {};
+let cacheTime = {};
+
+async function fetchWithCache(url, token) {
+    const cacheKey = url;
+    const now = Date.now();
+    
+    if (cacheTime[cacheKey] && now - cacheTime[cacheKey] < 30000) {
+        console.log('📦 Используем кэш для:', url);
+        return githubCache[cacheKey];
+    }
+    
+    try {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `token ${token}` }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            githubCache[cacheKey] = data;
+            cacheTime[cacheKey] = now;
+            return data;
+        }
+        return null;
+    } catch(e) {
+        console.log('Ошибка:', e);
+        return null;
+    }
+}
+
+// Отправка данных
+async function sendToGitHub() {
+    if (!ghToken || !gistId) return;
+    
+    try {
+        const API_URL = `https://api.github.com/gists/${gistId}`;
+        
+        const dataToSend = {
+            deviceId: localStorage.getItem('device_id_gist') || 'unknown',
+            temp: temp,
+            hum: hum,
+            soil: soil,
+            light: light,
+            devices: devices,
+            currentPlant: currentPlant,
+            waterSaved: waterSaved,
+            co2Absorbed: co2Absorbed,
+            timestamp: Date.now()
+        };
+        
+        const gist = await fetchWithCache(API_URL, ghToken);
+        if (!gist) return;
+        
+        let existingData = {};
+        if (gist.files && gist.files['teplitsa.json']) {
+            try {
+                existingData = JSON.parse(gist.files['teplitsa.json'].content);
+            } catch(e) { existingData = {}; }
+        }
+        
+        existingData.last = dataToSend;
+        if (!existingData.history) existingData.history = [];
+        existingData.history.push(dataToSend);
+        if (existingData.history.length > 20) existingData.history.shift();
+        
+        await fetch(API_URL, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `token ${ghToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: { 'teplitsa.json': { content: JSON.stringify(existingData, null, 2) } }
+            })
+        });
+        
+        addEventToLog('📤 Данные отправлены в Gist');
+    } catch(e) {
+        console.log('Ошибка отправки:', e);
+    }
 }
 
 // Принудительная отправка
 document.getElementById('debugForceSync').onclick = async () => {
     const token = localStorage.getItem('github_token');
-    const gistId = localStorage.getItem('gist_id');
+    const id = localStorage.getItem('gist_id');
     
-    if (!token || !gistId) {
+    if (!token || !id) {
         alert('❌ Нет настроек! Введите токен и ID Gist в панели выше');
         return;
     }
@@ -1443,7 +1539,7 @@ document.getElementById('debugForceSync').onclick = async () => {
         
         console.log('📦 Отправляем данные:', dataToSend);
         
-        const API_URL = `https://api.github.com/gists/${gistId}`;
+        const API_URL = `https://api.github.com/gists/${id}`;
         
         const getRes = await fetch(API_URL, {
             headers: { 'Authorization': `token ${token}` }
@@ -1481,28 +1577,25 @@ document.getElementById('debugForceSync').onclick = async () => {
                 document.getElementById('debugStatus').innerHTML = '⏳ Готов';
                 document.getElementById('debugStatus').style.color = '#0f0';
             }, 2000);
-            console.log('✅ Данные успешно отправлены в Gist');
         } else {
             const err = await updateRes.json();
             document.getElementById('debugStatus').innerHTML = `❌ Ошибка: ${err.message || 'Неизвестно'}`;
             document.getElementById('debugStatus').style.color = '#f00';
             addEventToLog(`❌ Ошибка отправки: ${err.message}`);
-            console.error('❌ Ошибка отправки:', err);
         }
     } catch(e) {
         document.getElementById('debugStatus').innerHTML = `❌ Ошибка: ${e.message}`;
         document.getElementById('debugStatus').style.color = '#f00';
         addEventToLog(`❌ Ошибка: ${e.message}`);
-        console.error('❌ Ошибка:', e);
     }
 };
 
 // Проверка Gist
 document.getElementById('debugCheckGist').onclick = async () => {
     const token = localStorage.getItem('github_token');
-    const gistId = localStorage.getItem('gist_id');
+    const id = localStorage.getItem('gist_id');
     
-    if (!token || !gistId) {
+    if (!token || !id) {
         alert('❌ Нет настроек');
         return;
     }
@@ -1510,7 +1603,7 @@ document.getElementById('debugCheckGist').onclick = async () => {
     document.getElementById('debugGistCheck').innerHTML = '🔄 Проверка...';
     
     try {
-        const API_URL = `https://api.github.com/gists/${gistId}`;
+        const API_URL = `https://api.github.com/gists/${id}`;
         const res = await fetch(API_URL, {
             headers: { 'Authorization': `token ${token}` }
         });
@@ -1546,10 +1639,6 @@ document.getElementById('debugClearCache').onclick = () => {
     localStorage.removeItem('teplitsa_settings');
     location.reload();
 };
-
-// ========== НАСТРОЙКИ ПОДКЛЮЧЕНИЯ ==========
-let ghToken = localStorage.getItem('github_token');
-let gistId = localStorage.getItem('gist_id');
 
 // Если настройки уже есть - скрываем панель
 if (ghToken && gistId) {
@@ -1617,6 +1706,12 @@ if (gistId) document.getElementById('gistIdInput').value = gistId;
 // Первоначальная проверка настроек
 updateSettingsStatus();
 updateDebugPanel();
+
+// Создаём device ID если нет
+if (!localStorage.getItem('device_id_gist')) {
+    const newId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    localStorage.setItem('device_id_gist', newId);
+}
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 function init() {
