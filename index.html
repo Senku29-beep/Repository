@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>Умная теплица | GitHub Gist Синхронизация</title>
+    <title>Умная теплица | GitHub Синхронизация</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -554,30 +554,6 @@
         </div>
     </div>
 
-    <!-- Панель настроек (показывается только если нет сохранённых настроек) -->
-    <div id="settingsPanel" class="settings-card" style="background: #ff9800; color: #333; margin-bottom: 20px;">
-        <div class="graph-title">🔐 Настройки подключения к GitHub</div>
-        <div class="setting-row">
-            <span>GitHub Token (только доступ к gist):</span>
-            <input type="password" id="tokenInput" class="setting-input" style="width: 250px;" placeholder="Введите ваш токен">
-        </div>
-        <div class="setting-row">
-            <span>ID Gist (публичный или секретный):</span>
-            <input type="text" id="gistIdInput" class="setting-input" style="width: 250px;" placeholder="Введите ID Gist">
-        </div>
-        <div class="setting-row">
-            <button id="saveSettingsBtn" class="save-btn" style="width: auto; padding: 8px 25px;">💾 Сохранить настройки</button>
-            <button id="resetSettingsBtn" class="save-btn" style="width: auto; padding: 8px 25px; background: #f44336;">🗑️ Сбросить</button>
-        </div>
-        <div class="setting-row">
-            <span>Статус:</span>
-            <span id="settingsStatus">⚙️ Введите токен и ID Gist</span>
-        </div>
-        <div class="setting-row">
-            <span style="font-size: 11px;">💡 Токен и ID сохранятся ТОЛЬКО в вашем браузере. GitHub НЕ увидит их и НЕ удалит.</span>
-        </div>
-    </div>
-
     <div class="nav" id="navContainer">
         <button class="nav-btn active" data-section="dashboard">📊 Дашборд</button>
         <button class="nav-btn" data-section="history">📅 Годовой календарь</button>
@@ -702,19 +678,45 @@
             <div class="graph-title">☁️ Статус синхронизации</div>
             <div class="setting-row">
                 <span>🌐 Облачная синхронизация</span>
-                <span id="syncStatus" style="font-weight: bold; color: #4caf50;">✅ GitHub Gist</span>
+                <span id="syncStatus" style="font-weight: bold; color: #f44336;">❌ Не настроена</span>
             </div>
             <div class="setting-row">
                 <span>🔄 Последняя синхронизация</span>
                 <span id="lastSyncTime">--:--:--</span>
             </div>
         </div>
+        
+        <!-- НОВАЯ КНОПКА ДЛЯ НАСТРОЙКИ СИНХРОНИЗАЦИИ -->
+        <div class="settings-card">
+            <div class="graph-title">🔐 Настройки облачной синхронизации</div>
+            <div class="setting-row">
+                <span>🌐 GitHub Gist синхронизация</span>
+                <button id="openGistSettingsBtn" class="save-btn" style="width: auto; padding: 8px 25px;">⚙️ Настроить</button>
+            </div>
+            <div class="setting-row">
+                <span>📊 Статус:</span>
+                <span id="gistStatus" style="font-weight: bold; color: #ff9800;">⏳ Не настроена</span>
+            </div>
+        </div>
     </div>
 
     <div id="about" class="section">
-        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени через GitHub Gist.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (GitHub Gist)</p><br><p><strong>Инструкция:</strong><br>1. Создайте Gist с файлом teplitsa.json<br>2. Создайте токен GitHub с доступом к gist<br>3. Введите токен и ID Gist и нажмите "Сохранить"<br>4. Токен и ID сохранятся в вашем браузере и GitHub их не удалит</p></div>
+        <div class="settings-card"><div class="graph-title">📌 О ПРОЕКТЕ</div><p style="line-height:1.6">Проект «Умная теплица» — полностью автоматизированная система с облачной синхронизацией в реальном времени через GitHub Gist.</p><br><p><strong>Функции:</strong><br>• 📅 Годовой календарь<br>• 💡 Регулировка яркости<br>• ⚙️ Настройки автоматики<br>• 🔔 Push-уведомления<br>• 💾 Офлайн-режим<br>• 📈 Экспорт CSV<br>• 🌱 19 растений<br>• ☁️ Авто-синхронизация между устройствами (GitHub Gist)</p><br><p><strong>Инструкция:</strong><br>1. Создайте секретный Gist с файлом teplitsa.json<br>2. Создайте токен GitHub с доступом к gist<br>3. Перейдите в раздел "Настройки" и нажмите "Настроить"<br>4. Введите токен и ID Gist</p></div>
     </div>
     <div class="footer">© 2026 Смурыгин Алексей | Умная теплица | GitHub Gist Синхронизация</div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО ДЛЯ ВВОДА НАСТРОЕК -->
+<div id="gistSettingsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 30px; padding: 30px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+        <h2 style="color: #2d5a2e; margin-bottom: 20px;">🔐 Настройка синхронизации</h2>
+        <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Введите данные GitHub для синхронизации между устройствами</p>
+        <input type="password" id="modalToken" placeholder="GitHub Token (только доступ к gist)" style="width: 100%; padding: 12px; margin: 10px 0; border-radius: 30px; border: 1px solid #ddd; font-size: 14px;">
+        <input type="text" id="modalGistId" placeholder="ID Gist" style="width: 100%; padding: 12px; margin: 10px 0; border-radius: 30px; border: 1px solid #ddd; font-size: 14px;">
+        <button id="modalSaveBtn" style="background: #2d5a2e; color: white; border: none; padding: 12px 30px; border-radius: 30px; font-size: 16px; cursor: pointer; margin-top: 10px; width: 100%;">💾 Сохранить и начать синхронизацию</button>
+        <button id="modalCloseBtn" style="background: #999; color: white; border: none; padding: 10px 20px; border-radius: 30px; font-size: 14px; cursor: pointer; margin-top: 10px; width: 100%;">❌ Отмена</button>
+        <p style="font-size: 11px; color: #999; margin-top: 15px;">Токен и ID сохранятся в вашем браузере</p>
+    </div>
 </div>
 
 <div id="chartModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modalTitle">📊 График</h2><button class="modal-close" id="modalCloseBtn">&times;</button></div><canvas id="modalChart" width="600" height="300"></canvas><div><button id="periodDay" class="save-btn" style="width:auto;">День</button> <button id="periodWeek" class="save-btn" style="width:auto;">Неделя</button> <button id="periodMonth" class="save-btn" style="width:auto;">Месяц</button></div></div></div>
@@ -803,6 +805,17 @@ function showToast(msg) {
     t.innerText = msg; 
     document.body.appendChild(t); 
     setTimeout(() => t.remove(), 2500); 
+}
+
+function addEventToLog(event) {
+    const eventsList = document.getElementById('eventsList');
+    if (eventsList) {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'setting-row';
+        eventDiv.innerHTML = `🔵 ${new Date().toLocaleTimeString()} | ${event}`;
+        eventsList.insertBefore(eventDiv, eventsList.firstChild);
+        if (eventsList.children.length > 10) eventsList.removeChild(eventsList.lastChild);
+    }
 }
 
 function getOptimumBadge(v, min, max) { 
@@ -921,17 +934,6 @@ function updateEventsList() {
     document.getElementById('eventsList').innerHTML = events.slice(0,5).map(e => `<div class="setting-row">${e}</div>`).join('');
 }
 
-function addEventToLog(event) {
-    const eventsList = document.getElementById('eventsList');
-    if (eventsList) {
-        const eventDiv = document.createElement('div');
-        eventDiv.className = 'setting-row';
-        eventDiv.innerHTML = `🔵 ${new Date().toLocaleTimeString()} | ${event}`;
-        eventsList.insertBefore(eventDiv, eventsList.firstChild);
-        if (eventsList.children.length > 10) eventsList.removeChild(eventsList.lastChild);
-    }
-}
-
 function updateGraphsData() {
     tempData24.push(Number(temp.toFixed(1)));
     tempData24.shift();
@@ -959,11 +961,6 @@ function buildDashboard() {
     document.querySelectorAll('.stat-card[data-metric]').forEach(card => card.addEventListener('click', () => openModal(card.dataset.metric)));
     
     document.getElementById('statsBottomGrid').innerHTML = `<div class="stat-card"><div class="stat-icon">🔧</div><div class="stat-value">950+</div><div class="stat-label">Строк кода</div></div><div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">19</div><div class="stat-label">Растений</div></div><div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">4640 ₽</div><div class="stat-label">Себестоимость</div></div>`;
-    
-    document.getElementById('tempValue').textContent = temp.toFixed(1);
-    document.getElementById('humValue').textContent = hum;
-    document.getElementById('lightValue').textContent = light;
-    document.getElementById('soilValue').textContent = soil;
     
     if (!document.getElementById('advisorCard')) { 
         const d = document.createElement('div'); 
@@ -994,7 +991,6 @@ function buildControlButtons() {
             if (id === 'pump') createDropletsOnCards();
             saveSettingsToLocal();
             
-            // Мгновенная отправка при клике
             if (ghToken && gistId) {
                 sendToGitHub();
             }
@@ -1385,21 +1381,11 @@ window.addEventListener('scroll', () => {
     document.getElementById('progressBar').style.width = (window.scrollY / h) * 100 + '%'; 
 });
 
-// ========== СИНХРОНИЗАЦИЯ ЧЕРЕЗ GITHUB ==========
-// Получаем сохранённые настройки из localStorage
-let ghToken = localStorage.getItem('github_token');
-let gistId = localStorage.getItem('gist_id');
+// ========== СИНХРОНИЗАЦИЯ ==========
+let ghToken = null;
+let gistId = null;
+let syncTimer = null;
 let lastSyncData = '';
-let syncInterval = null;
-
-// Обновление статуса в интерфейсе
-function updateSyncStatus(message, isError = false) {
-    const syncStatusEl = document.getElementById('syncStatus');
-    if (syncStatusEl) {
-        syncStatusEl.innerHTML = message;
-        syncStatusEl.style.backgroundColor = isError ? '#f44336' : '#2d5a2e';
-    }
-}
 
 // Отправка данных в Gist
 async function sendToGitHub() {
@@ -1408,7 +1394,6 @@ async function sendToGitHub() {
     try {
         const API_URL = `https://api.github.com/gists/${gistId}`;
         
-        // Получаем текущий gist
         const getRes = await fetch(API_URL, {
             headers: { 'Authorization': `token ${ghToken}` }
         });
@@ -1458,11 +1443,9 @@ async function sendToGitHub() {
         });
         
         document.getElementById('lastSyncTime').innerHTML = new Date().toLocaleTimeString();
-        updateSyncStatus('🟢 Синхронизация активна');
         addEventToLog('📤 Данные отправлены в Gist');
     } catch(e) {
         console.log('Ошибка отправки:', e);
-        updateSyncStatus('🔴 Ошибка отправки', true);
     }
 }
 
@@ -1476,10 +1459,7 @@ async function loadFromGitHub() {
             headers: { 'Authorization': `token ${ghToken}` }
         });
         
-        if (!res.ok) {
-            console.log('Ошибка HTTP:', res.status);
-            return false;
-        }
+        if (!res.ok) return false;
         
         const gist = await res.json();
         
@@ -1492,7 +1472,6 @@ async function loadFromGitHub() {
                 if (lastSyncData !== dataStr) {
                     lastSyncData = dataStr;
                     
-                    // Обновляем все данные
                     temp = data.last.temp;
                     hum = data.last.hum;
                     soil = data.last.soil;
@@ -1503,19 +1482,16 @@ async function loadFromGitHub() {
                     co2Absorbed = data.last.co2Absorbed;
                     if (data.last.autoSettings) autoSettings = data.last.autoSettings;
                     
-                    // Обновляем интерфейс
                     updateAllUI();
                     buildPlants();
                     buildControlButtons();
                     
-                    // Обновляем чекбоксы автоматики
                     if (document.getElementById('autoWaterToggle')) {
                         document.getElementById('autoWaterToggle').checked = autoSettings.water;
                         document.getElementById('autoVentToggle').checked = autoSettings.vent;
                         document.getElementById('autoLightToggle').checked = autoSettings.light;
                     }
                     
-                    // Обновляем ползунок яркости
                     if (document.getElementById('brightnessSlider')) {
                         document.getElementById('brightnessSlider').value = light;
                         document.getElementById('brightnessValue').innerHTML = light + '%';
@@ -1523,13 +1499,8 @@ async function loadFromGitHub() {
                     }
                     
                     document.getElementById('lastSyncTime').innerHTML = new Date(data.last.timestamp).toLocaleTimeString();
-                    updateSyncStatus('🟢 Синхронизировано!');
                     addEventToLog('🔄 Данные синхронизированы из Gist');
                     showToast('🔄 Данные синхронизированы');
-                    
-                    setTimeout(() => {
-                        updateSyncStatus('🟢 Синхронизация активна');
-                    }, 2000);
                     
                     return true;
                 }
@@ -1537,38 +1508,23 @@ async function loadFromGitHub() {
         }
     } catch(e) {
         console.log('Ошибка загрузки:', e);
-        updateSyncStatus('🔴 Ошибка загрузки', true);
     }
     return false;
 }
 
-// Сохранение настроек подключения
-document.getElementById('saveSettingsBtn').onclick = () => {
-    const token = document.getElementById('tokenInput').value.trim();
-    const id = document.getElementById('gistIdInput').value.trim();
+// Инициализация Gist
+async function initGist() {
+    if (!ghToken || !gistId) return;
     
-    if (!token || !id) {
-        showToast('❌ Введите токен и ID Gist');
-        return;
-    }
-    
-    localStorage.setItem('github_token', token);
-    localStorage.setItem('gist_id', id);
-    ghToken = token;
-    gistId = id;
-    
-    // Создаём device ID
-    if (!localStorage.getItem('device_id_gist')) {
-        const newId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-        localStorage.setItem('device_id_gist', newId);
-    }
-    
-    // Инициализируем Gist
-    fetch(`https://api.github.com/gists/${gistId}`, {
-        headers: { 'Authorization': `token ${ghToken}` }
-    }).then(res => res.json()).then(async (gist) => {
+    try {
+        const API_URL = `https://api.github.com/gists/${gistId}`;
+        const res = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${ghToken}` }
+        });
+        const gist = await res.json();
+        
         if (!gist.files || !gist.files['teplitsa.json']) {
-            await fetch(`https://api.github.com/gists/${gistId}`, {
+            await fetch(API_URL, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `token ${ghToken}`,
@@ -1584,62 +1540,107 @@ document.getElementById('saveSettingsBtn').onclick = () => {
             });
             addEventToLog('📁 Файл teplitsa.json создан в Gist');
         }
-    });
-    
-    document.getElementById('settingsPanel').style.display = 'none';
-    document.getElementById('settingsStatus').innerHTML = '✅ Настройки сохранены';
-    document.getElementById('syncStatus').innerHTML = '🟢 Синхронизация запущена';
-    
-    // Запускаем синхронизацию
-    if (syncInterval) clearInterval(syncInterval);
-    syncInterval = setInterval(() => {
-        loadFromGitHub();
+    } catch(e) {
+        console.log('Ошибка инициализации Gist:', e);
+    }
+}
+
+// Запуск синхронизации
+function startSync() {
+    if (syncTimer) clearInterval(syncTimer);
+    syncTimer = setInterval(() => {
         sendToGitHub();
+        loadFromGitHub();
     }, 5000);
-    
-    setTimeout(() => loadFromGitHub(), 1000);
-    showToast('✅ Настройки сохранены! Синхронизация запущена');
+    addEventToLog('☁️ Синхронизация запущена (каждые 5 сек)');
+}
+
+// Функция обновления статуса в настройках
+function updateGistStatus() {
+    const gistStatusSpan = document.getElementById('gistStatus');
+    const syncStatusSpan = document.getElementById('syncStatus');
+    if (ghToken && gistId) {
+        gistStatusSpan.innerHTML = '✅ Синхронизация активна';
+        gistStatusSpan.style.color = '#4caf50';
+        syncStatusSpan.innerHTML = '✅ GitHub Gist';
+        syncStatusSpan.style.color = '#4caf50';
+    } else {
+        gistStatusSpan.innerHTML = '⏳ Не настроена';
+        gistStatusSpan.style.color = '#ff9800';
+        syncStatusSpan.innerHTML = '❌ Не настроена';
+        syncStatusSpan.style.color = '#f44336';
+    }
+}
+
+// ========== ОБРАБОТЧИКИ МОДАЛЬНОГО ОКНА ==========
+// Открыть окно настроек из кнопки в настройках
+document.getElementById('openGistSettingsBtn').onclick = () => {
+    document.getElementById('gistSettingsModal').style.display = 'flex';
+    document.getElementById('modalToken').value = ghToken || '';
+    document.getElementById('modalGistId').value = gistId || '';
 };
 
-// Сброс настроек
-document.getElementById('resetSettingsBtn').onclick = () => {
-    localStorage.removeItem('github_token');
-    localStorage.removeItem('gist_id');
-    localStorage.removeItem('device_id_gist');
-    ghToken = null;
-    gistId = null;
-    if (syncInterval) clearInterval(syncInterval);
-    document.getElementById('settingsPanel').style.display = 'block';
-    document.getElementById('settingsStatus').innerHTML = '⚙️ Введите токен и ID Gist';
-    document.getElementById('syncStatus').innerHTML = '❌ Не настроена';
-    document.getElementById('tokenInput').value = '';
-    document.getElementById('gistIdInput').value = '';
-    showToast('🗑️ Настройки сброшены');
+// Закрыть окно
+document.getElementById('modalCloseBtn').onclick = () => {
+    document.getElementById('gistSettingsModal').style.display = 'none';
 };
 
-// Заполняем поля, если настройки есть
-if (ghToken) document.getElementById('tokenInput').value = ghToken;
-if (gistId) document.getElementById('gistIdInput').value = gistId;
+// Закрыть при клике вне окна
+window.onclick = (event) => {
+    const modal = document.getElementById('gistSettingsModal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+};
 
-// Если настройки уже есть - запускаем синхронизацию
-if (ghToken && gistId) {
-    document.getElementById('settingsPanel').style.display = 'none';
-    document.getElementById('settingsStatus').innerHTML = '✅ Настройки сохранены';
-    document.getElementById('syncStatus').innerHTML = '🟢 Синхронизация запущена';
+// Сохранение настроек из модального окна
+document.getElementById('modalSaveBtn').onclick = async () => {
+    const token = document.getElementById('modalToken').value.trim();
+    const id = document.getElementById('modalGistId').value.trim();
     
-    // Создаём device ID если нет
+    if (!token || !id) {
+        alert('❌ Введите токен и ID Gist');
+        return;
+    }
+    
+    ghToken = token;
+    gistId = id;
+    localStorage.setItem('github_token', token);
+    localStorage.setItem('gist_id', id);
+    
     if (!localStorage.getItem('device_id_gist')) {
         const newId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
         localStorage.setItem('device_id_gist', newId);
     }
     
-    // Запускаем синхронизацию
-    syncInterval = setInterval(() => {
-        loadFromGitHub();
-        sendToGitHub();
-    }, 5000);
-    
+    updateGistStatus();
+    await initGist();
+    startSync();
     setTimeout(() => loadFromGitHub(), 1000);
+    
+    document.getElementById('gistSettingsModal').style.display = 'none';
+    showToast('✅ Настройки сохранены! Синхронизация запущена');
+};
+
+// Проверяем сохранённые настройки
+const savedToken = localStorage.getItem('github_token');
+const savedId = localStorage.getItem('gist_id');
+
+if (savedToken && savedId) {
+    ghToken = savedToken;
+    gistId = savedId;
+    updateGistStatus();
+    
+    if (!localStorage.getItem('device_id_gist')) {
+        const newId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+        localStorage.setItem('device_id_gist', newId);
+    }
+    
+    initGist();
+    startSync();
+    setTimeout(() => loadFromGitHub(), 1000);
+} else {
+    updateGistStatus();
 }
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
@@ -1653,7 +1654,11 @@ function init() {
     setupAutoSaveSettings();
     
     addEventToLog('🚀 Система запущена');
-    addEventToLog(ghToken && gistId ? '☁️ GitHub синхронизация активна' : '⚙️ Введите настройки GitHub для синхронизации');
+    if (!ghToken || !gistId) {
+        addEventToLog('⚙️ Настройте синхронизацию в разделе "Настройки"');
+    } else {
+        addEventToLog('☁️ GitHub синхронизация активна');
+    }
 }
 
 init();
